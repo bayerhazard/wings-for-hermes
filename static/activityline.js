@@ -19,8 +19,6 @@
 
   const ROW_SEL = '.transparent-event-row';
   const LIVE_SEL = '[data-live-assistant="1"],[data-live-tid],[data-live-thinking]';
-  const TOOL_ROW_SEL = '.transparent-event-row[data-live-tid],.tool-card-row[data-live-tid]';
-  const THINK_ROW_SEL = '[data-live-thinking]';
 
   let _scheduled = false;
 
@@ -52,22 +50,25 @@
   }
 
   /* Latest live activity as {state, verb, preview} — what the user should
-     read right now. Only the newest event is shown; earlier ones are history. */
+     read right now. Live rows in the transparent stream do NOT carry
+     data-live-* markers, so we walk the activity rows newest→oldest and take
+     the newest tool/thinking row as the current action; prose segments are
+     skipped (the last action remains the story while the answer streams). */
   function _liveActivity(turn) {
-    // Prefer the newest live tool row; thinking only when no tool is running.
-    const toolRows = turn.querySelectorAll(TOOL_ROW_SEL);
-    if (toolRows.length) {
-      const row = toolRows[toolRows.length - 1];
-      const name = (row.querySelector('.tool-card-name') || {}).textContent || '';
-      const preview = (row.querySelector('.tool-card-preview') || {}).textContent || '';
-      return { state: 'tool', verb: name.trim(), preview: preview.trim() };
-    }
-    const thinkRows = turn.querySelectorAll(THINK_ROW_SEL);
-    if (thinkRows.length) {
-      const row = thinkRows[thinkRows.length - 1];
-      const prevEl = row.querySelector('.transparent-event-thinking-preview,.thinking-card-preview,.transparent-event-preview');
-      const preview = (prevEl ? prevEl.textContent : '') || '';
-      return { state: 'thinking', verb: _t('wings_activity_thinking'), preview: preview.trim() };
+    const rows = _activityRows(turn);
+    for (let i = rows.length - 1; i >= 0; i--) {
+      const row = rows[i];
+      const type = row.getAttribute('data-event-type');
+      if (type === 'tool') {
+        const name = (row.querySelector('.tool-card-name') || {}).textContent || '';
+        const preview = (row.querySelector('.tool-card-preview') || {}).textContent || '';
+        return { state: 'tool', verb: name.trim(), preview: preview.trim() };
+      }
+      if (type === 'thinking') {
+        const prevEl = row.querySelector('.transparent-event-thinking-preview,.thinking-card-preview,.transparent-event-preview');
+        const preview = (prevEl ? prevEl.textContent : '') || '';
+        return { state: 'thinking', verb: _t('wings_activity_thinking'), preview: preview.trim() };
+      }
     }
     return { state: 'working', verb: _t('wings_activity_working'), preview: '' };
   }
