@@ -9,7 +9,16 @@ let _currentPanel = 'chat';
 const ADVANCED_PANELS = new Set(['kanban', 'memory', 'workspaces', 'profiles', 'todos', 'insights', 'logs']);
 const ADVANCED_SETTINGS_SECTIONS = new Set(['providers', 'extensions', 'system']);
 
+function _isMobileViewport() {
+  // Same breakpoint as _isDesktopWidth() in boot.js (641px); duplicated here
+  // because panels.js must not depend on load order for the mode decision.
+  try { return !window.matchMedia('(min-width:641px)').matches; } catch (e) { return false; }
+}
+
 function getUIMode() {
+  // Mobile viewports always present the Basic scope — the Advanced workbench
+  // (kanban, memory, workspaces, profiles, insights, logs, …) is desktop UI.
+  if (_isMobileViewport()) return 'basic';
   try { return localStorage.getItem('wings-mode') === 'advanced' ? 'advanced' : 'basic'; }
   catch (e) { return 'basic'; }
 }
@@ -19,12 +28,14 @@ function isAdvancedPanel(name) { return ADVANCED_PANELS.has(name); }
 function setUIMode(mode) {
   mode = mode === 'advanced' ? 'advanced' : 'basic';
   try { localStorage.setItem('wings-mode', mode); } catch (e) {}
-  document.documentElement.dataset.mode = mode;
+  // Apply the EFFECTIVE mode (mobile viewports are always Basic) — the stored
+  // preference still decides what desktop viewports show.
+  document.documentElement.dataset.mode = getUIMode();
   _syncUIModeSwitch();
   // Rebuild the settings search index under the new mode so hidden sections
   // neither appear as results nor remain as stale entries.
   if (typeof _settingsIndex !== 'undefined') { _settingsIndex = null; _settingsIndexPromise = null; }
-  if (mode === 'basic') {
+  if (getUIMode() === 'basic') {
     // Collapse any open advanced surface so nothing stays visible-but-hidden.
     if (typeof closeComposerTerminal === 'function') closeComposerTerminal();
     if (document.documentElement.dataset.workspacePanel === 'open' && typeof toggleWorkspacePanel === 'function') toggleWorkspacePanel();
@@ -35,6 +46,7 @@ function setUIMode(mode) {
 
 function _syncUIModeSwitch() {
   const m = getUIMode();
+  const mobile = _isMobileViewport();
   const basic = $('modeBasicBtn');
   const advanced = $('modeAdvancedBtn');
   if (basic) {
@@ -44,8 +56,31 @@ function _syncUIModeSwitch() {
   if (advanced) {
     advanced.classList.toggle('active', m === 'advanced');
     advanced.setAttribute('aria-pressed', m === 'advanced' ? 'true' : 'false');
+    // On mobile the Advanced scope is unavailable; the stored preference is
+    // kept and takes effect again on desktop viewports.
+    advanced.disabled = mobile;
+    if (mobile) advanced.title = (typeof t === 'function' ? t('settings_mode_advanced_desktop_only') : '') || 'Available on larger screens';
+    else advanced.removeAttribute('title');
   }
 }
+
+// Re-apply the effective mode when the viewport crosses the mobile breakpoint
+// (rotation, window resize, device emulation) so open advanced surfaces close
+// and hidden ones stay unreachable.
+(function () {
+  try {
+    const mq = window.matchMedia('(min-width:641px)');
+    const onChange = function () {
+      document.documentElement.dataset.mode = getUIMode();
+      if (ADVANCED_PANELS.has(_currentPanel)) switchPanel('chat');
+      if (ADVANCED_SETTINGS_SECTIONS.has(_currentSettingsSection)) switchSettingsSection('conversation');
+      if (document.documentElement.dataset.workspacePanel === 'open' && typeof toggleWorkspacePanel === 'function') toggleWorkspacePanel();
+      _syncUIModeSwitch();
+    };
+    if (mq.addEventListener) mq.addEventListener('change', onChange);
+    else if (mq.addListener) mq.addListener(onChange);
+  } catch (e) {}
+})();
 
 let _renamingAppTitlebar = false;  // guard against re-entrant rename
 let _kanbanBoard = null;

@@ -1313,6 +1313,11 @@ function _micToastKeyForRecognitionError(error){
 })();
 window._micActive=window._micActive||false;
 window._micPendingSend=window._micPendingSend||false;
+// Eager default for the empty-state suggestion buttons: hidden until the
+// server-side preference resolves (default is OFF). Prevents a flash of
+// suggestions on first paint; applyEmptyStateSuggestionPref() re-syncs once
+// /api/settings arrives.
+window._hideEmptyStateSuggestions=window._hideEmptyStateSuggestions!==undefined?window._hideEmptyStateSuggestions:true;
 
 // ── Default message mode eager default (#5167 / #5145) ──────────────────────
 // The Default message mode preference (queue/interrupt/steer) is read on the
@@ -3300,7 +3305,7 @@ window._mirrorSpeechSettingsFromServer=_mirrorSpeechSettingsFromServer;
     window._showConversationOutline=false;
     document.documentElement.dataset.conversationOutline='disabled';
     if(typeof applyConversationOutlinePreference==='function') applyConversationOutlinePreference();
-    window._hideEmptyStateSuggestions=false;
+    window._hideEmptyStateSuggestions=true;  // settings-load failed: mirror the True config default (suggestions opt-in)
     applyEmptyStateSuggestionPref();
     window._virtualizeTranscript=false;  // settings-load failed: default-OFF (experimental/opt-in) (#4343)
     window._showTps=false;

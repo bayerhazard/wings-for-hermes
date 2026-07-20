@@ -198,7 +198,11 @@ class TestSettingsSearch:
         """Providers pane entries must index provider cards and API key fields."""
         idx = PANELS_JS.find("function _buildSettingsIndex()")
         assert idx >= 0, "_buildSettingsIndex not found"
-        body = PANELS_JS[idx:idx + 3500]
+        # Slice to the end of the function (same pattern as the plugin-cards
+        # test below) so unrelated upstream insertions can't push the provider
+        # block out of a fixed-size window.
+        end = PANELS_JS.find("function _resolveSettingsField(entry)", idx)
+        body = PANELS_JS[idx:end]
         assert "pane.querySelectorAll('.provider-card')" in body, (
             "_buildSettingsIndex must scan provider cards so Providers search is not empty"
         )

@@ -7288,3 +7288,8 @@ html[data-conversation-outline="enabled"] #outlineToggleBtn:not([hidden]){displa
   outline: 2px solid var(--focus-ring);
   outline-offset: 1px;
 }
+.mode-switch-btn:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+}
+.mode-switch-btn:disabled:hover { color: var(--muted); }

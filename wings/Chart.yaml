@@ -2,7 +2,7 @@ apiVersion: v2
 name: wings
 description: Wings for Hermes — AI Agent Web UI
 type: application
-version: 1.1.0
+version: 1.2.0
 appVersion: "0.50.43"
 keywords:
   - ai

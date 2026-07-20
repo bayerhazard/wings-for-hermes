@@ -198,6 +198,8 @@ If an AI assistant is helping with install, reinstall, bootstrap, provider setup
 - **Basic** (default) keeps the interface lean — chat, tasks, skills, and the core settings sections (Conversation, Appearance, Preferences, Plugins, Help). This mirrors the scope of the classic Wings desktop app.
 - **Advanced** reveals the full workbench: kanban, memory, workspaces, profiles, todos, insights, logs, providers, extensions, system settings, workspace panel, terminal, sharing, saved prompts, reasoning controls, and more.
 - Switch any time under **Settings → Preferences → Interface mode**. The choice persists in the browser (`wings-mode` in localStorage) and never touches server-side state; hidden panels and sections are fully deactivated (no background fetching), and deep links to advanced surfaces safely fall back to chat/conversation.
+- **Mobile viewports (under 641px) always present the Basic scope** — the Advanced workbench is desktop UI. The stored preference is kept and applies again on larger screens.
+- **Empty-state suggestion buttons are opt-in** — hidden by default; re-enable them via Settings → Preferences → "Hide new-chat suggestions".
 
 ### Chat and agent
 - Streaming responses via SSE (tokens appear as they are generated)
