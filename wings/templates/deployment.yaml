@@ -1,0 +1,95 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wings
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: wings
+    applications.app.bytetrade.io/name: wings
+    applications.app.bytetrade.io/owner: {{ .Release.Namespace | splitList "-" | last }}
+    applications.app.bytetrade.io/raw-app-name: wings
+spec:
+  replicas: {{ .Values.workloads.wings.replicaCount }}
+  revisionHistoryLimit: 1
+  selector:
+    matchLabels:
+      app: wings
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: wings
+        applications.app.bytetrade.io/name: wings
+        applications.app.bytetrade.io/owner: {{ .Release.Namespace | splitList "-" | last }}
+        applications.app.bytetrade.io/raw-app-name: wings
+        io.bytetrade.app: "true"
+    spec:
+      initContainers:
+      - name: fix-kubelet-bypass
+        image: beclab/init:v1.2.3
+        command:
+        - sh
+        - -c
+        - |
+          for cidr in {{ join "," .Values.kubeletCidrs }}; do
+            iptables -t nat -I OUTPUT -d $cidr -p tcp --dport 10250 -j DNAT --to-destination 127.0.0.1:10250
+          done
+        securityContext:
+          capabilities:
+            add: ["NET_ADMIN"]
+          privileged: true
+      - name: agent-src
+        image: "{{ .Values.agentImage.repository }}:{{ .Values.agentImage.tag }}"
+        imagePullPolicy: {{ .Values.agentImage.pullPolicy }}
+        command:
+        - sh
+        - -c
+        - |
+          set -e
+          echo "Copying /opt/hermes from beclab agent image to shared volume..."
+          cp -a /opt/hermes/. /agent-src/
+          rm -rf /agent-src/.venv /agent-src/.playwright
+          chown -R 1000:1000 /agent-src
+          echo "Agent source ready."
+        volumeMounts:
+        - name: agent-src
+          mountPath: /agent-src
+      containers:
+      - name: wings-webui
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        env:
+          {{- range $key, $value := .Values.env }}
+          {{- if ne $value "" }}
+          - name: {{ $key }}
+            value: {{ $value | quote }}
+          {{- end }}
+          {{- end }}
+          {{- range $key, $value := .Values.olaresEnv }}
+          {{- if ne $value "" }}
+          - name: {{ $key }}
+            value: {{ $value | quote }}
+          {{- end }}
+          {{- end }}
+        ports:
+        - containerPort: {{ .Values.webuiPort }}
+          name: http
+        resources:
+          {{- toYaml .Values.resources | nindent 10 }}
+        volumeMounts:
+        - name: hermes-home
+          mountPath: /opt/data
+        - name: agent-src
+          mountPath: /home/hermeswebui/.hermes/hermes-agent
+        startupProbe:
+          {{- toYaml .Values.startupProbe | nindent 10 }}
+        readinessProbe:
+          {{- toYaml .Values.readinessProbe | nindent 10 }}
+      volumes:
+      - name: hermes-home
+        hostPath:
+          path: {{ .Values.hermesHomeHostPath }}
+          type: Directory
+      - name: agent-src
+        emptyDir: {}

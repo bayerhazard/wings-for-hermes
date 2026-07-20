@@ -1,0 +1,19 @@
+apiVersion: v2
+name: wings
+description: Wings for Hermes — AI Agent Web UI
+type: application
+version: 1.0.0
+appVersion: "0.50.43"
+keywords:
+  - ai
+  - hermes
+  - agent
+  - webui
+  - chat
+home: https://github.com/bayerhazard/wings-for-hermes
+sources:
+  - https://github.com/bayerhazard/wings-for-hermes
+  - https://github.com/nesquena/hermes-webui
+maintainers:
+  - name: Aimighty
+    email: admin@aimighty.local

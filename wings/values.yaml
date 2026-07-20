@@ -1,0 +1,51 @@
+image:
+  repository: ghcr.io/bayerhazard/wings-for-hermes
+  tag: "latest"
+  pullPolicy: IfNotPresent
+agentImage:
+  repository: beclab/harveyff-hermes-agent
+  tag: "v2026.7.1-uid1000"
+  pullPolicy: IfNotPresent
+workloads:
+  wings:
+    replicaCount: 1
+webuiPort: 8787
+hermesHomeHostPath: /olares/rootfs/userspace/pvc-userspace-aimighty-yxce0cmwdzqtayox/Data/hermesagent/home
+resources:
+  limits:
+    cpu: "4"
+    memory: 4Gi
+  requests:
+    cpu: 500m
+    memory: 512Mi
+env:
+  HERMES_HOME: /opt/data
+  HERMES_WEBUI_STATE_DIR: /opt/data/webui
+  HERMES_WEBUI_HOST: "0.0.0.0"
+  HERMES_WEBUI_PORT: "8787"
+  HERMES_WEBUI_SSE_CHUNKED: "1"
+  HERMES_WEBUI_SERVER_CWD: /opt/data
+  WANTED_UID: "1000"
+  WANTED_GID: "1000"
+  TZ: Etc/UTC
+olaresEnv:
+  HERMES_WEBUI_PASSWORD: ""
+  HERMES_WEBUI_DEFAULT_MODEL: "Agent"
+startupProbe:
+  httpGet:
+    path: /health
+    port: 8787
+  failureThreshold: 60
+  periodSeconds: 10
+  timeoutSeconds: 5
+readinessProbe:
+  httpGet:
+    path: /health
+    port: 8787
+  periodSeconds: 15
+  timeoutSeconds: 5
+  failureThreshold: 3
+kubeletCidrs:
+  - 172.20.0.0/16
+service:
+  type: ClusterIP

@@ -1,0 +1,16 @@
+.git
+.pytest_cache
+__pycache__
+*.pyc
+*.pyo
+tests/
+.env*
+# Deployment/market files — not needed at runtime
+wings/
+OlaresManifest.yaml
+icon.png
+*.tgz
+docs/
+.github/
+node_modules/
+dist/

@@ -1,0 +1,81 @@
+---
+olaresManifest.version: '0.12.0'
+olaresManifest.type: app
+apiVersion: 'v3'
+
+workloadReplicas:
+  wings: 1
+metadata:
+  name: wings
+  icon: https://raw.githubusercontent.com/bayerhazard/wings-for-hermes/main/icon.png
+  description: Wings for Hermes — AI Agent Web UI with chat, sessions, memory, skills, cron, profiles, workspaces
+  appid: wings
+  title: Wings for Hermes
+  version: '1.0.0'
+  categories:
+    - Productivity_v112
+    - Developer Tools
+entrances:
+  - name: wings
+    port: 8787
+    host: wings
+    title: Wings for Hermes
+    icon: https://raw.githubusercontent.com/bayerhazard/wings-for-hermes/main/icon.png
+    openMethod: window
+    authLevel: internal
+spec:
+  versionName: '1.0.0'
+  upgradeDescription: |
+    v1.0.0: Initial release — Wings for Hermes (fork of hermes-webui 0.50.43), standalone container with bundled agent source.
+  fullDescription: |
+    **Wings for Hermes** — AI Agent Web UI, forked from hermes-webui.
+
+    **Full feature parity with Hermes Web UI:**
+    - Chat with streaming, reasoning display, tool-call cards, approvals
+    - Sessions: create, resume, search, pin, archive, projects, export
+    - Memory: view and edit MEMORY.md / USER.md inline
+    - Skills: list, preview, create, edit, delete (106+ skills)
+    - Tasks: cron jobs — view, create, edit, run, pause/resume, run history
+    - Profiles, workspaces with file browser, todos, themes
+
+    **Standalone architecture**
+    Runs as a single container with all agent code bundled. No separate Hermes Agent dependency.
+
+    **Access**
+    Protected by Olares SSO (internal).
+  developer: Aimighty
+  website: https://github.com/bayerhazard/wings-for-hermes
+  sourceCode: https://github.com/bayerhazard/wings-for-hermes
+  locale:
+    - en-US
+  supportArch:
+    - amd64
+  limitedCpu: 4
+  requiredCpu: 1
+  requiredMemory: 2Gi
+  limitedMemory: 8Gi
+  requiredDisk: 5Gi
+  limitedDisk: 20Gi
+permission:
+  appData: true
+options:
+  apiTimeout: 0
+  dependencies:
+    - name: olares
+      version: '>=1.12.6-0'
+      type: system
+  allowMultipleInstall: false
+envs:
+  - envName: HERMES_WEBUI_PASSWORD
+    required: false
+    type: password
+    editable: true
+    applyOnChange: true
+    description: "Optional app-level password for the Web UI (in addition to Olares SSO)."
+  - envName: HERMES_WEBUI_DEFAULT_MODEL
+    required: false
+    default: "Agent"
+    type: string
+    editable: true
+    applyOnChange: true
+    description: "Default model name used for new chats."
