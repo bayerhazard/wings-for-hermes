@@ -272,6 +272,8 @@ function syncWorkspacePanelState(){
 }
 
 function openWorkspacePanel(mode='browse'){
+  // Interface mode: the workspace panel is an Advanced-only surface.
+  if(typeof getUIMode==='function'&&getUIMode()!=='advanced')return;
   if(mode==='browse'&&!S.session&&!_hasWorkspacePreviewVisible()&&!S._profileDefaultWorkspace)return;
   if(mode==='preview'&&_workspacePanelMode==='browse'){
     syncWorkspacePanelUI();
@@ -1992,6 +1994,7 @@ $('btnExportJSON').onclick=()=>{
   a.download=`wings-${S.session.session_id}.json`;a.click();
 };
 $('btnShareSession').onclick=async()=>{
+  if(typeof getUIMode==='function'&&getUIMode()!=='advanced') return;
   if(!S.session) return;
   try{
     const existing=(S.session&&S.session.share_token)?new URL(`/share/${encodeURIComponent(S.session.share_token)}`,location.origin).href:null;

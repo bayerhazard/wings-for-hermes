@@ -11,7 +11,7 @@ metadata:
   description: Wings for Hermes — AI Agent Web UI with chat, sessions, memory, skills, cron, profiles, workspaces
   appid: wings
   title: Wings for Hermes
-  version: '1.0.0'
+  version: '1.1.0'
   categories:
     - Productivity_v112
     - Developer Tools
@@ -24,9 +24,9 @@ entrances:
     openMethod: window
     authLevel: internal
 spec:
-  versionName: '1.0.0'
+  versionName: '1.1.0'
   upgradeDescription: |
-    v1.0.0: Initial release — Wings for Hermes (fork of hermes-webui 0.50.43), standalone container with bundled agent source.
+    v1.1.0: Interface modes — Basic (lean, classic Wings scope: chat, tasks, skills, core settings) and Advanced (full workbench). Switch in Settings → Preferences. Default: Basic. Also fixes two JS syntax errors from the initial rebrand that broke the UI in browsers.
   fullDescription: |
     **Wings for Hermes** — AI Agent Web UI, forked from hermes-webui.
 

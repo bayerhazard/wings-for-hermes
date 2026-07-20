@@ -1,4 +1,52 @@
 let _currentPanel = 'chat';
+
+/* ── Interface mode (Basic / Advanced) ──────────────────────────────────────
+   Basic mirrors the classic Wings scope: chat, tasks, skills and the core
+   settings sections. Advanced reveals the full workbench. The CSS rule
+   `[data-mode="basic"] …` hides the surfaces below; the guards in
+   switchPanel()/switchSettingsSection() make sure hidden surfaces can never
+   become active or fetch data. Keep both lists in sync with style.css. */
+const ADVANCED_PANELS = new Set(['kanban', 'memory', 'workspaces', 'profiles', 'todos', 'insights', 'logs']);
+const ADVANCED_SETTINGS_SECTIONS = new Set(['providers', 'extensions', 'system']);
+
+function getUIMode() {
+  try { return localStorage.getItem('wings-mode') === 'advanced' ? 'advanced' : 'basic'; }
+  catch (e) { return 'basic'; }
+}
+
+function isAdvancedPanel(name) { return ADVANCED_PANELS.has(name); }
+
+function setUIMode(mode) {
+  mode = mode === 'advanced' ? 'advanced' : 'basic';
+  try { localStorage.setItem('wings-mode', mode); } catch (e) {}
+  document.documentElement.dataset.mode = mode;
+  _syncUIModeSwitch();
+  // Rebuild the settings search index under the new mode so hidden sections
+  // neither appear as results nor remain as stale entries.
+  if (typeof _settingsIndex !== 'undefined') { _settingsIndex = null; _settingsIndexPromise = null; }
+  if (mode === 'basic') {
+    // Collapse any open advanced surface so nothing stays visible-but-hidden.
+    if (typeof closeComposerTerminal === 'function') closeComposerTerminal();
+    if (document.documentElement.dataset.workspacePanel === 'open' && typeof toggleWorkspacePanel === 'function') toggleWorkspacePanel();
+    if (ADVANCED_PANELS.has(_currentPanel)) switchPanel('chat');
+    if (ADVANCED_SETTINGS_SECTIONS.has(_currentSettingsSection)) switchSettingsSection('conversation');
+  }
+}
+
+function _syncUIModeSwitch() {
+  const m = getUIMode();
+  const basic = $('modeBasicBtn');
+  const advanced = $('modeAdvancedBtn');
+  if (basic) {
+    basic.classList.toggle('active', m === 'basic');
+    basic.setAttribute('aria-pressed', m === 'basic' ? 'true' : 'false');
+  }
+  if (advanced) {
+    advanced.classList.toggle('active', m === 'advanced');
+    advanced.setAttribute('aria-pressed', m === 'advanced' ? 'true' : 'false');
+  }
+}
+
 let _renamingAppTitlebar = false;  // guard against re-entrant rename
 let _kanbanBoard = null;
 let _kanbanLatestEventId = 0;
@@ -365,7 +413,10 @@ function _syncMobileSidebarPanelFromMainView(){
 }
 
 async function switchPanel(name, opts = {}) {
-  const nextPanel = name || 'chat';
+  let nextPanel = name || 'chat';
+  // Interface mode: advanced-only panels can never activate in Basic mode —
+  // deep links, stale restore state and programmatic callers all land on chat.
+  if (getUIMode() !== 'advanced' && ADVANCED_PANELS.has(nextPanel)) nextPanel = 'chat';
   const prevPanel = _currentPanel;
   // ── Desktop sidebar collapse toggle (rail-click only) ──
   // If the click came from a rail icon AND we're on desktop, the rail icon
@@ -7907,6 +7958,8 @@ function switchSettingsSection(name,opts){
     return;
   }
   let section=(name==='appearance'||name==='preferences'||name==='providers'||name==='plugins'||name==='extensions'||name==='system'||name==='help')?name:'conversation';
+  // Interface mode: advanced-only sections fall back to Conversation in Basic.
+  if(getUIMode()!=='advanced' && ADVANCED_SETTINGS_SECTIONS.has(section)) section='conversation';
   // Deep-linking to the Plugins pane when the tab is hidden (no plugins
   // installed, #3457) falls back to Conversation. Resolve this BEFORE toggling
   // panes/sidebar/dropdown below so every downstream selection uses the
@@ -8006,6 +8059,9 @@ async function _buildSettingsIndex() {
       settingsPaneHelp: 'help',
     };
     for (const [paneId, sectionKey] of Object.entries(sectionMap)) {
+      // Interface mode: skip advanced-only sections in Basic so search never
+      // surfaces controls the user cannot see or activate.
+      if (getUIMode() !== 'advanced' && ADVANCED_SETTINGS_SECTIONS.has(sectionKey)) continue;
       const pane = $(paneId);
       if (!pane) continue;
       pane.querySelectorAll('.settings-field').forEach(field => {
@@ -8846,6 +8902,7 @@ function _syncSettingsMaxTokensPlaceholder(field, fallbackValue){
 }
 
 async function loadSettingsPanel(){
+  _syncUIModeSwitch();
   try{
     const settings=await api('/api/settings');
     checkWebUIVersionSkew(settings);

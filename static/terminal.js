@@ -497,6 +497,8 @@ async function _startComposerTerminal(restart=false){
 
 async function toggleComposerTerminal(force){
   const next=typeof force==='boolean'?force:!TERMINAL_UI.open;
+  // Interface mode: the workspace terminal is an Advanced-only surface.
+  if(next&&typeof getUIMode==='function'&&getUIMode()!=='advanced')return;
   if(next){
     if(TERMINAL_UI.open){
       if(TERMINAL_UI.collapsed)expandComposerTerminal();

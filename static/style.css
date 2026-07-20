@@ -7235,3 +7235,56 @@ html[data-conversation-outline="enabled"] #outlineToggleBtn:not([hidden]){displa
 /* Settings field highlight (mirrors msg-question-highlight / _highlightQuestionRow pattern) */
 .settings-field-highlight { animation: settings-field-pulse 1.6s ease-out; }
 @keyframes settings-field-pulse { 0% { box-shadow: 0 0 0 0 var(--focus-ring); } 35% { box-shadow: 0 0 0 4px var(--focus-ring); } 100% { box-shadow: 0 0 0 0 rgba(0, 0, 0, 0); } }
+
+/* ── Interface mode (Basic / Advanced) ─────────────────────────────────────
+   Basic keeps the surface lean (chat, tasks, skills, core settings — the
+   classic Wings scope). Advanced reveals the full workbench. Anything with
+   the .mode-advanced class, plus the nav/settings entries listed below, is
+   hidden while <html data-mode="basic">. JS guards in panels.js mirror this
+   list so hidden surfaces can never be activated or fetch data. */
+[data-mode="basic"] .mode-advanced,
+[data-mode="basic"] [data-panel="kanban"],
+[data-mode="basic"] [data-panel="memory"],
+[data-mode="basic"] [data-panel="workspaces"],
+[data-mode="basic"] [data-panel="profiles"],
+[data-mode="basic"] [data-panel="todos"],
+[data-mode="basic"] [data-panel="insights"],
+[data-mode="basic"] [data-panel="logs"],
+[data-mode="basic"] [data-dashboard-link],
+[data-mode="basic"] [data-settings-section="providers"],
+[data-mode="basic"] [data-settings-section="extensions"],
+[data-mode="basic"] [data-settings-section="system"] {
+  display: none !important;
+}
+
+/* Segmented control for the mode switch (Preferences → Interface mode).
+   Uses the shared accent tokens so every skin renders it consistently. */
+.mode-switch {
+  display: inline-flex;
+  gap: 2px;
+  padding: 2px;
+  background: var(--code-bg);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-md);
+}
+.mode-switch-btn {
+  padding: 6px 16px;
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  font-family: inherit;
+  color: var(--muted);
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: color .15s ease, background .15s ease;
+}
+.mode-switch-btn:hover { color: var(--text); }
+.mode-switch-btn.active {
+  color: var(--accent-text);
+  background: var(--accent-bg-strong);
+}
+.mode-switch-btn:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 1px;
+}
