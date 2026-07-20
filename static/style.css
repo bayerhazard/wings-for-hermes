@@ -7293,3 +7293,152 @@ html[data-conversation-outline="enabled"] #outlineToggleBtn:not([hidden]){displa
   cursor: not-allowed;
 }
 .mode-switch-btn:disabled:hover { color: var(--muted); }
+
+/* ── Wings Activity Line ───────────────────────────────────────────────────
+   One calm line per assistant turn replacing per-event rows (tool calls as
+   individual lines, thinking as blocks). Live it shows only the current
+   action, swapped in place; settled it collapses the whole trace behind a
+   quiet summary that expands on click. The underlying event rows are left
+   untouched — they are only hidden/shown via turn-level classes, so every
+   existing expand/copy/detail affordance keeps working when expanded. */
+.wings-aline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 8px var(--msg-rail);
+  max-width: var(--msg-max);
+  padding: 4px 8px 4px 2px;
+  border-radius: 8px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--muted);
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  transition: background .15s ease;
+}
+.wings-aline:hover { background: var(--hover-bg); }
+.wings-aline:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 1px; }
+
+.wings-aline-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: var(--accent);
+  animation: wings-aline-pulse 1.6s ease-in-out infinite;
+}
+@keyframes wings-aline-pulse {
+  0%, 100% { opacity: .45; transform: scale(.85); }
+  50% { opacity: 1; transform: scale(1); }
+}
+/* Settled: no dot, quieter line */
+.assistant-turn:not(.wings-aline-live) .wings-aline-dot { display: none; }
+
+.wings-aline-verb {
+  flex-shrink: 0;
+  font-weight: 500;
+  color: var(--text);
+  transition: opacity .14s ease, transform .14s ease;
+}
+.wings-aline-preview {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--muted);
+  transition: opacity .14s ease, transform .14s ease;
+}
+.wings-aline-verb.wings-aline-swap,
+.wings-aline-preview.wings-aline-swap { opacity: 0; transform: translateY(2px); }
+
+/* Thinking: a quiet shimmer sweeping the verb — alive but never loud */
+.wings-aline[data-state="thinking"] .wings-aline-verb {
+  background: linear-gradient(90deg, var(--muted) 20%, var(--text) 50%, var(--muted) 80%);
+  background-size: 220% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  animation: wings-aline-shimmer 2.4s linear infinite;
+}
+@keyframes wings-aline-shimmer {
+  0% { background-position: 120% 0; }
+  100% { background-position: -120% 0; }
+}
+
+.wings-aline-chevron {
+  margin-left: auto;
+  flex-shrink: 0;
+  opacity: .45;
+  display: inline-flex;
+  transition: transform .2s ease;
+}
+.assistant-turn.wings-aline-open .wings-aline-chevron { transform: rotate(90deg); }
+
+/* Row visibility, driven purely by turn state. Un-managed turns (no activity
+   line, e.g. plain-text answers) are never touched. */
+.assistant-turn.wings-aline-managed:not(.wings-aline-open) .transparent-event-row {
+  display: none !important;
+}
+.assistant-turn.wings-aline-open .transparent-event-row {
+  animation: wings-aline-rows-in .28s ease;
+}
+@keyframes wings-aline-rows-in {
+  from { opacity: 0; transform: translateY(3px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* The legacy "Trace: N tools · Expand all · Collapse all" bar is replaced by
+   the activity line. */
+.transparent-event-controls { display: none !important; }
+
+/* Subtle panel-switch fade — one consistent motion language */
+.panel-view.active { animation: wings-panel-in .22s ease; }
+@keyframes wings-panel-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wings-aline-dot { animation: none; opacity: .8; }
+  .wings-aline[data-state="thinking"] .wings-aline-verb {
+    animation: none;
+    background: none;
+    -webkit-text-fill-color: currentColor;
+    color: var(--muted);
+  }
+  .wings-aline-verb, .wings-aline-preview { transition: none; }
+  .assistant-turn.wings-aline-open .transparent-event-row { animation: none; }
+  .panel-view.active { animation: none; }
+}
+
+/* ── Curated micro-interactions (Wings polish) ─────────────────────────────
+   Quiet, single-language motion: fast entrances, physical presses, no bounce. */
+
+/* Activity line entrance */
+.wings-aline { animation: wings-aline-in .24s ease; }
+@keyframes wings-aline-in {
+  from { opacity: 0; transform: translateY(2px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* Physical press feedback on icon buttons */
+.icon-btn:active,
+.panel-head-btn:active,
+.rail-btn:active { transform: scale(.94); }
+.icon-btn, .panel-head-btn, .rail-btn { transition: transform .12s ease, background .15s ease, color .15s ease, border-color .15s ease; }
+
+/* User turns: a single calm rise when the latest one lands */
+.msg-row[data-role="user"]:last-of-type { animation: wings-user-in .32s cubic-bezier(.2,.7,.3,1); }
+@keyframes wings-user-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wings-aline { animation: none; }
+  .icon-btn:active, .panel-head-btn:active, .rail-btn:active { transform: none; }
+  .msg-row[data-role="user"]:last-of-type { animation: none; }
+}

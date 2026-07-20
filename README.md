@@ -201,6 +201,10 @@ If an AI assistant is helping with install, reinstall, bootstrap, provider setup
 - **Mobile viewports (under 641px) always present the Basic scope** — the Advanced workbench is desktop UI. The stored preference is kept and applies again on larger screens.
 - **Empty-state suggestion buttons are opt-in** — hidden by default; re-enable them via Settings → Preferences → "Hide new-chat suggestions".
 
+### Activity line
+- Run activity renders as **one calm line** per answer instead of per-event rows: live it shows only the current action — tool calls swap in place, thinking shimmers with a live preview; click any time to expand the full trace.
+- Settled turns collapse the trace behind a quiet summary (`3 actions · 7s`); one click reveals every tool call and thinking block with all existing detail/copy affordances intact.
+
 ### Chat and agent
 - Streaming responses via SSE (tokens appear as they are generated)
 - Multi-provider model support -- any Hermes API provider (OpenAI, Anthropic, Google, DeepSeek, Nous Portal, OpenRouter, MiniMax, Xiaomi MiMo, Z.AI); dynamic model dropdown populated from configured keys
