@@ -48,7 +48,8 @@ def test_context_indicator_uses_post_compression_estimate():
 
     assert indicator["percent"] == "3"
     assert indicator["label"].startswith("Estimated next model context")
-    assert indicator["usage"].startswith("Estimated next model context")
+    # KPI-compact tooltip: absolute tokens as the primary line; '~' marks the estimate
+    assert indicator["usage"] == "~4096 / 128000 tokens"
 
 
 def test_post_compression_estimate_uses_pruned_request_and_preserves_last_prompt(monkeypatch):

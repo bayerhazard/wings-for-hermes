@@ -122,6 +122,7 @@ def test_rendered_apply_patch_tool_card_html_contains_diff_lines():
         "_tcAction",
         "_isMemorySave",
         "_isSkillUpdate",
+        "_toolCreatedFilePath",
         "buildToolCard",
     ]
     functions = "\n".join(_function_source(UI_JS, name) for name in function_names)

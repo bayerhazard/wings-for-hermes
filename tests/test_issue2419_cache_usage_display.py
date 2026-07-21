@@ -50,7 +50,9 @@ def test_context_indicator_surfaces_cache_hit_rate():
     assert "cacheWriteTok=usage.cache_write_tokens||0" in src
     assert "cacheHitPct=usage.cache_hit_percent" in src
     assert "t('usage_cache_hit_detail',cacheHitPct" in src
-    assert "Estimated cost: $${cost<0.01?cost.toFixed(4):cost.toFixed(2)}" in src
+    # KPI-compact tooltip: cost and cache-hit rate are merged into the second line
+    assert "if(cost) tokensText+=" in src
+    assert "if(cacheText) tokensText+=" in src
     assert "cacheHitPct=msg._turnUsage.cache_hit_percent" in src
     assert "t('usage_cached_percent',cacheHitPct)" in src
     assert "cacheHitPct!=null" in src
@@ -63,8 +65,9 @@ def test_context_indicator_surfaces_cache_hit_rate():
 def test_cache_usage_labels_are_localized():
     src = (ROOT / "static" / "i18n.js").read_text()
 
-    assert src.count("usage_cache_hit_detail:") == 15
-    assert src.count("usage_cached_percent:") == 15
+    # The Wings fork ships en+de locales (upstream had 15)
+    assert src.count("usage_cache_hit_detail:") == 2
+    assert src.count("usage_cached_percent:") == 2
     assert "usage_cache_hit_detail: 'Cache: {0}% hit ({1} read / {2} write)'" in src
     assert "usage_cached_percent: '{0}% cached'" in src
 

@@ -19,7 +19,7 @@ def test_quota_indicator_is_near_model_picker_in_composer_chrome():
     assert model_idx < quota_idx < INDEX.find('id="composerReasoningWrap"'), (
         "quota chip should sit next to the model picker, before reasoning/toolset chrome"
     )
-    assert 'class="provider-quota-chip"' in INDEX
+    assert 'class="provider-quota-chip mode-advanced"' in INDEX
     assert 'hidden' in INDEX[quota_idx - 200 : quota_idx + 400]
 
 

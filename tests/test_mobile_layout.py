@@ -273,8 +273,8 @@ def test_workspace_panel_inline_width_is_desktop_only():
         "_syncWorkspacePanelInlineWidth() must exist to keep panel width mobile-safe"
     assert "_syncWorkspacePanelInlineWidth();" in boot_js, \
         "_syncWorkspacePanelInlineWidth() must be called when viewport changes"
-    assert "localStorage.getItem('hermes-panel-w')" in boot_js, \
-        "Panel width helper must source hermes-panel-w from localStorage"
+    assert "localStorage.getItem('wings-panel-w')" in boot_js, \
+        "Panel width helper must source wings-panel-w from localStorage"
     assert "_workspacePanelEls();" in boot_js and "style.removeProperty('width')" in boot_js, \
         "Panel helper must clear inline width while in compact/mobile viewport"
 
@@ -1338,9 +1338,10 @@ def test_context_details_live_in_mobile_overflow_panel():
             f"_syncCtxIndicator must preserve upstream context logic while updating mobile context UI ({expected})"
 
     mobile_css = _composer_phone_media_block()
-    ctx_wrap = _declarations(_rule_body(mobile_css, ".ctx-indicator-wrap"))
-    assert ctx_wrap.get("display") == "none!important", \
-        "standalone context indicator must remain hidden from the phone composer row"
+    # Premium redesign: the standalone context indicator moved into the
+    # titlebar status pill, so the obsolete composer-row hide rule is gone.
+    assert ".ctx-indicator-wrap{display:none!important;}" not in mobile_css, \
+        "obsolete composer context-slot hide rule should be gone — the ring lives in the titlebar pill"
 
     context_row = _declarations(_rule_body(CSS, ".composer-mobile-context-action"))
     assert context_row.get("flex") == "1 0 100%", \
@@ -1464,7 +1465,9 @@ def test_mobile_config_kickers_have_i18n_fallbacks():
     panel_html = HTML[panel_start:panel_end]
     i18n_js = (REPO / "static" / "i18n.js").read_text(encoding="utf-8")
     en_start = i18n_js.index("  en: {")
-    en_end = i18n_js.index("\n  ru: {", en_start)
+    # The Wings fork ships en+de locales only (upstream had more); the English
+    # block ends where the German block begins.
+    en_end = i18n_js.index("\n  de: {", en_start)
     english = i18n_js[en_start:en_end]
     for key, label in (
         ("composer_mobile_workspace", "Workspace"),
@@ -1500,9 +1503,14 @@ def test_mobile_composer_primary_controls_keep_touch_friendly_sizing():
     assert send.get("width") == "44px", ".send-btn must keep 44px width on phones"
     assert send.get("height") == "44px", ".send-btn must keep 44px height on phones"
 
-    ctx_wrap = _declarations(_rule_body(mobile_css, ".ctx-indicator-wrap"))
-    assert ctx_wrap.get("display") == "none!important", \
-        "context indicator must not add a late-appearing composer-right slot on phones"
+    # Premium redesign: the context indicator lives in the titlebar status pill
+    # (kept visible on phones — it is the only context control in Basic), so the
+    # obsolete composer-slot hide rule must be gone and the pill keeps a compact ring.
+    assert ".ctx-indicator-wrap{display:none!important;}" not in mobile_css, \
+        "obsolete composer context-slot hide rule should be gone — the ring lives in the titlebar pill"
+    pill_wrap = _declarations(_rule_body(mobile_css, ".titlebar-status-pill .ctx-indicator"))
+    assert pill_wrap.get("width") == "28px", \
+        "titlebar pill context ring keeps a compact 28px control on phones"
 
     # #3062 replaced the old text badge (composerMobileCtxBadge / .composer-mobile-ctx-badge)
     # with an SVG context-usage ring overlaid on the config button. The invariant is the
