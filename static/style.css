@@ -205,8 +205,15 @@
   :root.dark[data-skin="neon"] .session-item.active{box-shadow:inset 3px 0 0 var(--accent),0 0 12px rgba(34,211,238,.1);}
   :root.dark[data-skin="neon"] .titlebar-status-pill:hover{box-shadow:0 0 10px rgba(34,211,238,.14);}
 
-  /* ── Dark mode: hide titlebar, darker session text, darker placeholder ── */
-  .app-titlebar{display:none;}
+  /* ── Hide titlebar, disable focus/active highlights, hide basic-mode stats ── */
+  .app-titlebar{display:none!important;}
+  .composer-box:focus-within{border-color:var(--border2)!important;box-shadow:none!important;}
+  .session-item.active{background:transparent!important;color:var(--muted)!important;box-shadow:none!important;}
+  .session-item.active .session-title{color:var(--text)!important;}
+  [data-mode="basic"] .transparent-turn-footer{display:none!important;}
+  [data-mode="basic"] .msg-usage-inline,
+  [data-mode="basic"] .msg-duration-inline,
+  [data-mode="basic"] .msg-gateway-inline{display:none!important;}
   :root.dark .session-item{color:color-mix(in srgb, var(--muted) 90%, #000);}
   :root.dark textarea#msg::placeholder{color:color-mix(in srgb, var(--muted) 70%, #000);opacity:1;}
   :root.dark .sidebar{border-right:none;}
@@ -406,7 +413,7 @@
   .sr-only{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0 0 0 0)!important;clip-path:inset(50%)!important;white-space:nowrap!important;border:0!important;}
   body{background:var(--bg);color:var(--text);height:100vh;height:100dvh;overflow:hidden;display:flex;flex-direction:column;}
   .layout{display:flex;width:100%;flex:1 1 auto;min-height:0;}
-  .app-titlebar{display:flex;align-items:center;justify-content:flex-start;height:44px;flex-shrink:0;background:var(--sidebar);border-bottom:1px solid var(--border);padding:0 12px;padding-top:var(--app-titlebar-safe-top);padding-left:max(12px,env(safe-area-inset-left,0));padding-right:max(12px,env(safe-area-inset-right,0));box-sizing:content-box;font-size:12px;color:var(--muted);user-select:none;-webkit-app-region:drag;position:relative;z-index:20;}
+  .app-titlebar{display:none!important;align-items:center;justify-content:flex-start;height:44px;flex-shrink:0;background:var(--sidebar);border-bottom:1px solid var(--border);padding:0 12px;padding-top:var(--app-titlebar-safe-top);padding-left:max(12px,env(safe-area-inset-left,0));padding-right:max(12px,env(safe-area-inset-right,0));box-sizing:content-box;font-size:12px;color:var(--muted);user-select:none;-webkit-app-region:drag;position:relative;z-index:20;}
   .app-titlebar-left{display:flex;align-items:center;gap:6px;min-width:0;}
   .app-titlebar-inner{display:flex;align-items:center;gap:8px;min-width:0;flex:1 1 auto;justify-content:center;}
   /* Profile switcher — optional, opt-in via settings; sits in the titlebar left flex group */

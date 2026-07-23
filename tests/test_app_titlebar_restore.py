@@ -13,11 +13,9 @@ def test_app_titlebar_no_longer_contains_tps_chip():
 
 
 def test_app_titlebar_returns_to_centered_desktop_layout():
-    # Premium redesign: the status pill (context ring + model) anchors the
-    # titlebar left, so the bar is flex-start; the title inner grows and
-    # centers its content between the pill and the right-side actions.
-    assert ".app-titlebar{display:flex;align-items:center;justify-content:flex-start;" in STYLE_CSS
-    assert ".app-titlebar-inner{display:flex;align-items:center;gap:8px;min-width:0;flex:1 1 auto;justify-content:center;}" in STYLE_CSS
+    # Titlebar is hidden (display:none!important) — the top bar was removed
+    # and the status pill was moved to the sidebar panel header.
+    assert ".app-titlebar{display:none!important;" in STYLE_CSS
 
 
 def test_app_titlebar_subtitle_shows_message_count_again():
