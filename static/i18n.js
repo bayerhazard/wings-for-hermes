@@ -1323,7 +1323,7 @@ const LOCALES = {
     save_skill: 'Save skill',
     editing: 'Editing',
     // Empty state
-    empty_title: 'What can I help with?',
+    empty_title: 'Wings for Hermes',
     empty_subtitle: 'Ask anything, run commands, explore files, or manage your scheduled tasks.',
     suggest_files: 'What files are in this workspace?',
     suggest_schedule: "What's on my schedule today?",
@@ -2648,7 +2648,7 @@ const LOCALES = {
     save_skill: 'Skill speichern',
     editing: 'Bearbeitung',
     // Empty state
-    empty_title: 'Wie kann ich helfen?',
+    empty_title: 'Wings for Hermes',
     empty_subtitle: 'Frage mich alles, führe Befehle aus, erkunde Dateien oder verwalte deine Aufgaben.',
     suggest_files: 'Welche Dateien sind in diesem Workspace?',
     suggest_schedule: 'Was steht heute auf meinem Plan?',

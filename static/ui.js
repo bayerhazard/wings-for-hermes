@@ -1594,11 +1594,7 @@ function _userMessageDomId(rawIdx){
 }
 
 function _questionJumpButtonHtml(questionRawIdx, assistantRawIdx){
-  if(typeof questionRawIdx!=='number'||questionRawIdx<0) return '';
-  const label=t('jump_to_question')||'Response';
-  const title=t('jump_to_question_label')||'Jump to the start of this response';
-  const aIdx=(typeof assistantRawIdx==='number'&&assistantRawIdx>=0)?assistantRawIdx:-1;
-  return `<button class="msg-question-jump-btn session-jump-btn session-jump-btn--inline" type="button" title="${esc(title)}" aria-label="${esc(title)}" onclick="jumpToTurnQuestion(${questionRawIdx},${aIdx})"><span aria-hidden="true">↑</span><span>${esc(label)}</span></button>`;
+  return '';
 }
 
 function _highlightQuestionRow(row){
@@ -13486,21 +13482,9 @@ function placeLiveRunStatusHost(){
   return _moveLiveRunStatusToTurnEnd(el);
 }
 function showLiveRunStatus(sid,opts){
-  if(typeof isCompactWorklogMode==='function'&&isCompactWorklogMode()){
-    _liveRunStatusSessionId=sid;
-    _liveRunStatusTokens=opts&&opts.tokens||null;
-    const el=$('liveRunStatus');
-    if(el){el.hidden=true;el.innerHTML='';}
-    return;
-  }
-  const el=placeLiveRunStatusHost();
-  if(!el)return;
-  _liveRunStatusSessionId=sid;
-  const startedAt=opts&&opts.startedAt||null;
-  _liveRunStatusTokens=opts&&opts.tokens||null;
-  el.hidden=false;
-  _renderLiveRunStatusContent(el,startedAt);
-  _startLiveRunStatusTimer(sid,startedAt);
+  const el=$('liveRunStatus');
+  if(el){el.hidden=true;el.innerHTML='';}
+  return;
 }
 function _renderLiveRunStatusContent(el,startedAt){
   if(!el)return;

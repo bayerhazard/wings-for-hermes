@@ -40,7 +40,7 @@ function setUIMode(mode) {
     if (typeof closeComposerTerminal === 'function') closeComposerTerminal();
     if (document.documentElement.dataset.workspacePanel === 'open' && typeof toggleWorkspacePanel === 'function') toggleWorkspacePanel();
     if (ADVANCED_PANELS.has(_currentPanel)) switchPanel('chat');
-    if (ADVANCED_SETTINGS_SECTIONS.has(_currentSettingsSection)) switchSettingsSection('conversation');
+    if (ADVANCED_SETTINGS_SECTIONS.has(_currentSettingsSection)) switchSettingsSection('preferences');
   }
 }
 
@@ -73,7 +73,7 @@ function _syncUIModeSwitch() {
     const onChange = function () {
       document.documentElement.dataset.mode = getUIMode();
       if (ADVANCED_PANELS.has(_currentPanel)) switchPanel('chat');
-      if (ADVANCED_SETTINGS_SECTIONS.has(_currentSettingsSection)) switchSettingsSection('conversation');
+      if (ADVANCED_SETTINGS_SECTIONS.has(_currentSettingsSection)) switchSettingsSection('preferences');
       if (document.documentElement.dataset.workspacePanel === 'open' && typeof toggleWorkspacePanel === 'function') toggleWorkspacePanel();
       _syncUIModeSwitch();
     };
@@ -7555,8 +7555,8 @@ let _settingsSkinOnOpen = null; // track skin at open time for discard revert
 let _settingsFontSizeOnOpen = null; // track font size at open time for discard revert
 let _settingsHermesDefaultModelOnOpen = '';
 let _settingsHermesDefaultModelProviderOnOpen = null;
-let _settingsSection = 'conversation';
-let _currentSettingsSection = 'conversation';
+let _settingsSection = 'preferences';
+let _currentSettingsSection = 'preferences';
 let _settingsIndex = null;
 let _settingsIndexPromise = null;
 let _settingsSearchSeq = 0;
@@ -8001,9 +8001,9 @@ function switchSettingsSection(name,opts){
     _settingsSection = name;
     return;
   }
-  let section=(name==='appearance'||name==='preferences'||name==='providers'||name==='plugins'||name==='extensions'||name==='system'||name==='help')?name:'conversation';
+  let section=(name==='appearance'||name==='preferences'||name==='providers'||name==='plugins'||name==='extensions'||name==='system'||name==='help')?name:'preferences';
   // Interface mode: advanced-only sections fall back to Conversation in Basic.
-  if(getUIMode()!=='advanced' && ADVANCED_SETTINGS_SECTIONS.has(section)) section='conversation';
+  if(getUIMode()!=='advanced' && ADVANCED_SETTINGS_SECTIONS.has(section)) section='preferences';
   // Deep-linking to the Plugins pane when the tab is hidden (no plugins
   // installed, #3457) falls back to Conversation. Resolve this BEFORE toggling
   // panes/sidebar/dropdown below so every downstream selection uses the
@@ -8011,7 +8011,7 @@ function switchSettingsSection(name,opts){
   // but empty. (#3457)
   if(section==='plugins'){
     const pluginsTabBtn=document.querySelector('[data-settings-section="plugins"]');
-    if(pluginsTabBtn && pluginsTabBtn.style.display==='none') section='conversation';
+    if(pluginsTabBtn && pluginsTabBtn.style.display==='none') section='preferences';
   }
   _settingsSection=section;
   _currentSettingsSection=section;
