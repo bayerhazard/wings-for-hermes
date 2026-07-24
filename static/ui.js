@@ -6347,17 +6347,18 @@ document.addEventListener('DOMContentLoaded',function(){
   if(!wrap||!tooltip)return;
   const card=document.getElementById('titlebarStatusPill');
   if(card){
-    card.addEventListener('click',function(e){
-      // Only open context menu when clicking the ring area, not the model text
+    // Hover-only tooltip — no click action on the ring
+    card.addEventListener('mouseenter',function(e){
       if(e.target.closest('.ctx-gauge-model')) return;
-      openComposerContextMenu(e);
+      tooltip.classList.add('ctx-tooltip-active');
+      tooltip.setAttribute('aria-hidden','false');
+    });
+    card.addEventListener('mouseleave',function(e){
+      if(e.target.closest('.ctx-gauge-model')) return;
+      tooltip.classList.remove('ctx-tooltip-active');
+      tooltip.setAttribute('aria-hidden','true');
     });
   }
-  // Close on outside tap
-  document.addEventListener('click',function(){
-    tooltip.classList.remove('ctx-tooltip-active');
-    tooltip.setAttribute('aria-hidden','true');
-  },{passive:true});
   // Prevent tooltip click from closing itself
   tooltip.addEventListener('click',function(e){e.stopPropagation();});
 });

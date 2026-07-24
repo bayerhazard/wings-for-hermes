@@ -27,8 +27,8 @@
 <script>(function(){try{var t=localStorage.getItem('wings-theme')||'dark';if(t==='system')t=window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';var c=t==='dark'?'#0A0A0A':'#F5F8FA';document.querySelectorAll('meta[name="theme-color"]').forEach(function(m){m.setAttribute('content',c);m.removeAttribute('media');});}catch(e){}})()</script>
 <script>(function(){try{var adv=localStorage.getItem('wings-mode')==='advanced';if(!window.matchMedia('(min-width:641px)').matches)adv=false;var wp=(adv&&localStorage.getItem('wings-workspace-panel')==='open')?'open':'closed';document.documentElement.dataset.workspacePanel=wp;}catch(e){document.documentElement.dataset.workspacePanel='closed';}})()</script>
 <script>(function(){try{if(localStorage.getItem('wings-sidebar-collapsed')==='1')document.documentElement.dataset.sidebarCollapsed='1';}catch(e){}})()</script>
-<link rel="preload" href="static/pwa-startup.js?v=__WEBUI_VERSION__&w=146" as="script">
-<script src="static/pwa-startup.js?v=__WEBUI_VERSION__&w=146"></script>
+<link rel="preload" href="static/pwa-startup.js?v=__WEBUI_VERSION__&w=150" as="script">
+<script src="static/pwa-startup.js?v=__WEBUI_VERSION__&w=150"></script>
 <script>window.__HERMES_CONFIG__={maxUploadBytes:__MAX_UPLOAD_BYTES__,csrfToken:__CSRF_TOKEN_JSON__};</script>
 <script>window.__HERMES_WEBUI_BUNDLE_VERSION__='__WEBUI_VERSION__';</script>
 <script>(function(){
@@ -70,7 +70,7 @@
     };
   }
 })()</script>
-<link rel="stylesheet" href="static/style.css?v=__WEBUI_VERSION__&w=146">
+<link rel="stylesheet" href="static/style.css?v=__WEBUI_VERSION__&w=150">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.css" integrity="sha384-LJcOxlx9IMbNXDqJ2axpfEQKkAYbFjJfhXexLfiRJhjDU81mzgkiQq8rkV0j6dVh" crossorigin="anonymous">
   <!-- KaTeX math rendering CSS (loaded eagerly from vendored assets to prevent font CSP noise) -->
   <link rel="stylesheet" href="static/vendor/katex/0.16.22/katex.min.css">
@@ -98,7 +98,7 @@
   .ctx-gauge-card:hover{border-color:var(--accent);background:var(--hover-bg);}
   .ctx-gauge-ring-wrap{width:32px;height:32px;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
   .ctx-gauge-svg{width:32px;height:32px;transform:rotate(-90deg);}
-  .ctx-gauge-track{fill:none;stroke:var(--border);stroke-width:3;}
+  .ctx-gauge-track{fill:none;stroke:color-mix(in srgb, var(--muted) 20%, transparent);stroke-width:3;}
   .ctx-gauge-arc{
     fill:none;stroke:var(--success);stroke-width:3;stroke-linecap:round;
     stroke-dasharray:91.106;stroke-dashoffset:91.106;
@@ -118,6 +118,19 @@
   }
   .ctx-gauge-card .ctx-tooltip{position:absolute;top:calc(100% + 6px);left:0;}
   .ctx-gauge-card .model-dropdown{top:calc(100% + 6px);bottom:auto;left:0;border-radius:14px;box-shadow:var(--shadow-lg);}
+  /* ── Sidebar footer search ── */
+  .sidebar-footer-search{display:flex;align-items:center;gap:4px;flex:1;min-width:0;height:28px;padding:0 6px;border-radius:8px;background:var(--surface);border:1px solid var(--border);transition:border-color .15s;}
+  .sidebar-footer-search:focus-within{border-color:var(--accent);}
+  .sidebar-footer-search-icon{width:13px;height:13px;flex-shrink:0;color:var(--muted);opacity:.5;}
+  .sidebar-footer-search-input{flex:1;min-width:0;border:none;outline:none;background:transparent;color:var(--text);font-size:12px;font-family:inherit;}
+  .sidebar-footer-search-input::placeholder{color:var(--muted);opacity:.5;}
+  .sidebar-footer-search-clear{flex-shrink:0;border:none;background:none;color:var(--muted);cursor:pointer;padding:2px;display:flex;align-items:center;}
+  .sidebar-footer-search-clear svg{width:12px;height:12px;}
+  /* ── Basic mode: hide project pills and session color dots ── */
+  [data-mode="basic"] .session-tag,
+  [data-mode="basic"] .session-project-dot,
+  [data-mode="basic"] .project-chip,
+  [data-mode="basic"] .color-dot{display:none!important;}
   @media(max-width:640px){.ctx-gauge-card{display:none!important;}}
   </style>
   <!-- streaming-markdown: incremental DOM-building markdown parser for live streams -->
@@ -145,7 +158,7 @@
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', function() {
-        navigator.serviceWorker.register('sw.js?v=__WEBUI_VERSION__&w=146').catch(function(err) {
+        navigator.serviceWorker.register('sw.js?v=__WEBUI_VERSION__&w=150').catch(function(err) {
           console.warn('[pwa] Service worker registration failed:', err);
         });
       });
@@ -292,7 +305,6 @@
           </button>
         </div>
       </div>
-      <div class="session-search sidebar-search"><div class="session-search-field"><svg class="sidebar-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg><input id="sessionSearch" placeholder="Filter conversations..." data-i18n-placeholder="filter_conversations" oninput="filterSessions()" autocomplete="off"><button type="button" id="sessionSearchClear" class="session-search-clear has-tooltip has-tooltip--bottom-right" aria-label="Clear conversation filter" data-tooltip="Clear conversation filter" onclick="clearSessionSearch()" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div></div>
       <div class="session-list" id="sessionList"></div>
     </div>
     <!-- Tasks (cron) panel -->
@@ -485,6 +497,7 @@
     <button class="sidebar-footer-btn has-tooltip" type="button" data-panel="memory" onclick="sidebarFooterNav('memory')" data-tooltip="Memory" data-i18n-title="tab_memory" aria-label="Memory"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5V19A9 3 0 0 0 21 19V5"/><path d="M3 12A9 3 0 0 0 21 12"/></svg></button>
     <button class="sidebar-footer-btn has-tooltip" type="button" data-panel="insights" onclick="sidebarFooterNav('insights')" data-tooltip="Insights" data-i18n-title="tab_insights" aria-label="Insights"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg></button>
     <span class="sidebar-footer-spacer" aria-hidden="true"></span>
+    <div class="sidebar-footer-search" id="sessionSearchWrap"><svg class="sidebar-footer-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg><input id="sessionSearch" class="sidebar-footer-search-input" placeholder="Filter…" data-i18n-placeholder="filter_conversations" oninput="filterSessions()" autocomplete="off"><button type="button" id="sessionSearchClear" class="sidebar-footer-search-clear" aria-label="Clear conversation filter" data-tooltip="Clear conversation filter" onclick="clearSessionSearch()" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
     <button class="sidebar-footer-btn has-tooltip" type="button" data-panel="settings" onclick="sidebarFooterNav('settings')" data-tooltip="Settings" data-i18n-title="tab_settings" aria-label="Settings"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06-.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
   </div>
   <div class="resize-handle" id="sidebarResize"></div>
@@ -1791,21 +1804,21 @@
   </div>
 </div>
 <div class="toast" id="toast"></div>
-<script src="static/i18n.js?v=__WEBUI_VERSION__&w=146" defer></script>
-<script src="static/icons.js?v=__WEBUI_VERSION__&w=146" defer></script>
-<script src="static/assistant_turn_anchors.js?v=__WEBUI_VERSION__&w=146" defer></script>
-<script src="static/ui.js?v=__WEBUI_VERSION__&w=146" defer></script>
-<script src="static/workspace.js?v=__WEBUI_VERSION__&w=146" defer></script>
-<script src="static/terminal.js?v=__WEBUI_VERSION__&w=146" defer></script>
-<script src="static/sessions.js?v=__WEBUI_VERSION__&w=146" defer></script>
-<script src="static/commands.js?v=__WEBUI_VERSION__&w=146" defer></script>
-<script src="static/messages.js?v=__WEBUI_VERSION__&w=146" defer></script>
-<script src="static/extension_settings.js?v=__WEBUI_VERSION__&w=146" defer></script>
-<script src="static/panels.js?v=__WEBUI_VERSION__&w=146" defer></script>
-<script src="static/onboarding.js?v=__WEBUI_VERSION__&w=146" defer></script>
-<script src="static/boot.js?v=__WEBUI_VERSION__&w=146" defer></script>
-<script src="static/outline.js?v=__WEBUI_VERSION__&w=146" defer></script>
-<script src="static/activityline.js?v=__WEBUI_VERSION__&w=146" defer></script>
+<script src="static/i18n.js?v=__WEBUI_VERSION__&w=150" defer></script>
+<script src="static/icons.js?v=__WEBUI_VERSION__&w=150" defer></script>
+<script src="static/assistant_turn_anchors.js?v=__WEBUI_VERSION__&w=150" defer></script>
+<script src="static/ui.js?v=__WEBUI_VERSION__&w=150" defer></script>
+<script src="static/workspace.js?v=__WEBUI_VERSION__&w=150" defer></script>
+<script src="static/terminal.js?v=__WEBUI_VERSION__&w=150" defer></script>
+<script src="static/sessions.js?v=__WEBUI_VERSION__&w=150" defer></script>
+<script src="static/commands.js?v=__WEBUI_VERSION__&w=150" defer></script>
+<script src="static/messages.js?v=__WEBUI_VERSION__&w=150" defer></script>
+<script src="static/extension_settings.js?v=__WEBUI_VERSION__&w=150" defer></script>
+<script src="static/panels.js?v=__WEBUI_VERSION__&w=150" defer></script>
+<script src="static/onboarding.js?v=__WEBUI_VERSION__&w=150" defer></script>
+<script src="static/boot.js?v=__WEBUI_VERSION__&w=150" defer></script>
+<script src="static/outline.js?v=__WEBUI_VERSION__&w=150" defer></script>
+<script src="static/activityline.js?v=__WEBUI_VERSION__&w=150" defer></script>
 
 <!-- Kanban: create/rename board modal — used for both flows. -->
 <div class="kanban-modal-overlay" id="kanbanBoardModal" hidden onclick="if(event.target===this)closeKanbanBoardModal()">
