@@ -1,0 +1,3 @@
+[pytest11]
+pytest-shard = pytest_shard.pytest_shard
+

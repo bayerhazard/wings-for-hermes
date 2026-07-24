@@ -8001,6 +8001,10 @@ function switchSettingsSection(name,opts){
     _settingsSection = name;
     return;
   }
+  const sidebarSearch=$('kanbanSearch');
+  if(sidebarSearch){
+    sidebarSearch.placeholder=_currentPanel==='settings'?'Einstellungen durchsuchen':'Chats durchsuchen';
+  }
   let section=(name==='appearance'||name==='preferences'||name==='providers'||name==='plugins'||name==='extensions'||name==='system'||name==='help')?name:'preferences';
   // Interface mode: advanced-only sections fall back to Conversation in Basic.
   if(getUIMode()!=='advanced' && ADVANCED_SETTINGS_SECTIONS.has(section)) section='preferences';
@@ -8525,6 +8529,8 @@ function _appearancePayloadFromUi(){
     show_titlebar_profile: !!($('settingsShowTitlebarProfile')||{}).checked,
     worklog_details_expanded_default: worklogDetailsExpanded,
     activity_feed_expanded_default: worklogDetailsExpanded,
+    user_avatar_initial: ($('settingsUserAvatarInitial')||{}).value||'',
+    user_avatar_color: ($('settingsUserAvatarColor')||{}).value||'#C9A45C',
     ..._composerControlVisibilityPayload(),
     composer_control_order: _getComposerControlOrder(),
     hidden_tabs: _getHiddenTabs(),
@@ -8574,9 +8580,17 @@ function _setAppearanceAutosaveStatus(state){
 
 function _rememberAppearanceSaved(payload){
   if(!payload) return;
-  _settingsThemeOnOpen=payload.theme||localStorage.getItem('hermes-theme')||'dark';
+_settingsThemeOnOpen=payload.theme||localStorage.getItem('hermes-theme')||'dark';
   _settingsSkinOnOpen=payload.skin||localStorage.getItem('hermes-skin')||'default';
   _settingsFontSizeOnOpen=payload.font_size||localStorage.getItem('hermes-font-size')||'default';
+  if(payload.user_avatar_initial) localStorage.setItem('wings_user_avatar_initial',payload.user_avatar_initial);
+  if(payload.user_avatar_color) localStorage.setItem('wings_user_avatar_color',payload.user_avatar_color);
+  if(payload.user_avatar_color){
+    const root=document.documentElement;
+    if(root) root.style.setProperty('--user-avatar-color',payload.user_avatar_color);
+  }
+  if(payload.user_avatar_initial) localStorage.setItem('wings_user_avatar_initial',payload.user_avatar_initial);
+  if(payload.user_avatar_color) localStorage.setItem('wings_user_avatar_color',payload.user_avatar_color);
 }
 
 function _scheduleAppearanceAutosave(){

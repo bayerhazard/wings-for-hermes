@@ -10250,16 +10250,33 @@ function isTpsDisplayEnabled(){
 }
 function _assistantRoleHtml(tsTitle='', tpsText=''){
   const _bn=assistantDisplayName();
-  const tps=(isTpsDisplayEnabled()&&tpsText)?`<span class="msg-tps-inline" title="Tokens per second">${esc(tpsText)}</span>`:'';
   const avatar=_getAssistantAvatarHtml();
-  return `${avatar}${tps}`;
+  return `${avatar}`;
 }
 function _setAssistantTurnTps(turn, tpsText=''){
   if(!turn) return;
+  const text=String(tpsText||'').trim();
+  // Look for tps chip in the footer of the first visible segment (or the turn itself for live)
+  const seg=turn.querySelector('.assistant-segment:not([hidden]), .assistant-segment[data-live-assistant="1"]');
+  if(seg){
+    const foot=seg.querySelector('.msg-foot');
+    if(foot){
+      let chip=foot.querySelector('.msg-tps-inline');
+      if(!text){if(chip) chip.remove();return;}
+      if(!chip){
+        chip=document.createElement('span');
+        chip.className='msg-tps-inline';
+        chip.title='Tokens per second';
+        foot.insertBefore(chip, foot.firstChild);
+      }
+      chip.textContent=text;
+      return;
+    }
+  }
+  // Fallback: add to role area (legacy/compatibility)
   const role=turn.querySelector('.msg-role.assistant');
   if(!role) return;
   let chip=role.querySelector('.msg-tps-inline');
-  const text=String(tpsText||'').trim();
   if(!text){if(chip) chip.remove();return;}
   if(!chip){
     chip=document.createElement('span');
@@ -15422,7 +15439,8 @@ function renderMessages(options){
     const questionJumpBtn = (_qJumpTarget!==undefined&&_qJumpTarget!==null)
       ? _questionJumpButtonHtml(_qJumpTarget, assistantRawIdxByQuestionRawIdx.get(_qJumpTarget)??rawIdx)
       : '';
-    const footHtml = `<div class="msg-foot">${timeHtml}<span class="msg-actions">${editBtn}${ttsBtn}${forkBtn}${copyBtn}${retryBtn}</span>${questionJumpBtn}</div>`;
+    const assistantTpsHtml = (!isUser && isTpsDisplayEnabled() && m._turnTps) ? `<span class="msg-tps-inline" title="Tokens per second">${_formatTurnTps(m._turnTps)}</span>` : '';
+    const footHtml = `<div class="msg-foot">${assistantTpsHtml}${timeHtml}<span class="msg-actions">${editBtn}${ttsBtn}${forkBtn}${copyBtn}${retryBtn}</span>${questionJumpBtn}</div>`;
 
     if(_isContextCompactionMessage(m)){
       continue;
@@ -17043,10 +17061,10 @@ function _timeAgo(timestamp){
 function _getUserAvatarHtml(){
   const profile=S.activeProfile||'default';
   const initial=profile==='default'?'U':profile.charAt(0).toUpperCase();
-  const name=profile==='default'?'User':profile.charAt(0).toUpperCase()+profile.slice(1);
+  const storedInitial=localStorage.getItem('wings_user_avatar_initial');
+  const displayInitial=storedInitial||initial;
   return `<div class="avatar-wrap">
-    <div class="avatar avatar-user">${initial}</div>
-    <div class="avatar-name">${esc(name)}</div>
+    <div class="avatar avatar-user" style="color:${_getAvatarColor()}">${displayInitial}</div>
   </div>`;
 }
 
@@ -17054,9 +17072,13 @@ function _getAssistantAvatarHtml(){
   const bn=assistantDisplayName();
   const initial=bn.charAt(0).toUpperCase();
   return `<div class="avatar-wrap">
-    <div class="avatar avatar-assistant">${initial}</div>
-    <div class="avatar-name">${esc(bn)}</div>
+    <div class="avatar avatar-assistant" style="color:${_getAvatarColor()}">${initial}</div>
   </div>`;
+}
+
+function _getAvatarColor(){
+  const stored=localStorage.getItem('wings_user_avatar_color');
+  return stored||'#C9A45C';
 }
 
 function buildToolCard(tc){
