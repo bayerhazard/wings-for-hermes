@@ -5303,11 +5303,7 @@ function openComposerContextMenu(e){
     e.preventDefault();
     e.stopPropagation();
   }
-  const tooltip=$('ctxTooltip');
-  if(tooltip){
-    tooltip.classList.remove('ctx-tooltip-active');
-    tooltip.setAttribute('aria-hidden','true');
-  }
+ 
   openMobileComposerConfig();
 }
 window.openComposerContextMenu=openComposerContextMenu;
@@ -6312,64 +6308,13 @@ function _syncCtxIndicator(usage){
     const shortName=modelName.split('/').pop()||modelName;
     if(modelLabel.textContent!==shortName) modelLabel.textContent=shortName;
   }
-  // ── Tooltip (bleibt erhalten) ──
-  const usageLine=$('ctxTooltipUsage');
-  const tokensLine=$('ctxTooltipTokens');
-  const thresholdLine=$('ctxTooltipThreshold');
-  const costLine=$('ctxTooltipCost');
-  const compressWrap=$('ctxTooltipCompress');
-  const compressBtn=$('ctxCompressBtn');
-  const compressText=pct>=75?t('ctx_compress_action'):(pct>=50?t('ctx_compress_hint'):'');
-  if(compressWrap) compressWrap.style.display=compressText?'':'none';
-  _setCtxCompressButton(compressBtn,compressText);
-  const cacheHitPct=usage.cache_hit_percent;
-  const cacheText=cacheHitPct!=null?t('usage_cache_hit_detail',cacheHitPct,_fmtTokens(cacheReadTok),_fmtTokens(cacheWriteTok)):'';
-  const hasExplicitCtx=!!usage.context_length;
-  let label=hasPromptTok?`Context window ${pct}% used`:`${_fmtTokens(totalTok)} tokens used`;
-  if(!hasExplicitCtx&&hasPromptTok) label+=' (est. 128K)';
-  if(cost) label+=` \u00b7 $${cost<0.01?cost.toFixed(4):cost.toFixed(2)}`;
-  if(cacheText) label+=` \u00b7 ${cacheText}`;
-  card.setAttribute('aria-label',label);
-  const usageText=hasPromptTok?`${hasPostCompressionEstimate?'~':''}${_fmtTokens(contextPromptTok)} / ${_fmtTokens(ctxWindow)} tokens`:`${_fmtTokens(totalTok)} tokens used`;
-  let tokensText=hasPromptTok?(overflowed?`${rawPct}% used — context exceeded`:`${pct}% used`):`In: ${_fmtTokens(usage.input_tokens||0)} \u00b7 Out: ${_fmtTokens(usage.output_tokens||0)}`;
-  if(cost) tokensText+=` \u00b7 $${cost<0.01?cost.toFixed(4):cost.toFixed(2)}`;
-  if(cacheText) tokensText+=` \u00b7 ${cacheText}`;
-  if(usageLine) usageLine.textContent=usageText;
-  if(tokensLine) tokensLine.textContent=tokensText;
-  if(thresholdLine){thresholdLine.style.display='none';thresholdLine.textContent='';}
-  if(costLine){costLine.style.display='none';costLine.textContent='';}
-  const thresholdText='';
-  const costText='';
+  
   _syncMobileCtxDisplay({
     visible:true,hasPromptTok,pct,label,usageText,tokensText,thresholdText,costText,compressText
   });
 }
 
-// ── Touch support: toggle context tooltip on tap (#524) ──
-// Hover/focus still exposes the compact tooltip, but a click/tap now opens the
-// shared composer config menu used by the phone footer so the richer context
-// details and compress action have one interaction path.
-document.addEventListener('DOMContentLoaded',function(){
-  const wrap=document.getElementById('ctxIndicatorWrap');
-  const tooltip=document.getElementById('ctxTooltip');
-  if(!wrap||!tooltip)return;
-  const card=document.getElementById('titlebarStatusPill');
-  if(card){
-    // Hover-only tooltip — no click action on the ring
-    card.addEventListener('mouseenter',function(e){
-      if(e.target.closest('.ctx-gauge-model')) return;
-      tooltip.classList.add('ctx-tooltip-active');
-      tooltip.setAttribute('aria-hidden','false');
-    });
-    card.addEventListener('mouseleave',function(e){
-      if(e.target.closest('.ctx-gauge-model')) return;
-      tooltip.classList.remove('ctx-tooltip-active');
-      tooltip.setAttribute('aria-hidden','true');
-    });
-  }
-  // Prevent tooltip click from closing itself
-  tooltip.addEventListener('click',function(e){e.stopPropagation();});
-});
+
 
 function _setMessageScrollToBottom(){
   const el=$('messages');
@@ -10306,7 +10251,8 @@ function isTpsDisplayEnabled(){
 function _assistantRoleHtml(tsTitle='', tpsText=''){
   const _bn=assistantDisplayName();
   const tps=(isTpsDisplayEnabled()&&tpsText)?`<span class="msg-tps-inline" title="Tokens per second">${esc(tpsText)}</span>`:'';
-  return `<div class="msg-role assistant" ${tsTitle?`title="${esc(tsTitle)}"`:''}><div class="role-icon assistant">${esc(_bn.charAt(0).toUpperCase())}</div><span class="msg-role-name">${esc(_bn)}</span>${tps}</div>`;
+  const avatar=_getAssistantAvatarHtml();
+  return `${avatar}${tps}`;
 }
 function _setAssistantTurnTps(turn, tpsText=''){
   if(!turn) return;
@@ -15523,7 +15469,7 @@ function renderMessages(options){
       let row=_msgNodeRecycleEnabled?_recycleStash.get(rawIdx):null;
       if(row&&(!row.classList.contains('msg-row')||row.classList.contains('assistant-turn'))) row=null;
       const newRawText=String(displayContent).trim();
-      const nextRowHtml=`${filesHtml}<div class="msg-body">${bodyHtml}</div>${footHtml}`;
+      const nextRowHtml=`${_getUserAvatarHtml()}<div class="msg-body">${filesHtml}${bodyHtml}</div>${footHtml}`;
       if(row){
         row.className='msg-row';
         row.id=_userMessageDomId(rawIdx);
@@ -17066,6 +17012,53 @@ function _toolCreatedFilePath(tc){
   return (typeof p==='string'&&p.trim())?p.trim():'';
 }
 
+function _renderDownloadCard(path,tc){
+  const createdUrl=_workspaceRouteForPath?_workspaceRouteForPath(path,'raw',{download:true}):'';
+  if(!createdUrl) return '';
+  const dlLabel=(typeof t==='function')?t('download_file','Download file'):'Download file';
+  const openLabel=(typeof t==='function')?t('open_workspace','Open in Workspace'):'Open in Workspace';
+  const openUrl=_workspaceRouteForPath?_workspaceRouteForPath(path,'raw'):'';
+  const fname=path.split('/').pop()||path;
+  const size=tc.args&&tc.args.size?`${tc.args.size} KB`:'';
+  const createdTime=tc.timestamp?` · ${_timeAgo(tc.timestamp)}`:'';
+  return `<div class="download-card">
+    <div class="download-card-header">${esc(fname)}${size?`<span class="download-card-size">${esc(size)}</span>`:''}</div>
+    <div class="download-card-meta">${size} · erstellt${createdTime}</div>
+    <div class="download-card-actions">
+      <a class="download-card-btn" href="${esc(createdUrl)}" download title="${esc(dlLabel)}" aria-label="${esc(dlLabel)}">${esc(dlLabel)}</a>
+      ${openUrl?`<a class="download-card-btn" href="${esc(openUrl)}" target="_blank" rel="noopener" title="${esc(openLabel)}" aria-label="${esc(openLabel)}">${esc(openLabel)}</a>`:''}
+    </div>
+  </div>`;
+}
+
+function _timeAgo(timestamp){
+  const now=Date.now()/1000;
+  const diff=now-timestamp;
+  if(diff<60) return 'gerade eben';
+  if(diff<3600) return `vor ${Math.floor(diff/60)} Minuten`;
+  if(diff<86400) return `vor ${Math.floor(diff/3600)} Stunden`;
+  return `vor ${Math.floor(diff/86400)} Tagen`;
+}
+
+function _getUserAvatarHtml(){
+  const profile=S.activeProfile||'default';
+  const initial=profile==='default'?'U':profile.charAt(0).toUpperCase();
+  const name=profile==='default'?'User':profile.charAt(0).toUpperCase()+profile.slice(1);
+  return `<div class="avatar-wrap">
+    <div class="avatar avatar-user">${initial}</div>
+    <div class="avatar-name">${esc(name)}</div>
+  </div>`;
+}
+
+function _getAssistantAvatarHtml(){
+  const bn=assistantDisplayName();
+  const initial=bn.charAt(0).toUpperCase();
+  return `<div class="avatar-wrap">
+    <div class="avatar avatar-assistant">${initial}</div>
+    <div class="avatar-name">${esc(bn)}</div>
+  </div>`;
+}
+
 function buildToolCard(tc){
   const row=document.createElement('div');
   row.className='tool-card-row';
@@ -17117,6 +17110,7 @@ function buildToolCard(tc){
   const createdUrl=createdPath&&typeof _workspaceRouteForPath==='function'?_workspaceRouteForPath(createdPath,'raw',{download:true}):'';
   const dlLabel=(typeof t==='function')?t('download_file','Download file'):'Download file';
   const downloadBtn=createdUrl?`<a class="tool-card-download" href="${esc(createdUrl)}" download title="${esc(dlLabel)}" aria-label="${esc(dlLabel)}" onclick="event.stopPropagation()">${li('download',12)}</a>`:'';
+  const downloadCard=createdUrl?_renderDownloadCard(createdPath,tc):'';
   const argsEntries=tc.args&&Object.keys(tc.args).length?Object.entries(tc.args):[];
   const visibleArgs=(detailLeadText&&toolKind==='shell')?[]:argsEntries;
   row.innerHTML=`
@@ -17143,7 +17137,7 @@ function buildToolCard(tc){
           ${hasMore?`<button class="tool-card-more" data-full="${esc(tc.snippet||'').replace(/"/g,'&quot;')}" data-short="${esc(displaySnippet||'').replace(/"/g,'&quot;')}" data-is-diff="${tc.is_diff||_snippetLooksLikeDiff(displaySnippet)?1:0}" data-more-label="${esc(moreLabel)}" data-less-label="${esc(lessLabel)}" onclick="event.stopPropagation();_toggleToolDiff(this)">${esc(moreLabel)}</button>`:''}
         </div>`:''}
       </div>`:''}
-    </div>`;
+    </div>${downloadCard}`;
   row._tcData = tc;
   // Durable classification flags: _tcData (a JS property) does NOT survive the
   // outerHTML/innerHTML snapshot+restore the live tool-call group uses on session

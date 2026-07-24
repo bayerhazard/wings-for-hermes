@@ -6,6 +6,11 @@
 
 ## P0 — Blocking / Häufige Frustration
 
+### [x] Gauge-Tooltip hat transparenten Hintergrund (unleserlich)
+**Status:** **GELOST in v1.6.0** — Tooltip komplett entfernt (HTML+JS+CSS).
+**Details:** `.ctx-tooltip` wurde aus `index.html`, `ui.js` und `style.css` entfernt. Der Ring zeigt nur noch die Token-Anzeige.
+**Deployed:** v1.6.0
+
 ### [ ] Timeout-Toast bei aktivem Stream störend
 **Status:** Smart-Timeout in v1.5.6 implementiert (unterdrückt Toast wenn Stream aktiv), aber noch nicht robust genug.
 **Details:** Bei sehr langen Antworten (500+ tokens) kommt es vor, dass der Server langsam antwortet, der Stream aber noch aktiv ist. Der aktuelle Fix prüft `S.activeStreamId` — aber das reicht nicht für alle Fälle (z.B. wenn der Stream pausiert und dann weitermacht).
@@ -18,6 +23,21 @@
 ---
 
 ## P1 — Theme-Konsistenz (Dark Mode)
+
+### [x] Chatbubble-Hintergründe haben Akzentfarben
+**Status:** **GELOST in v1.6.0** — User-Bubbles jetzt neutral (Anthrazit in Dark, Surface in Light).
+**Details:** Globale CSS-Override am Ende von `style.css` setzt `--user-bubble-bg` auf `var(--chat-bg)` (dark) oder `var(--surface)` (light). Keine Gold/Blau-Farben mehr in User-Nachrichten.
+**Deployed:** v1.6.0
+
+### [x] Avatar-Konzept implementiert
+**Status:** **GELOST in v1.6.0** — Avatare neben Nachrichten (User rechtsbündig, Hermes linksbündig).
+**Details:** Avatare (32px Kreis, Anthrazit-Hintergrund, goldener Rand) stehen jetzt neben den Nachrichten. User-Nachrichten sind rechtsbündig mit Avatar rechts, Hermes-Antworten linksbündig mit Avatar links. Alte `msg-role`-Leiste ausgeblendet.
+**Deployed:** v1.6.0
+
+### [x] Smart Download-Card für erstellte Dateien
+**Status:** **GELOST in v1.6.0** — Download-Card nach file-creating tool calls.
+**Details:** Nach write_file/create_file/save_file/edit_file tool calls wird eine Download-Card gerendert mit Filename, Size, Timestamp und zwei Buttons: "Download file" + "Open in Workspace". Keine Emojis/Symbole, nur Text.
+**Deployed:** v1.6.0
 
 ### [ ] Delete-Confirm-Dialog passt nicht zum Dark-Theme
 **Status:** Teilweise gefixt in v1.5.6 (`:root.dark .app-dialog` Override). Muss verifiziert werden.
@@ -33,7 +53,6 @@
 - `app-dialog` (Confirm/Prompt dialogs)
 - `app-dialog-overlay` (Overlay-Hintergrund)
 - `model-dropdown` (Model-Auswahl)
-- `ctx-tooltip` (Gauge-Tooltip)
 - `composer-model-select` (Model-Picker)
 - Extensions-Dialoge
 - Settings-Overlays
@@ -112,6 +131,7 @@
 
 | Version | Datum | Thema | Deployed |
 |---------|-------|-------|----------|
+| v1.6.0 | 2026-07-24 | Gauge-Tooltip löschen, Smart Download-Card, Avatar-Konzept, neutrale Chatbubble-Hintergründe | — |
 | v1.5.6 | 2026-07-24 | Smart timeout, dark dialog bg, remove tooltip title | Ja |
 | v1.5.5 | 2026-07-24 | Logo-Abstand fix (gap + margin) | Ja |
 | v1.5.4 | 2026-07-24 | Logo-Abstand -33%, ws-panel arrow aus, search focus aus | Ja |
