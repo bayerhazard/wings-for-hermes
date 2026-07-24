@@ -11,7 +11,7 @@ metadata:
   description: Wings for Hermes — AI Agent Web UI with chat, sessions, memory, skills, cron, profiles, workspaces
   appid: wings
   title: Wings for Hermes
-  version: '1.4.2'
+  version: '1.4.3'
   categories:
     - Productivity_v112
     - Developer Tools
@@ -24,9 +24,9 @@ entrances:
     openMethod: window
     authLevel: internal
 spec:
-  versionName: '1.4.2'
+  versionName: '1.4.3'
   upgradeDescription: |
-    v1.4.2: Fix titlebar removal (display:none!important), memory icon replaced with database SVG, basic-mode message stats hidden, composer focus highlight disabled, active session highlight disabled.
+    v1.4.3: Fix CSS cache issue — override rules moved to inline <style> block in HTML (always fresh via network-first SW). Titlebar hidden, composer focus glow disabled, active session highlight disabled, basic-mode stats hidden.
   fullDescription: |
     **Wings for Hermes** — AI Agent Web UI, forked from hermes-webui.
 

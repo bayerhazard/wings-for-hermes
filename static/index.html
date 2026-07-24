@@ -74,6 +74,20 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.css" integrity="sha384-LJcOxlx9IMbNXDqJ2axpfEQKkAYbFjJfhXexLfiRJhjDU81mzgkiQq8rkV0j6dVh" crossorigin="anonymous">
   <!-- KaTeX math rendering CSS (loaded eagerly from vendored assets to prevent font CSP noise) -->
   <link rel="stylesheet" href="static/vendor/katex/0.16.22/katex.min.css">
+  <!-- ── Inline override block — always fresh (HTML is network-first via SW) ──
+       These rules override the immutable-cached style.css. Do NOT move to style.css:
+       the 1-year immutable cache on ?v=__WEBUI_VERSION__ prevents CSS hotfixes
+       from reaching the browser. Inline styles in the HTML shell are always fresh. -->
+  <style>
+  .app-titlebar{display:none!important;}
+  .composer-box:focus-within{border-color:var(--border2)!important;box-shadow:none!important;}
+  .session-item.active{background:transparent!important;color:var(--muted)!important;box-shadow:none!important;}
+  .session-item.active .session-title{color:var(--text)!important;}
+  [data-mode="basic"] .transparent-turn-footer{display:none!important;}
+  [data-mode="basic"] .msg-usage-inline,
+  [data-mode="basic"] .msg-duration-inline,
+  [data-mode="basic"] .msg-gateway-inline{display:none!important;}
+  </style>
   <!-- streaming-markdown: incremental DOM-building markdown parser for live streams -->
   <!-- Self-hosted from npm:streaming-markdown@0.2.15 — no CDN dependency.           -->
   <!-- sha384 of smd.min.js @0.2.15: sha384-T6r95ocN9t3W8tUK2Fa6FPaO7bJryyjyW0WCalrUnpgtm2qXr5xcN4vwPYEJ6vHa -->
