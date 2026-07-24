@@ -27,8 +27,8 @@
 <script>(function(){try{var t=localStorage.getItem('wings-theme')||'dark';if(t==='system')t=window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';var c=t==='dark'?'#0A0A0A':'#F5F8FA';document.querySelectorAll('meta[name="theme-color"]').forEach(function(m){m.setAttribute('content',c);m.removeAttribute('media');});}catch(e){}})()</script>
 <script>(function(){try{var adv=localStorage.getItem('wings-mode')==='advanced';if(!window.matchMedia('(min-width:641px)').matches)adv=false;var wp=(adv&&localStorage.getItem('wings-workspace-panel')==='open')?'open':'closed';document.documentElement.dataset.workspacePanel=wp;}catch(e){document.documentElement.dataset.workspacePanel='closed';}})()</script>
 <script>(function(){try{if(localStorage.getItem('wings-sidebar-collapsed')==='1')document.documentElement.dataset.sidebarCollapsed='1';}catch(e){}})()</script>
-<link rel="preload" href="static/pwa-startup.js?v=__WEBUI_VERSION__&w=151" as="script">
-<script src="static/pwa-startup.js?v=__WEBUI_VERSION__&w=151"></script>
+<link rel="preload" href="static/pwa-startup.js?v=__WEBUI_VERSION__&w=152" as="script">
+<script src="static/pwa-startup.js?v=__WEBUI_VERSION__&w=152"></script>
 <script>window.__HERMES_CONFIG__={maxUploadBytes:__MAX_UPLOAD_BYTES__,csrfToken:__CSRF_TOKEN_JSON__};</script>
 <script>window.__HERMES_WEBUI_BUNDLE_VERSION__='__WEBUI_VERSION__';</script>
 <script>(function(){
@@ -70,7 +70,7 @@
     };
   }
 })()</script>
-<link rel="stylesheet" href="static/style.css?v=__WEBUI_VERSION__&w=151">
+<link rel="stylesheet" href="static/style.css?v=__WEBUI_VERSION__&w=152">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.css" integrity="sha384-LJcOxlx9IMbNXDqJ2axpfEQKkAYbFjJfhXexLfiRJhjDU81mzgkiQq8rkV0j6dVh" crossorigin="anonymous">
   <!-- KaTeX math rendering CSS (loaded eagerly from vendored assets to prevent font CSP noise) -->
   <link rel="stylesheet" href="static/vendor/katex/0.16.22/katex.min.css">
@@ -132,12 +132,14 @@
   [data-mode="basic"] .project-chip,
   [data-mode="basic"] .color-dot,
   [data-mode="basic"] .project-chip-quick-create,
-  [data-mode="basic"] .project-new-btn{display:none!important;}
+  [data-mode="basic"] .project-new-btn,
+  [data-mode="basic"] .project-create-btn{display:none!important;}
   /* ── Empty-state logo: no glow, wide aspect ratio ── */
   .empty-logo::before{display:none!important;}
-  .empty-logo svg{width:200px!important;height:auto!important;}
+  .empty-logo img{width:200px!important;height:auto!important;display:block;}
   /* ── Sidebar footer search: wider, centered ── */
-  .sidebar-footer-search{flex:1.75!important;max-width:140px;margin:0 auto;}
+  .sidebar-footer-search{flex:1.75!important;max-width:160px;margin:0 auto;}
+  .sidebar-footer-spacer{display:none!important;}
   /* ── Gauge card: flush with session list (no extra left padding) ── */
   .ctx-gauge-card{margin:10px 8px!important;}
   /* ── Ring always visible (even on new session with no data) ── */
@@ -169,7 +171,7 @@
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', function() {
-        navigator.serviceWorker.register('sw.js?v=__WEBUI_VERSION__&w=151').catch(function(err) {
+        navigator.serviceWorker.register('sw.js?v=__WEBUI_VERSION__&w=152').catch(function(err) {
           console.warn('[pwa] Service worker registration failed:', err);
         });
       });
@@ -556,7 +558,7 @@
         aria-controls="outlinePanelWrapper"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="3" x2="9" y2="21"/></svg></button>
     <div class="messages" id="messages">
       <div class="empty-state no-suggestions" id="emptyState">
-        <div class="empty-logo"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 320" width="200" aria-label="AImighty"><defs><linearGradient id="aimighty-gold" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#F5D77F"/><stop offset="25%" stop-color="#DFAC4D"/><stop offset="60%" stop-color="#C79838"/><stop offset="100%" stop-color="#9E7220"/></linearGradient><linearGradient id="aimighty-gold-light" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#FFE89C"/><stop offset="100%" stop-color="#D7A94B"/></linearGradient><linearGradient id="aimighty-silver" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#FFFFFF"/><stop offset="100%" stop-color="#D1D5DB"/></linearGradient></defs><g transform="translate(30, 10)"><path fill="url(#aimighty-gold)" d="M 25,240 L 112,50 L 144,50 L 168,105 L 168,120 L 198,120 L 198,240 L 168,240 L 168,200 L 96,200 L 76,240 Z M 107,175 L 168,175 L 128,82 Z" /><g stroke="url(#aimighty-gold-light)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="183" y1="120" x2="168" y2="108" /><line x1="168" y1="108" x2="152" y2="98" /><line x1="152" y1="98" x2="140" y2="80" /><line x1="140" y1="80" x2="135" y2="60" /><line x1="135" y1="60" x2="142" y2="42" /><line x1="142" y1="42" x2="155" y2="28" /><line x1="155" y1="28" x2="172" y2="18" /><line x1="172" y1="18" x2="195" y2="16" /><line x1="195" y1="16" x2="218" y2="22" /><line x1="218" y1="22" x2="232" y2="35" /><line x1="232" y1="35" x2="240" y2="52" /><line x1="240" y1="52" x2="238" y2="72" /><line x1="238" y1="72" x2="228" y2="90" /><line x1="228" y1="90" x2="212" y2="104" /><line x1="212" y1="104" x2="198" y2="114" /><line x1="198" y1="114" x2="183" y2="120" /><line x1="135" y1="60" x2="155" y2="58" /><line x1="142" y1="42" x2="155" y2="58" /><line x1="155" y1="28" x2="170" y2="38" /><line x1="155" y1="58" x2="170" y2="38" /><line x1="152" y1="98" x2="162" y2="78" /><line x1="140" y1="80" x2="162" y2="78" /><line x1="155" y1="58" x2="162" y2="78" /><line x1="172" y1="18" x2="188" y2="32" /><line x1="195" y1="16" x2="188" y2="32" /><line x1="170" y1="38" x2="188" y2="32" /><line x1="195" y1="16" x2="208" y2="30" /><line x1="218" y1="22" x2="208" y2="30" /><line x1="170" y1="38" x2="192" y2="52" /><line x1="188" y1="32" x2="192" y2="52" /><line x1="208" y1="30" x2="192" y2="52" /><line x1="162" y1="78" x2="188" y2="72" /><line x1="192" y1="52" x2="188" y2="72" /><line x1="162" y1="78" x2="178" y2="100" /><line x1="188" y1="72" x2="178" y2="100" /><line x1="232" y1="35" x2="222" y2="50" /><line x1="240" y1="52" x2="222" y2="50" /><line x1="208" y1="30" x2="222" y2="50" /><line x1="192" y1="52" x2="222" y2="50" /><line x1="238" y1="72" x2="220" y2="72" /><line x1="228" y1="90" x2="220" y2="72" /><line x1="222" y1="50" x2="220" y2="72" /><line x1="188" y1="72" x2="220" y2="72" /><line x1="212" y1="104" x2="204" y2="90" /><line x1="220" y1="72" x2="204" y2="90" /><line x1="188" y1="72" x2="204" y2="90" /><line x1="178" y1="100" x2="204" y2="90" /><line x1="178" y1="100" x2="183" y2="120" /><line x1="204" y1="90" x2="183" y2="120" /><line x1="198" y1="114" x2="183" y2="120" /><line x1="168" y1="108" x2="183" y2="120" /><g fill="url(#aimighty-gold-light)" stroke="none"><circle cx="135" cy="60" r="2.8" /><circle cx="142" cy="42" r="2.8" /><circle cx="155" cy="28" r="2.8" /><circle cx="172" cy="18" r="2.8" /><circle cx="195" cy="16" r="2.8" /><circle cx="218" cy="22" r="2.8" /><circle cx="232" cy="35" r="2.8" /><circle cx="240" cy="52" r="2.8" /><circle cx="238" cy="72" r="2.8" /><circle cx="228" cy="90" r="2.8" /><circle cx="212" cy="104" r="2.8" /><circle cx="198" cy="114" r="2.8" /><circle cx="168" cy="108" r="2.8" /><circle cx="152" cy="98" r="2.8" /><circle cx="140" cy="80" r="2.8" /><circle cx="155" cy="58" r="2.8" /><circle cx="170" cy="38" r="2.8" /><circle cx="188" cy="32" r="2.8" /><circle cx="208" cy="30" r="2.8" /><circle cx="222" cy="50" r="2.8" /><circle cx="220" cy="72" r="2.8" /><circle cx="204" cy="90" r="2.8" /><circle cx="178" cy="100" r="2.8" /><circle cx="188" cy="72" r="2.8" /><circle cx="192" cy="52" r="2.8" /><circle cx="162" cy="78" r="2.8" /><circle cx="183" cy="120" r="3.2" /></g></g><g fill="url(#aimighty-silver)"><path d="M 228,120 L 255,120 L 255,138 C 264,124 278,118 292,118 C 308,118 318,126 322,141 C 331,126 345,118 362,118 C 382,118 392,130 392,154 L 392,240 L 365,240 L 365,160 C 365,148 359,142 349,142 C 338,142 331,150 331,164 L 331,240 L 304,240 L 304,160 C 304,148 298,142 288,142 C 277,142 270,150 270,164 L 270,240 L 243,240 L 243,120 Z" transform="translate(-10, 0)" /><path d="M 395,120 L 422,120 L 422,240 L 395,240 Z M 395,72 A 14,14 0 1,1 423,72 A 14,14 0 1,1 395,72 Z" transform="translate(-10, 0)" /><path d="M 495,120 L 495,240 C 495,272 474,288 444,288 C 423,288 408,280 399,266 L 420,249 C 426,258 436,264 447,264 C 462,264 470,255 470,238 L 470,227 C 462,236 450,242 435,242 C 405,242 384,220 384,180 C 384,140 405,118 435,118 C 450,118 462,124 470,133 L 470,120 L 495,120 Z M 440,142 C 423,142 411,156 411,180 C 411,204 423,218 440,218 C 457,218 470,204 470,180 C 470,156 457,142 440,142 Z" transform="translate(-5, 0)" /><path d="M 510,50 L 537,50 L 537,135 C 546,123 558,118 573,118 C 594,118 605,130 605,154 L 605,240 L 578,240 L 578,160 C 578,148 572,142 562,142 C 550,142 537,151 537,166 L 537,240 L 510,240 Z" transform="translate(-2, 0)" /><path d="M 628,50 L 655,50 L 655,95 L 680,95 L 680,120 L 655,120 L 655,202 C 655,212 660,217 670,217 C 675,217 680,216 685,213 L 690,236 C 680,240 671,242 661,242 C 637,242 628,228 628,202 L 628,120 L 610,120 L 610,95 L 628,95 Z" transform="translate(-2, 0)" /><path d="M 695,120 L 724,120 L 747,196 L 770,120 L 798,120 L 755,252 C 744,277 728,288 705,288 C 696,288 687,285 680,281 L 687,258 C 692,261 698,263 704,263 C 715,263 723,256 728,241 L 731,230 L 695,120 Z" transform="translate(-5, 0)" /></g></g></svg></div>
+        <div class="empty-logo"><img src="static/aimighty-logo.png" alt="AImighty" width="200" /></div>
         <h2 data-i18n="empty_title">Wings for Hermes</h2>
         <p data-i18n="empty_subtitle" style="display:none"></p>
         <div class="suggestion-grid">
@@ -1815,21 +1817,21 @@
   </div>
 </div>
 <div class="toast" id="toast"></div>
-<script src="static/i18n.js?v=__WEBUI_VERSION__&w=151" defer></script>
-<script src="static/icons.js?v=__WEBUI_VERSION__&w=151" defer></script>
-<script src="static/assistant_turn_anchors.js?v=__WEBUI_VERSION__&w=151" defer></script>
-<script src="static/ui.js?v=__WEBUI_VERSION__&w=151" defer></script>
-<script src="static/workspace.js?v=__WEBUI_VERSION__&w=151" defer></script>
-<script src="static/terminal.js?v=__WEBUI_VERSION__&w=151" defer></script>
-<script src="static/sessions.js?v=__WEBUI_VERSION__&w=151" defer></script>
-<script src="static/commands.js?v=__WEBUI_VERSION__&w=151" defer></script>
-<script src="static/messages.js?v=__WEBUI_VERSION__&w=151" defer></script>
-<script src="static/extension_settings.js?v=__WEBUI_VERSION__&w=151" defer></script>
-<script src="static/panels.js?v=__WEBUI_VERSION__&w=151" defer></script>
-<script src="static/onboarding.js?v=__WEBUI_VERSION__&w=151" defer></script>
-<script src="static/boot.js?v=__WEBUI_VERSION__&w=151" defer></script>
-<script src="static/outline.js?v=__WEBUI_VERSION__&w=151" defer></script>
-<script src="static/activityline.js?v=__WEBUI_VERSION__&w=151" defer></script>
+<script src="static/i18n.js?v=__WEBUI_VERSION__&w=152" defer></script>
+<script src="static/icons.js?v=__WEBUI_VERSION__&w=152" defer></script>
+<script src="static/assistant_turn_anchors.js?v=__WEBUI_VERSION__&w=152" defer></script>
+<script src="static/ui.js?v=__WEBUI_VERSION__&w=152" defer></script>
+<script src="static/workspace.js?v=__WEBUI_VERSION__&w=152" defer></script>
+<script src="static/terminal.js?v=__WEBUI_VERSION__&w=152" defer></script>
+<script src="static/sessions.js?v=__WEBUI_VERSION__&w=152" defer></script>
+<script src="static/commands.js?v=__WEBUI_VERSION__&w=152" defer></script>
+<script src="static/messages.js?v=__WEBUI_VERSION__&w=152" defer></script>
+<script src="static/extension_settings.js?v=__WEBUI_VERSION__&w=152" defer></script>
+<script src="static/panels.js?v=__WEBUI_VERSION__&w=152" defer></script>
+<script src="static/onboarding.js?v=__WEBUI_VERSION__&w=152" defer></script>
+<script src="static/boot.js?v=__WEBUI_VERSION__&w=152" defer></script>
+<script src="static/outline.js?v=__WEBUI_VERSION__&w=152" defer></script>
+<script src="static/activityline.js?v=__WEBUI_VERSION__&w=152" defer></script>
 
 <!-- Kanban: create/rename board modal — used for both flows. -->
 <div class="kanban-modal-overlay" id="kanbanBoardModal" hidden onclick="if(event.target===this)closeKanbanBoardModal()">

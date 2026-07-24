@@ -20,7 +20,7 @@ const CACHE_NAME = 'wings-for-hermes-shell-__WEBUI_VERSION__-w146';
 // either the authenticated app shell or login code, and stale cached responses
 // can make valid password submits fail until the user clears browser cache.
 // Navigations populate './' only after a successful non-redirect network load.
-const VQ = '?v=__WEBUI_VERSION__&w=151';
+const VQ = '?v=__WEBUI_VERSION__&w=152';
 const SHELL_ASSETS = [
   './static/style.css' + VQ,
   './static/pwa-startup.js' + VQ,

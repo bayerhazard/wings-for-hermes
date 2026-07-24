@@ -11,7 +11,7 @@ metadata:
   description: Wings for Hermes — AI Agent Web UI with chat, sessions, memory, skills, cron, profiles, workspaces
   appid: wings
   title: Wings for Hermes
-  version: '1.5.1'
+  version: '1.5.2'
   categories:
     - Productivity_v112
     - Developer Tools
@@ -24,9 +24,9 @@ entrances:
     openMethod: window
     authLevel: internal
 spec:
-  versionName: '1.5.1'
+  versionName: '1.5.2'
   upgradeDescription: |
-    v1.5.1: AImighty logo on start screen, subtitle removed, sidebar search wider and centered, memory/insights icons swapped, project plus hidden in Basic mode, gauge card flush with sessions, ring always visible.
+    v1.5.2: Fix project-create-btn hidden in basic, AImighty logo as PNG, sidebar footer spacer removed for wider search field.
   fullDescription: |
     **Wings for Hermes** — AI Agent Web UI, forked from hermes-webui.
 
