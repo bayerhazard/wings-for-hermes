@@ -6268,7 +6268,15 @@ function _syncCtxIndicator(usage){
   const ctxWindow=usage.context_length||DEFAULT_CTX;
   const cost=usage.estimated_cost;
   if(!promptTok&&!totalTok&&!cost&&!cacheReadTok&&!cacheWriteTok){
-    if(wrap) wrap.style.display='none';
+    if(wrap) wrap.style.display='';
+    const tokensEl=$('ctxGaugeTokens');
+    if(tokensEl) tokensEl.textContent='Token —';
+    const ring=$('ctxRingValue');
+    if(ring){
+      const circumference=91.106186954;
+      ring.style.strokeDasharray=String(circumference);
+      ring.style.strokeDashoffset=String(circumference);
+    }
     _syncMobileCtxDisplay({visible:false});
     return;
   }
