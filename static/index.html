@@ -27,8 +27,8 @@
 <script>(function(){try{var t=localStorage.getItem('wings-theme')||'dark';if(t==='system')t=window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';var c=t==='dark'?'#0A0A0A':'#F5F8FA';document.querySelectorAll('meta[name="theme-color"]').forEach(function(m){m.setAttribute('content',c);m.removeAttribute('media');});}catch(e){}})()</script>
 <script>(function(){try{var adv=localStorage.getItem('wings-mode')==='advanced';if(!window.matchMedia('(min-width:641px)').matches)adv=false;var wp=(adv&&localStorage.getItem('wings-workspace-panel')==='open')?'open':'closed';document.documentElement.dataset.workspacePanel=wp;}catch(e){document.documentElement.dataset.workspacePanel='closed';}})()</script>
 <script>(function(){try{if(localStorage.getItem('wings-sidebar-collapsed')==='1')document.documentElement.dataset.sidebarCollapsed='1';}catch(e){}})()</script>
-<link rel="preload" href="static/pwa-startup.js?v=__WEBUI_VERSION__&w=144" as="script">
-<script src="static/pwa-startup.js?v=__WEBUI_VERSION__&w=144"></script>
+<link rel="preload" href="static/pwa-startup.js?v=__WEBUI_VERSION__&w=146" as="script">
+<script src="static/pwa-startup.js?v=__WEBUI_VERSION__&w=146"></script>
 <script>window.__HERMES_CONFIG__={maxUploadBytes:__MAX_UPLOAD_BYTES__,csrfToken:__CSRF_TOKEN_JSON__};</script>
 <script>window.__HERMES_WEBUI_BUNDLE_VERSION__='__WEBUI_VERSION__';</script>
 <script>(function(){
@@ -70,7 +70,7 @@
     };
   }
 })()</script>
-<link rel="stylesheet" href="static/style.css?v=__WEBUI_VERSION__&w=144">
+<link rel="stylesheet" href="static/style.css?v=__WEBUI_VERSION__&w=146">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.css" integrity="sha384-LJcOxlx9IMbNXDqJ2axpfEQKkAYbFjJfhXexLfiRJhjDU81mzgkiQq8rkV0j6dVh" crossorigin="anonymous">
   <!-- KaTeX math rendering CSS (loaded eagerly from vendored assets to prevent font CSP noise) -->
   <link rel="stylesheet" href="static/vendor/katex/0.16.22/katex.min.css">
@@ -87,6 +87,38 @@
   [data-mode="basic"] .msg-usage-inline,
   [data-mode="basic"] .msg-duration-inline,
   [data-mode="basic"] .msg-gateway-inline{display:none!important;}
+  /* ── Wings-native Gauge-Karte (inline um SW-Cache zu umgehen) ── */
+  .ctx-gauge-card{
+    display:flex;align-items:center;gap:12px;padding:10px 14px;
+    border:1px solid var(--border);border-radius:12px;
+    background:var(--surface);cursor:pointer;flex-shrink:0;
+    margin:10px 16px;position:relative;min-width:0;
+    transition:border-color .15s,background-color .15s;
+  }
+  .ctx-gauge-card:hover{border-color:var(--accent);background:var(--hover-bg);}
+  .ctx-gauge-ring-wrap{width:32px;height:32px;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+  .ctx-gauge-svg{width:32px;height:32px;transform:rotate(-90deg);}
+  .ctx-gauge-track{fill:none;stroke:var(--border);stroke-width:3;}
+  .ctx-gauge-arc{
+    fill:none;stroke:var(--success);stroke-width:3;stroke-linecap:round;
+    stroke-dasharray:91.106;stroke-dashoffset:91.106;
+    transition:stroke-dashoffset .4s ease,stroke .3s ease;
+  }
+  .ctx-gauge-card.ctx-mid .ctx-gauge-arc{stroke:var(--warning);}
+  .ctx-gauge-card.ctx-high .ctx-gauge-arc{stroke:var(--error);}
+  .ctx-gauge-text{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1;}
+  .ctx-gauge-model{
+    font-size:14px;font-weight:600;color:var(--text);line-height:1.2;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;
+  }
+  .ctx-gauge-model:hover{color:var(--accent);}
+  .ctx-gauge-tokens{
+    font-size:12px;color:var(--muted);line-height:1.2;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  .ctx-gauge-card .ctx-tooltip{position:absolute;top:calc(100% + 6px);left:0;}
+  .ctx-gauge-card .model-dropdown{top:calc(100% + 6px);bottom:auto;left:0;border-radius:14px;box-shadow:var(--shadow-lg);}
+  @media(max-width:640px){.ctx-gauge-card{display:none!important;}}
   </style>
   <!-- streaming-markdown: incremental DOM-building markdown parser for live streams -->
   <!-- Self-hosted from npm:streaming-markdown@0.2.15 — no CDN dependency.           -->
@@ -113,7 +145,7 @@
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', function() {
-        navigator.serviceWorker.register('sw.js?v=__WEBUI_VERSION__&w=144').catch(function(err) {
+        navigator.serviceWorker.register('sw.js?v=__WEBUI_VERSION__&w=146').catch(function(err) {
           console.warn('[pwa] Service worker registration failed:', err);
         });
       });
@@ -208,59 +240,52 @@
     <!-- Chat panel -->
     <div class="panel-view active" id="panelChat">
       <div class="panel-head">
-        <div class="titlebar-status-pill" id="titlebarStatusPill">
-      <div class="ctx-indicator-wrap" id="ctxIndicatorWrap" style="display:none">
-        <button class="ctx-indicator" id="ctxIndicator" type="button" aria-label="Context window usage" aria-describedby="ctxTooltip">
-          <span class="ctx-ring">
-            <svg class="ctx-ring-svg" viewBox="0 0 24 24" aria-hidden="true">
-              <circle class="ctx-ring-track" cx="12" cy="12" r="9.75"></circle>
-              <circle class="ctx-ring-value" id="ctxRingValue" cx="12" cy="12" r="9.75"></circle>
+        <div class="ctx-gauge-card" id="titlebarStatusPill">
+          <div class="ctx-gauge-ring-wrap" id="ctxIndicatorWrap" style="display:none">
+            <svg class="ctx-gauge-svg" viewBox="0 0 32 32" aria-hidden="true">
+              <circle class="ctx-gauge-track" cx="16" cy="16" r="14.5"></circle>
+              <circle class="ctx-gauge-arc" id="ctxRingValue" cx="16" cy="16" r="14.5"></circle>
             </svg>
-            <span class="ctx-ring-center" id="ctxPercent">0</span>
-          </span>
-        </button>
-        <div class="ctx-tooltip" id="ctxTooltip" role="tooltip" aria-hidden="true">
-          <div class="ctx-tooltip-title">Context window</div>
-          <div class="ctx-tooltip-line" id="ctxTooltipUsage"></div>
-          <div class="ctx-tooltip-line" id="ctxTooltipTokens"></div>
-          <div class="ctx-tooltip-line" id="ctxTooltipThreshold"></div>
-          <div class="ctx-tooltip-line" id="ctxTooltipCost" style="display:none"></div>
-          <div class="ctx-tooltip-compress" id="ctxTooltipCompress" style="display:none">
-            <button class="ctx-compress-btn" id="ctxCompressBtn" type="button"></button>
           </div>
+          <div class="ctx-gauge-text">
+            <span class="ctx-gauge-model" id="composerModelChip" onclick="toggleModelDropdown()" title="Conversation model">
+              Modell: <span id="composerModelLabel">agent</span>
+            </span>
+            <span class="ctx-gauge-tokens" id="ctxGaugeTokens">Token —</span>
+          </div>
+          <div class="ctx-tooltip" id="ctxTooltip" role="tooltip" aria-hidden="true">
+            <div class="ctx-tooltip-title">Context window</div>
+            <div class="ctx-tooltip-line" id="ctxTooltipUsage"></div>
+            <div class="ctx-tooltip-line" id="ctxTooltipTokens"></div>
+            <div class="ctx-tooltip-line" id="ctxTooltipThreshold"></div>
+            <div class="ctx-tooltip-line" id="ctxTooltipCost" style="display:none"></div>
+            <div class="ctx-tooltip-compress" id="ctxTooltipCompress" style="display:none">
+              <button class="ctx-compress-btn" id="ctxCompressBtn" type="button"></button>
+            </div>
+          </div>
+          <select id="modelSelect" class="composer-model-select" title="Conversation model" aria-hidden="true" tabindex="-1">
+            <optgroup label="OpenAI">
+              <option value="openai/gpt-5.4-mini">GPT-5.4 Mini</option>
+              <option value="openai/gpt-4o">GPT-4o</option>
+              <option value="openai/o3">o3</option>
+              <option value="openai/o4-mini">o4-mini</option>
+            </optgroup>
+            <optgroup label="Anthropic">
+              <option value="anthropic/claude-sonnet-4.6">Claude Sonnet 4.6</option>
+              <option value="anthropic/claude-sonnet-4-5">Claude Sonnet 4.5</option>
+              <option value="anthropic/claude-haiku-3-5">Claude Haiku 3.5</option>
+            </optgroup>
+            <optgroup label="Other">
+              <option value="google/gemini-3.1-pro-preview">Gemini 3.1 Pro Preview</option>
+              <option value="google/gemini-3-flash-preview">Gemini 3 Flash Preview</option>
+              <option value="deepseek/deepseek-v4-flash">DeepSeek V4 Flash</option>
+              <option value="deepseek/deepseek-v4-pro">DeepSeek V4 Pro</option>
+              <option value="deepseek/deepseek-chat-v3-0324">DeepSeek V3 (legacy)</option>
+              <option value="meta-llama/llama-4-scout">Llama 4 Scout</option>
+            </optgroup>
+          </select>
+          <div class="model-dropdown" id="composerModelDropdown"></div>
         </div>
-      </div>
-      <span class="titlebar-pill-divider" aria-hidden="true"></span>
-      <div class="composer-model-wrap">
-        <button class="composer-model-chip" id="composerModelChip" type="button" onclick="toggleModelDropdown()" title="Conversation model">
-          <span class="composer-model-icon" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M15 2v2"/><path d="M15 20v2"/><path d="M2 15h2"/><path d="M2 9h2"/><path d="M20 15h2"/><path d="M20 9h2"/><path d="M9 2v2"/><path d="M9 20v2"/></svg></span>
-          <span class="composer-model-label" id="composerModelLabel"></span>
-          <span class="composer-model-chevron" aria-hidden="true"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></span>
-        </button>
-        <select id="modelSelect" class="composer-model-select" title="Conversation model" aria-hidden="true" tabindex="-1">
-        <optgroup label="OpenAI">
-          <option value="openai/gpt-5.4-mini">GPT-5.4 Mini</option>
-          <option value="openai/gpt-4o">GPT-4o</option>
-          <option value="openai/o3">o3</option>
-          <option value="openai/o4-mini">o4-mini</option>
-        </optgroup>
-        <optgroup label="Anthropic">
-          <option value="anthropic/claude-sonnet-4.6">Claude Sonnet 4.6</option>
-          <option value="anthropic/claude-sonnet-4-5">Claude Sonnet 4.5</option>
-          <option value="anthropic/claude-haiku-3-5">Claude Haiku 3.5</option>
-        </optgroup>
-        <optgroup label="Other">
-          <option value="google/gemini-3.1-pro-preview">Gemini 3.1 Pro Preview</option>
-          <option value="google/gemini-3-flash-preview">Gemini 3 Flash Preview</option>
-          <option value="deepseek/deepseek-v4-flash">DeepSeek V4 Flash</option>
-          <option value="deepseek/deepseek-v4-pro">DeepSeek V4 Pro</option>
-          <option value="deepseek/deepseek-chat-v3-0324">DeepSeek V3 (legacy)</option>
-          <option value="meta-llama/llama-4-scout">Llama 4 Scout</option>
-        </optgroup>
-      </select>
-        <div class="model-dropdown" id="composerModelDropdown"></div>
-      </div>
-    </div>
         <div class="panel-head-actions">
           <button class="panel-head-btn has-tooltip has-tooltip--bottom-right" id="btnNewChat" data-tooltip="New conversation (Cmd+K)" data-i18n-title="new_conversation" aria-label="New conversation">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -1766,21 +1791,21 @@
   </div>
 </div>
 <div class="toast" id="toast"></div>
-<script src="static/i18n.js?v=__WEBUI_VERSION__&w=144" defer></script>
-<script src="static/icons.js?v=__WEBUI_VERSION__&w=144" defer></script>
-<script src="static/assistant_turn_anchors.js?v=__WEBUI_VERSION__&w=144" defer></script>
-<script src="static/ui.js?v=__WEBUI_VERSION__&w=144" defer></script>
-<script src="static/workspace.js?v=__WEBUI_VERSION__&w=144" defer></script>
-<script src="static/terminal.js?v=__WEBUI_VERSION__&w=144" defer></script>
-<script src="static/sessions.js?v=__WEBUI_VERSION__&w=144" defer></script>
-<script src="static/commands.js?v=__WEBUI_VERSION__&w=144" defer></script>
-<script src="static/messages.js?v=__WEBUI_VERSION__&w=144" defer></script>
-<script src="static/extension_settings.js?v=__WEBUI_VERSION__&w=144" defer></script>
-<script src="static/panels.js?v=__WEBUI_VERSION__&w=144" defer></script>
-<script src="static/onboarding.js?v=__WEBUI_VERSION__&w=144" defer></script>
-<script src="static/boot.js?v=__WEBUI_VERSION__&w=144" defer></script>
-<script src="static/outline.js?v=__WEBUI_VERSION__&w=144" defer></script>
-<script src="static/activityline.js?v=__WEBUI_VERSION__&w=144" defer></script>
+<script src="static/i18n.js?v=__WEBUI_VERSION__&w=146" defer></script>
+<script src="static/icons.js?v=__WEBUI_VERSION__&w=146" defer></script>
+<script src="static/assistant_turn_anchors.js?v=__WEBUI_VERSION__&w=146" defer></script>
+<script src="static/ui.js?v=__WEBUI_VERSION__&w=146" defer></script>
+<script src="static/workspace.js?v=__WEBUI_VERSION__&w=146" defer></script>
+<script src="static/terminal.js?v=__WEBUI_VERSION__&w=146" defer></script>
+<script src="static/sessions.js?v=__WEBUI_VERSION__&w=146" defer></script>
+<script src="static/commands.js?v=__WEBUI_VERSION__&w=146" defer></script>
+<script src="static/messages.js?v=__WEBUI_VERSION__&w=146" defer></script>
+<script src="static/extension_settings.js?v=__WEBUI_VERSION__&w=146" defer></script>
+<script src="static/panels.js?v=__WEBUI_VERSION__&w=146" defer></script>
+<script src="static/onboarding.js?v=__WEBUI_VERSION__&w=146" defer></script>
+<script src="static/boot.js?v=__WEBUI_VERSION__&w=146" defer></script>
+<script src="static/outline.js?v=__WEBUI_VERSION__&w=146" defer></script>
+<script src="static/activityline.js?v=__WEBUI_VERSION__&w=146" defer></script>
 
 <!-- Kanban: create/rename board modal — used for both flows. -->
 <div class="kanban-modal-overlay" id="kanbanBoardModal" hidden onclick="if(event.target===this)closeKanbanBoardModal()">

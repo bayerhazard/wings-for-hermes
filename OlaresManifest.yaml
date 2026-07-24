@@ -11,7 +11,7 @@ metadata:
   description: Wings for Hermes — AI Agent Web UI with chat, sessions, memory, skills, cron, profiles, workspaces
   appid: wings
   title: Wings for Hermes
-  version: '1.4.5'
+  version: '1.4.6'
   categories:
     - Productivity_v112
     - Developer Tools
@@ -24,9 +24,9 @@ entrances:
     openMethod: window
     authLevel: internal
 spec:
-  versionName: '1.4.5'
+  versionName: '1.4.6'
   upgradeDescription: |
-    v1.4.5: Fix Service Worker cache — Wings version token added to cache name and asset URLs to force complete cache bust on every Wings update.
+    v1.4.6: Wings-native gauge card — replaces the round status pill with a Relay-style card (32px context ring without center text + two-line model/token display). Green→amber→red color shifting. Hidden on mobile. Model selector preserved on click.
   fullDescription: |
     **Wings for Hermes** — AI Agent Web UI, forked from hermes-webui.
 

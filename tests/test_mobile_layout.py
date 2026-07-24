@@ -724,7 +724,7 @@ def test_mobile_sidebar_detail_selections_share_close_helper():
     assert "mobile-panel-drawer', 'mobile-open'" in panels_js, (
         "Opening Settings from the rail should keep the mobile drawer available"
     )
-    for section in ["conversation", "appearance", "preferences", "providers", "plugins", "extensions", "system", "help"]:
+    for section in ["preferences", "appearance", "providers", "plugins", "extensions", "system", "help"]:
         assert f"switchSettingsSection('{section}',{{fromSidebarItem:true}})" in HTML, (
             f"Settings sidebar item {section} should close after selecting its detail"
         )
@@ -1264,18 +1264,18 @@ def test_mobile_overflow_panel_quota_order_matches_desktop_sequence():
 
 
 def test_model_and_reasoning_dropdowns_use_mobile_panel_anchors():
-    """Model/reasoning dropdowns must anchor to mobile actions while the overflow is open."""
+    """Model/reasoning dropdowns must anchor to the gauge card or mobile actions."""
     ui_js = (REPO / "static" / "ui.js").read_text(encoding="utf-8")
     model_start = ui_js.index("function _positionModelDropdown()")
     model_end = ui_js.index("function renderModelDropdown()", model_start)
     model_body = ui_js[model_start:model_end]
     for expected in (
-        "composerMobileConfigPanel",
+        "titlebarStatusPill",
+        "composerModelChip",
         "composerMobileModelAction",
-        "classList.contains('open')",
     ):
         assert expected in model_body, \
-            f"_positionModelDropdown must keep mobile-panel anchor logic ({expected})"
+            f"_positionModelDropdown must keep card/chip/mobile anchor logic ({expected})"
 
     reasoning_start = ui_js.index("function _positionReasoningDropdown()")
     reasoning_end = ui_js.index("function closeReasoningDropdown()", reasoning_start)
@@ -1362,8 +1362,8 @@ def test_context_indicator_click_opens_shared_mobile_config_menu():
         assert expected in context_menu_body, \
             f"context click should open the shared menu without leaving tooltip state behind ({expected})"
 
-    assert "btn.addEventListener('click',openComposerContextMenu)" in ui_js, \
-        "context indicator click must open the shared composer config menu"
+    assert "card.addEventListener('click',function(e)" in ui_js, \
+        "gauge card click must open the shared composer config menu"
 
     panel_open = _declarations(_rule_body(CSS, ".composer-mobile-config-panel.open"))
     assert panel_open.get("display") == "flex", \

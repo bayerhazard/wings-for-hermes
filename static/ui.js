@@ -3653,15 +3653,17 @@ function _positionModelDropdown(){
   const dd=$('composerModelDropdown');
   const chip=$('composerModelChip');
   const mobileAction=$('composerMobileModelAction');
-  const footer=document.querySelector('.composer-footer');
-  if(!dd||!footer) return;
-  const panel=$('composerMobileConfigPanel');
-  const anchor=(panel&&panel.classList.contains('open')&&mobileAction)?mobileAction:(chip&&chip.offsetParent?chip:mobileAction);
+  const card=$('titlebarStatusPill');
+  if(!dd) return;
+  // Prefer the gauge card as anchor (new Wings-native pill location)
+  const anchor=card&&card.offsetParent?card:(chip&&chip.offsetParent?chip:mobileAction);
   if(!anchor) return;
-  const chipRect=anchor.getBoundingClientRect();
-  const footerRect=footer.getBoundingClientRect();
-  let left=chipRect.left-footerRect.left;
-  const maxLeft=Math.max(0, footer.clientWidth-dd.offsetWidth);
+  const anchorRect=anchor.getBoundingClientRect();
+  // Position relative to the anchor's offsetParent
+  const offsetParent=dd.offsetParent||document.body;
+  const parentRect=offsetParent.getBoundingClientRect();
+  let left=anchorRect.left-parentRect.left;
+  const maxLeft=Math.max(0,offsetParent.clientWidth-dd.offsetWidth);
   left=Math.max(0, Math.min(left, maxLeft));
   dd.style.left=`${left}px`;
 }
@@ -6247,20 +6249,14 @@ function _mergeUsageForCtxIndicator(latest, fallback){
 // Context usage indicator in composer footer
 function _syncCtxIndicator(usage){
   const wrap=$('ctxIndicatorWrap');
-  const el=$('ctxIndicator');
-  if(!el)return;
+  const card=$('titlebarStatusPill');
+  if(!card)return;
   const ctxHidden=!!(window._composerControlVisibility&&window._composerControlVisibility.hide_composer_context);
   if(ctxHidden){
     if(wrap) wrap.style.display='none';
     _syncMobileCtxDisplay({visible:false});
     return;
   }
-  // #1436: Use last_prompt_tokens only — NEVER fall back to cumulative
-  // input_tokens for the "context window % used" calculation.  input_tokens
-  // is summed across all turns, so dividing it by the context window gives a
-  // nonsense percentage (often >100%) on long sessions.  When we have no
-  // last-prompt data we render "·" + "tokens used" via the !hasPromptTok
-  // branch below — honest "no data" instead of misleading "890% used".
   const postCompressionEstimate=Number(usage.post_compression_context_tokens_estimate)||0;
   const hasPostCompressionEstimate=postCompressionEstimate>0;
   const promptTok=usage.last_prompt_tokens||0;
@@ -6268,48 +6264,51 @@ function _syncCtxIndicator(usage){
   const totalTok=(usage.input_tokens||0)+(usage.output_tokens||0);
   const cacheReadTok=usage.cache_read_tokens||0;
   const cacheWriteTok=usage.cache_write_tokens||0;
-  // Default context window to 128K when not provided by backend
   const DEFAULT_CTX=128*1024;
   const ctxWindow=usage.context_length||DEFAULT_CTX;
   const cost=usage.estimated_cost;
-  // Show indicator whenever we have any usage data (tokens or cost)
-  const _pill=$('titlebarStatusPill');
   if(!promptTok&&!totalTok&&!cost&&!cacheReadTok&&!cacheWriteTok){
     if(wrap) wrap.style.display='none';
-    if(_pill) _pill.classList.remove('has-ctx');
     _syncMobileCtxDisplay({visible:false});
     return;
   }
   if(wrap){
-    // Defensive reset: keep dynamic context display from being stuck hidden.
-    wrap.classList.remove('composer-control-hidden');
-    wrap.removeAttribute('aria-hidden');
     wrap.style.display='';
   }
-  if(_pill) _pill.classList.add('has-ctx');
   let hasPromptTok=!!promptTok;
   if(hasPostCompressionEstimate) hasPromptTok=true;
   const rawPct=hasPromptTok?Math.round((contextPromptTok/ctxWindow)*100):0;
   const pct=Math.min(100,rawPct);
   const overflowed=rawPct>100;
+  // ── Ring (32px, r=14.5, circumference=91.106) ──
   const ring=$('ctxRingValue');
-  const center=$('ctxPercent');
+  if(ring){
+    const circumference=91.106186954;
+    ring.style.strokeDasharray=String(circumference);
+    ring.style.strokeDashoffset=String(circumference*(1-pct/100));
+  }
+  // ── Farb-Klassen auf der Karte (grün → amber ≥60% → rot >85%) ──
+  card.classList.toggle('ctx-mid',pct>=60&&pct<=85);
+  card.classList.toggle('ctx-high',pct>85);
+  // ── Token-Anzeige in der Karte ──
+  const tokensEl=$('ctxGaugeTokens');
+  if(tokensEl){
+    tokensEl.textContent=hasPromptTok
+      ?`Token ${_fmtTokens(contextPromptTok)} / ${_fmtTokens(ctxWindow)}`
+      :(totalTok?`Token ${_fmtTokens(totalTok)}`:'Token —');
+  }
+  // ── Modell-Name in der Karte ──
+  const modelLabel=$('composerModelLabel');
+  if(modelLabel){
+    const modelName=usage.model||(S.session&&S.session.model)||'agent';
+    const shortName=modelName.split('/').pop()||modelName;
+    if(modelLabel.textContent!==shortName) modelLabel.textContent=shortName;
+  }
+  // ── Tooltip (bleibt erhalten) ──
   const usageLine=$('ctxTooltipUsage');
   const tokensLine=$('ctxTooltipTokens');
   const thresholdLine=$('ctxTooltipThreshold');
   const costLine=$('ctxTooltipCost');
-  if(ring){
-    const circumference=61.261056745;
-    ring.style.strokeDasharray=String(circumference);
-    ring.style.strokeDashoffset=String(circumference*(1-pct/100));
-  }
-  if(center) center.textContent=hasPromptTok?String(pct):'\u00b7';
-  const hasExplicitCtx=!!usage.context_length;
-  el.classList.toggle('ctx-mid',pct>50&&pct<=75);
-  el.classList.toggle('ctx-high',pct>75);
-  // ── Compress affordance (#524) ──
-  // Show a hint in the tooltip when context usage is high so users
-  // discover /compress without having to know the slash command.
   const compressWrap=$('ctxTooltipCompress');
   const compressBtn=$('ctxCompressBtn');
   const compressText=pct>=75?t('ctx_compress_action'):(pct>=50?t('ctx_compress_hint'):'');
@@ -6317,41 +6316,24 @@ function _syncCtxIndicator(usage){
   _setCtxCompressButton(compressBtn,compressText);
   const cacheHitPct=usage.cache_hit_percent;
   const cacheText=cacheHitPct!=null?t('usage_cache_hit_detail',cacheHitPct,_fmtTokens(cacheReadTok),_fmtTokens(cacheWriteTok)):'';
-  const contextLabel=hasPostCompressionEstimate?'Estimated next model context':'Context window';
-  let label=hasPromptTok?`${contextLabel} ${pct}% used`:`${_fmtTokens(totalTok)} tokens used`;
+  const hasExplicitCtx=!!usage.context_length;
+  let label=hasPromptTok?`Context window ${pct}% used`:`${_fmtTokens(totalTok)} tokens used`;
   if(!hasExplicitCtx&&hasPromptTok) label+=' (est. 128K)';
   if(cost) label+=` \u00b7 $${cost<0.01?cost.toFixed(4):cost.toFixed(2)}`;
   if(cacheText) label+=` \u00b7 ${cacheText}`;
-  el.setAttribute('aria-label',label);
+  card.setAttribute('aria-label',label);
   const usageText=hasPromptTok?`${hasPostCompressionEstimate?'~':''}${_fmtTokens(contextPromptTok)} / ${_fmtTokens(ctxWindow)} tokens`:`${_fmtTokens(totalTok)} tokens used`;
   let tokensText=hasPromptTok?(overflowed?`${rawPct}% used — context exceeded`:`${pct}% used`):`In: ${_fmtTokens(usage.input_tokens||0)} \u00b7 Out: ${_fmtTokens(usage.output_tokens||0)}`;
   if(cost) tokensText+=` \u00b7 $${cost<0.01?cost.toFixed(4):cost.toFixed(2)}`;
   if(cacheText) tokensText+=` \u00b7 ${cacheText}`;
   if(usageLine) usageLine.textContent=usageText;
   if(tokensLine) tokensLine.textContent=tokensText;
-  const threshold=usage.threshold_tokens||0;
-  // KPI-compact tooltip: threshold and cost lines stay hidden — the essentials
-  // (absolute tokens, percent, cost) live in the two lines above.
-  if(thresholdLine){
-    thresholdLine.style.display='none';
-    thresholdLine.textContent='';
-  }
-  if(costLine){
-    costLine.style.display='none';
-    costLine.textContent='';
-  }
+  if(thresholdLine){thresholdLine.style.display='none';thresholdLine.textContent='';}
+  if(costLine){costLine.style.display='none';costLine.textContent='';}
   const thresholdText='';
   const costText='';
   _syncMobileCtxDisplay({
-    visible:true,
-    hasPromptTok,
-    pct,
-    label,
-    usageText,
-    tokensText,
-    thresholdText,
-    costText,
-    compressText
+    visible:true,hasPromptTok,pct,label,usageText,tokensText,thresholdText,costText,compressText
   });
 }
 
@@ -6363,9 +6345,14 @@ document.addEventListener('DOMContentLoaded',function(){
   const wrap=document.getElementById('ctxIndicatorWrap');
   const tooltip=document.getElementById('ctxTooltip');
   if(!wrap||!tooltip)return;
-  const btn=document.getElementById('ctxIndicator');
-  if(!btn)return;
-  btn.addEventListener('click',openComposerContextMenu);
+  const card=document.getElementById('titlebarStatusPill');
+  if(card){
+    card.addEventListener('click',function(e){
+      // Only open context menu when clicking the ring area, not the model text
+      if(e.target.closest('.ctx-gauge-model')) return;
+      openComposerContextMenu(e);
+    });
+  }
   // Close on outside tap
   document.addEventListener('click',function(){
     tooltip.classList.remove('ctx-tooltip-active');
