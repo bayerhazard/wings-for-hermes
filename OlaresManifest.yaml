@@ -11,7 +11,7 @@ metadata:
   description: Wings for Hermes — AI Agent Web UI with chat, sessions, memory, skills, cron, profiles, workspaces
   appid: wings
   title: Wings for Hermes
-  version: '1.4.7'
+  version: '1.4.8'
   categories:
     - Productivity_v112
     - Developer Tools
@@ -24,9 +24,9 @@ entrances:
     openMethod: window
     authLevel: internal
 spec:
-  versionName: '1.4.7'
+  versionName: '1.4.8'
   upgradeDescription: |
-    v1.4.7: Auto-detect Hermes Agent home path — no manual configuration needed. initContainer scans /olares/rootfs/userspace for hermesagent home directory. hermesagent dependency declared. kubelet CIDR auto-detected from node IP. UID/GID auto-detected from hermesagent home directory ownership.
+    v1.4.8: Force re-sync to clear stale chartrepo state.
   fullDescription: |
     **Wings for Hermes** — AI Agent Web UI, forked from hermes-webui.
 
