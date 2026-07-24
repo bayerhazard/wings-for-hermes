@@ -4676,62 +4676,12 @@ function _openSessionActionMenu(session, anchorEl){
   menu.id='sessionActionMenu-'+(++_sessionActionMenuId);
   menu.setAttribute('role','menu');
   menu.setAttribute('aria-label', 'Conversation actions');
-  _appendSessionCopyLinkAction(menu, session);
   if(isReadOnly){
     _appendSessionExportHtmlAction(menu, session);
     _mountSessionActionMenu(menu, session, anchorEl);
     return;
   }
-  // Rename — first menu item by request (#1764). Double-click rename is
-  // timing-sensitive: the first click frequently registers as "open the
-  // chat" before the second click arrives, so users open the conversation
-  // when they meant to rename it. Putting Rename in the menu eliminates
-  // the timing entirely. Only shown for sessions that support rename
-  // (read-only imported sessions skip it; same gate as startRename's
-  // _isReadOnlySession check).
-  if(!_isReadOnlySession(session)){
-    menu.appendChild(_buildSessionAction(
-      t('session_rename'),
-      t('session_rename_desc'),
-      ICONS.edit,
-      ()=>{
-        closeSessionActionMenu();
-        // Find the row for this session and call its attached startRename.
-        // Falls back to a no-op toast if the row isn't currently rendered
-        // (e.g. archived-and-hidden) — extremely rare since the menu only
-        // opens from a visible row's three-dot button.
-        const row=_findSessionRenameRow(session.session_id);
-        if(row && typeof row._startRename === 'function'){
-          row._startRename();
-        } else if(typeof showToast==='function'){
-          showToast(t('session_rename_failed_no_row')||'Could not start rename — row not found.', 3000, 'error');
-        }
-      }
-    ));
-  }
   _appendSessionShareActions(menu, session);
-  menu.appendChild(_buildSessionAction(
-    session.pinned?t('session_unpin'):t('session_pin'),
-    session.pinned?t('session_unpin_desc'):t('session_pin_desc'),
-    session.pinned?ICONS.pin:ICONS.unpin,
-    async()=>{
-      closeSessionActionMenu();
-      const newPinned=!session.pinned;
-      try{
-        await api('/api/session/pin',{method:'POST',body:JSON.stringify({session_id:session.session_id,pinned:newPinned})});
-        session.pinned=newPinned;
-        const cached=(_allSessions||[]).find(s=>s&&s.session_id===session.session_id);
-        if(cached) cached.pinned=newPinned;
-        if(S.session&&S.session.session_id===session.session_id) S.session.pinned=newPinned;
-        renderSessionListFromCache();
-        void renderSessionList();
-      }catch(err){
-        showToast(t('session_pin_failed')+err.message);
-        await renderSessionList();
-      }
-    },
-    session.pinned?'is-active':''
-  ));
   menu.appendChild(_buildSessionAction(
     t('session_move_project'),
     session.project_id?t('session_move_project_desc_has'):t('session_move_project_desc_none'),
@@ -4769,7 +4719,6 @@ function _openSessionActionMenu(session, anchorEl){
     ));
   }
   if(!isExternalSession){
-    _appendSessionDuplicateAction(menu, session);
   }
   _appendSessionExportHtmlAction(menu, session);
   if(session.active_stream_id){
@@ -4828,7 +4777,7 @@ function _openSessionActionMenu(session, anchorEl){
       ));
     }
     menu.appendChild(_buildSessionAction(
-      t('session_delete'),
+      'Löschen',
       _sessionDeleteDescription(session),
       ICONS.trash,
       async()=>{
