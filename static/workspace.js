@@ -101,6 +101,23 @@ async function api(path,opts={}){
           if(retryDelayMs) await new Promise(resolve=>setTimeout(resolve,retryDelayMs*Math.pow(2,attempt)));
           continue;
         }
+        // Smart timeout: if an SSE stream is actively generating, suppress the
+        // toast and silently retry once — the server is busy producing output,
+        // not unreachable. Only surface the error when no stream is active.
+        let streamActive=false;
+        try{
+          if(typeof S!=='undefined'){
+            streamActive=!!(S.activeStreamId||(S.session&&S.session.active_stream_id));
+          }
+        }catch(_){}
+        if(streamActive&&timeoutToast){
+          // Silently retry once with a short delay before giving up
+          if(attempt<maxAttempts-1){
+            if(retryDelayMs) await new Promise(resolve=>setTimeout(resolve,retryDelayMs*Math.pow(2,attempt)));
+            continue;
+          }
+          throw lastErr;
+        }
         const err=(e&&e.name==='TimeoutError')?e:new Error('Request timed out. Please try again.');
         err.name='TimeoutError';
         err.timeout=true;

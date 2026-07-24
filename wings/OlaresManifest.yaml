@@ -11,7 +11,7 @@ metadata:
   description: Wings for Hermes — AI Agent Web UI with chat, sessions, memory, skills, cron, profiles, workspaces
   appid: wings
   title: Wings for Hermes
-  version: '1.5.5'
+  version: '1.5.6'
   categories:
     - Productivity_v112
     - Developer Tools
@@ -24,9 +24,9 @@ entrances:
     openMethod: window
     authLevel: internal
 spec:
-  versionName: '1.5.5'
+  versionName: '1.5.6'
   upgradeDescription: |
-    v1.5.5: Fix logo-title spacing — override both flexbox gap and margin-bottom.
+    v1.5.6: Smart timeout (suppress toast during active stream), dark-mode dialog bg, remove redundant tooltip title.
   fullDescription: |
     **Wings for Hermes** — AI Agent Web UI, forked from hermes-webui.
 

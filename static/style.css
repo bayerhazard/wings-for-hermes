@@ -222,6 +222,9 @@
   :root.dark .panel-head{border-bottom:none;}
 
 
+  /* Dark mode: dialog bg must match the anthrazit page background (#141414 / #1A1A1E) */
+  :root.dark .app-dialog{background:linear-gradient(180deg,#1A1A1E,#141414)!important;border-color:var(--border2)!important;box-shadow:0 18px 60px rgba(0,0,0,.6)!important;}
+  :root.dark .app-dialog-overlay{background:rgba(0,0,0,.7)!important;backdrop-filter:blur(8px)!important;}
   /* #594: app-dialog light mode overrides — base styles use hardcoded dark gradients */
   :root:not(.dark) .app-dialog{
     background:linear-gradient(180deg,rgba(240,237,232,.99),rgba(228,224,216,.99));
