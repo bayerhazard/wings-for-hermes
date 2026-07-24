@@ -7,7 +7,7 @@
 
 // Cache version is injected by the server at request time (routes.py /sw.js handler).
 // Bumps automatically whenever the git commit changes — no manual edits needed.
-const CACHE_NAME = 'wings-for-hermes-shell-__WEBUI_VERSION__-w146';
+const CACHE_NAME = 'wings-for-hermes-shell-__WEBUI_VERSION__-w170';
 
 // Static assets that form the app shell.
 //
