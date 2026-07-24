@@ -27,8 +27,8 @@
 <script>(function(){try{var t=localStorage.getItem('wings-theme')||'dark';if(t==='system')t=window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';var c=t==='dark'?'#0A0A0A':'#F5F8FA';document.querySelectorAll('meta[name="theme-color"]').forEach(function(m){m.setAttribute('content',c);m.removeAttribute('media');});}catch(e){}})()</script>
 <script>(function(){try{var adv=localStorage.getItem('wings-mode')==='advanced';if(!window.matchMedia('(min-width:641px)').matches)adv=false;var wp=(adv&&localStorage.getItem('wings-workspace-panel')==='open')?'open':'closed';document.documentElement.dataset.workspacePanel=wp;}catch(e){document.documentElement.dataset.workspacePanel='closed';}})()</script>
 <script>(function(){try{if(localStorage.getItem('wings-sidebar-collapsed')==='1')document.documentElement.dataset.sidebarCollapsed='1';}catch(e){}})()</script>
-<link rel="preload" href="static/pwa-startup.js?v=__WEBUI_VERSION__&w=154" as="script">
-<script src="static/pwa-startup.js?v=__WEBUI_VERSION__&w=154"></script>
+<link rel="preload" href="static/pwa-startup.js?v=__WEBUI_VERSION__&w=155" as="script">
+<script src="static/pwa-startup.js?v=__WEBUI_VERSION__&w=155"></script>
 <script>window.__HERMES_CONFIG__={maxUploadBytes:__MAX_UPLOAD_BYTES__,csrfToken:__CSRF_TOKEN_JSON__};</script>
 <script>window.__HERMES_WEBUI_BUNDLE_VERSION__='__WEBUI_VERSION__';</script>
 <script>(function(){
@@ -70,7 +70,7 @@
     };
   }
 })()</script>
-<link rel="stylesheet" href="static/style.css?v=__WEBUI_VERSION__&w=154">
+<link rel="stylesheet" href="static/style.css?v=__WEBUI_VERSION__&w=155">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.css" integrity="sha384-LJcOxlx9IMbNXDqJ2axpfEQKkAYbFjJfhXexLfiRJhjDU81mzgkiQq8rkV0j6dVh" crossorigin="anonymous">
   <!-- KaTeX math rendering CSS (loaded eagerly from vendored assets to prevent font CSP noise) -->
   <link rel="stylesheet" href="static/vendor/katex/0.16.22/katex.min.css">
@@ -137,8 +137,9 @@
   /* ── Empty-state logo: no glow, wide aspect ratio ── */
   .empty-logo::before{display:none!important;}
   .empty-logo img{width:200px!important;height:auto!important;display:block;}
-  .empty-logo{margin-bottom:6px!important;}
-  .empty-state h2{font-weight:300!important;letter-spacing:-.01em!important;}
+  .empty-logo{margin-bottom:0!important;}
+  .empty-state{gap:4px!important;}
+  .empty-state h2{font-weight:300!important;letter-spacing:-.01em!important;margin-top:0!important;}
   /* ── Hide workspace panel edge toggle arrow ── */
   .workspace-panel-edge-toggle{display:none!important;}
   /* ── Disable search field focus highlight ── */
@@ -177,7 +178,7 @@
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', function() {
-        navigator.serviceWorker.register('sw.js?v=__WEBUI_VERSION__&w=154').catch(function(err) {
+        navigator.serviceWorker.register('sw.js?v=__WEBUI_VERSION__&w=155').catch(function(err) {
           console.warn('[pwa] Service worker registration failed:', err);
         });
       });
@@ -1823,21 +1824,21 @@
   </div>
 </div>
 <div class="toast" id="toast"></div>
-<script src="static/i18n.js?v=__WEBUI_VERSION__&w=154" defer></script>
-<script src="static/icons.js?v=__WEBUI_VERSION__&w=154" defer></script>
-<script src="static/assistant_turn_anchors.js?v=__WEBUI_VERSION__&w=154" defer></script>
-<script src="static/ui.js?v=__WEBUI_VERSION__&w=154" defer></script>
-<script src="static/workspace.js?v=__WEBUI_VERSION__&w=154" defer></script>
-<script src="static/terminal.js?v=__WEBUI_VERSION__&w=154" defer></script>
-<script src="static/sessions.js?v=__WEBUI_VERSION__&w=154" defer></script>
-<script src="static/commands.js?v=__WEBUI_VERSION__&w=154" defer></script>
-<script src="static/messages.js?v=__WEBUI_VERSION__&w=154" defer></script>
-<script src="static/extension_settings.js?v=__WEBUI_VERSION__&w=154" defer></script>
-<script src="static/panels.js?v=__WEBUI_VERSION__&w=154" defer></script>
-<script src="static/onboarding.js?v=__WEBUI_VERSION__&w=154" defer></script>
-<script src="static/boot.js?v=__WEBUI_VERSION__&w=154" defer></script>
-<script src="static/outline.js?v=__WEBUI_VERSION__&w=154" defer></script>
-<script src="static/activityline.js?v=__WEBUI_VERSION__&w=154" defer></script>
+<script src="static/i18n.js?v=__WEBUI_VERSION__&w=155" defer></script>
+<script src="static/icons.js?v=__WEBUI_VERSION__&w=155" defer></script>
+<script src="static/assistant_turn_anchors.js?v=__WEBUI_VERSION__&w=155" defer></script>
+<script src="static/ui.js?v=__WEBUI_VERSION__&w=155" defer></script>
+<script src="static/workspace.js?v=__WEBUI_VERSION__&w=155" defer></script>
+<script src="static/terminal.js?v=__WEBUI_VERSION__&w=155" defer></script>
+<script src="static/sessions.js?v=__WEBUI_VERSION__&w=155" defer></script>
+<script src="static/commands.js?v=__WEBUI_VERSION__&w=155" defer></script>
+<script src="static/messages.js?v=__WEBUI_VERSION__&w=155" defer></script>
+<script src="static/extension_settings.js?v=__WEBUI_VERSION__&w=155" defer></script>
+<script src="static/panels.js?v=__WEBUI_VERSION__&w=155" defer></script>
+<script src="static/onboarding.js?v=__WEBUI_VERSION__&w=155" defer></script>
+<script src="static/boot.js?v=__WEBUI_VERSION__&w=155" defer></script>
+<script src="static/outline.js?v=__WEBUI_VERSION__&w=155" defer></script>
+<script src="static/activityline.js?v=__WEBUI_VERSION__&w=155" defer></script>
 
 <!-- Kanban: create/rename board modal — used for both flows. -->
 <div class="kanban-modal-overlay" id="kanbanBoardModal" hidden onclick="if(event.target===this)closeKanbanBoardModal()">
