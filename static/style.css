@@ -5092,12 +5092,13 @@ main.main > #mainPlugin{display:none;}
   justify-content: flex-start;
   padding-left: var(--msg-rail);
   max-width: var(--msg-max);
-  opacity: 0;
-  transition: opacity .15s;
+  opacity: 1;
 }
 .msg-row[data-role="assistant"]:hover .msg-foot,
 .assistant-turn:hover .msg-foot,
 .assistant-turn:focus-within .msg-foot { opacity: 1; }
+/* Note: .msg-foot now always visible (opacity:1). Hover/focus rules kept for
+   backward compat but have no visible effect. */
 /* Desktop/tablet keeps the per-turn jump affordance discoverable without
    exposing the quieter timestamp/action chrome until hover or keyboard focus. */
 @media (min-width: 641px) {

@@ -6931,6 +6931,9 @@ function renderMd(raw){
     t=t.replace(/\*\*\*(.+?)\*\*\*/g,(_,x)=>`<strong><em>${esc(x)}</em></strong>`);
     t=t.replace(/\*\*(.+?)\*\*/g,(_,x)=>`<strong>${esc(x)}</strong>`);
     t=t.replace(/\*([^*\n]+)\*/g,(_,x)=>`<em>${esc(x)}</em>`);
+    t=t.replace(/___(.+?)___/g,(_,x)=>`<strong><em>${esc(x)}</em></strong>`);
+    t=t.replace(/__(.+?)__/g,(_,x)=>`<strong>${esc(x)}</strong>`);
+    t=t.replace(/_([^_\n]+)_/g,(_,x)=>`<em>${esc(x)}</em>`);
     // Strikethrough: ~~text~~ → <del>text</del>
     t=t.replace(/~~(.+?)~~/g,(_,x)=>`<del>${esc(x)}</del>`);
     // #487: Image pass — runs while code stash is active so ![x](url) inside
@@ -6961,6 +6964,9 @@ function renderMd(raw){
   s=s.replace(/\*\*\*(.+?)\*\*\*/g,(_,t)=>`<strong><em>${esc(t)}</em></strong>`);
   s=s.replace(/\*\*(.+?)\*\*/g,(_,t)=>`<strong>${esc(t)}</strong>`);
   s=s.replace(/\*([^*\n]+)\*/g,(_,t)=>`<em>${esc(t)}</em>`);
+  s=s.replace(/___(.+?)___/g,(_,t)=>`<strong><em>${esc(t)}</em></strong>`);
+  s=s.replace(/__(.+?)__/g,(_,t)=>`<strong>${esc(t)}</strong>`);
+  s=s.replace(/_([^_\n]+)_/g,(_,t)=>`<em>${esc(t)}</em>`);
   s=s.replace(/~~(.+?)~~/g,(_,t)=>`<del>${esc(t)}</del>`);
   s=s.replace(/\x00O(\d+)\x00/g,(_,i)=>_ob_stash[+i]);
   s=s.replace(/^###### (.+)$/gm,(_,t)=>`<h6>${inlineMd(t)}</h6>`).replace(/^##### (.+)$/gm,(_,t)=>`<h5>${inlineMd(t)}</h5>`).replace(/^#### (.+)$/gm,(_,t)=>`<h4>${inlineMd(t)}</h4>`).replace(/^### (.+)$/gm,(_,t)=>`<h3>${inlineMd(t)}</h3>`).replace(/^## (.+)$/gm,(_,t)=>`<h2>${inlineMd(t)}</h2>`).replace(/^# (.+)$/gm,(_,t)=>`<h1>${inlineMd(t)}</h1>`);
@@ -16051,51 +16057,21 @@ function renderMessages(options){
     });
     if(!isTransparentStream()){
       for(const entry of activityOrder){
-        const {aIdx,segmentSeq,burstId,cards,thinkingIdx,includeAnchorReason}=entry;
+        const {aIdx,segmentSeq,burstId,cards,thinkingIdx}=entry;
         if(aIdx<assistantIdxs[0]) continue;
         const anchorRow=_assistantAnchorForActivity(aIdx,segmentSeq,burstId);
         if(!anchorRow) continue;
         const anchorParent=anchorRow.parentElement;
-        const anchorReasonHtml=_worklogReasonHtmlFromAnchor(anchorRow);
         const thinkingText=thinkingIdx!==null?assistantThinking.get(thinkingIdx):'';
-        if(!cards.length&&!anchorReasonHtml&&!thinkingText) continue;
-        const anchorTurn=anchorRow.closest('.assistant-turn');
-        if(!anchorTurn) continue;
-        let state=activityByTurn.get(anchorTurn);
-        if(!state){
-          const includeTurnDuration=!durationAssignedTurns.has(anchorTurn);
-          if(includeTurnDuration) durationAssignedTurns.add(anchorTurn);
-          const activityKey=`assistant:${aIdx}`;
-          const anchorIsWorklogSource=anchorRow.classList&&anchorRow.classList.contains('assistant-segment-worklog-source');
-          const group=ensureActivityGroup(anchorParent,{
-            collapsed:true,
-            anchor:anchorRow,
-            beforeAnchor:!!thinkingText&&!anchorIsWorklogSource,
-            syncAnchorReason:anchorIsWorklogSource,
-            activityKey,
-            burstId:burstId||'',
-            segmentSeq:segmentSeq||'',
-            turnDuration:includeTurnDuration?_turnDurationForAnchor(anchorRow):undefined,
-          });
-          const list=_toolWorklogListEl(group);
-          if(!list) continue;
-          list.innerHTML='';
-          state={group,cards:[],seenReasons:new Set(),seenTools:new Set()};
-          activityByTurn.set(anchorTurn,state);
+        if(!cards.length&&!thinkingText) continue;
+        const refNode=anchorRow.nextSibling;
+        for(let i=cards.length-1;i>=0;i--){
+          anchorParent.insertBefore(buildToolCard(cards[i]), refNode);
         }
-        state.cards.push(...cards);
-        _appendWorklogStep(state.group, anchorRow, cards, thinkingText, {
-          live:false,
-          includeAnchorReason:!!includeAnchorReason&&!!anchorReasonHtml,
-          thinkingKey:thinkingText?`thinking:${_normalizeThinkingEchoCompare(thinkingText)}`:'',
-          thinkingDisclosureKey:thinkingText?`thinking:${entry.key}`:'',
-          seenReasons:state.seenReasons,
-          seenTools:state.seenTools,
-        });
+        if(thinkingText){
+          anchorParent.insertBefore(_thinkingActivityNode(thinkingText,false), refNode);
+        }
       }
-      activityByTurn.forEach(state=>{
-        _syncToolCallGroupSummary(state.group);
-      });
     }else{
       // ── transparent_stream path: individual expandable event rows ──
       const transparentInsertCursors=new Map();
@@ -16201,11 +16177,10 @@ function renderMessages(options){
       const failoverText=_gatewayRoutingFailoverText(routing);
       const modelWarningText=_gatewayModelWarningText(routing);
       const hasTurnUsage=!!msg._turnUsage;
-      // The Worklog summary owns the "Done in …" duration whenever this
-      // assistant message contributes tool or thinking detail to a folded
-      // Worklog above the final answer.
-      const compactWorklogForMessage=isCompactWorklogMode()&&(toolCallAssistantIdxs.has(mi)||assistantThinking.has(mi));
-      const durationText=compactWorklogForMessage?'':_formatTurnDuration(msg._turnDuration);
+      // Duration is owned by the per-turn msg-foot since we render individual
+      // tool/thinking cards directly (no collapsed Worklog group).
+      const compactWorklogForMessage=false;
+      const durationText=_formatTurnDuration(msg._turnDuration);
       if(!hasTurnUsage&&!durationText&&!gatewayText&&!failoverText&&!modelWarningText) continue;
       const seg=assistantSegments.get(mi);
       const row=seg?seg.closest('.assistant-turn'):null;
