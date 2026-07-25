@@ -1050,48 +1050,23 @@ async function cmdUsage(){
 }
 
 async function cmdTheme(args){
-  const themes=['system','dark','light'];
-  const skins=(_SKINS||[]).map(s=>(s.value||s.name).toLowerCase());
+  const themes=['system','dark','light','neon'];
   const legacyThemes=Object.keys(_LEGACY_THEME_MAP||{});
   const val=(args||'').toLowerCase().trim();
-  // Check if it's a theme
+  // Check if it's a theme or legacy theme
   if(themes.includes(val)||legacyThemes.includes(val)){
-    const appearance=_normalizeAppearance(
-      val,
-      legacyThemes.includes(val)?null:localStorage.getItem('hermes-skin')
-    );
+    const appearance=_normalizeAppearance(val);
     localStorage.setItem('hermes-theme',appearance.theme);
-    localStorage.setItem('hermes-skin',appearance.skin);
+    localStorage.removeItem('hermes-skin');
     _applyTheme(appearance.theme);
-    _applySkin(appearance.skin);
-    try{await api('/api/settings',{method:'POST',body:JSON.stringify({theme:appearance.theme,skin:appearance.skin})});}catch(e){}
+    try{await api('/api/settings',{method:'POST',body:JSON.stringify({theme:appearance.theme})});}catch(e){}
     const sel=$('settingsTheme');
     if(sel)sel.value=appearance.theme;
-    const skinSel=$('settingsSkin');
-    if(skinSel)skinSel.value=appearance.skin;
     if(typeof _syncThemePicker==='function') _syncThemePicker(appearance.theme);
-    if(typeof _syncSkinPicker==='function') _syncSkinPicker(appearance.skin);
-    showToast(t('theme_set')+appearance.theme+(legacyThemes.includes(val)?` + ${appearance.skin}`:''));
+    showToast(t('theme_set')+appearance.theme);
     return;
   }
-  // Check if it's a skin
-  if(skins.includes(val)){
-    const appearance=_normalizeAppearance(localStorage.getItem('hermes-theme'),val);
-    localStorage.setItem('hermes-theme',appearance.theme);
-    localStorage.setItem('hermes-skin',appearance.skin);
-    _applyTheme(appearance.theme);
-    _applySkin(appearance.skin);
-    try{await api('/api/settings',{method:'POST',body:JSON.stringify({theme:appearance.theme,skin:appearance.skin})});}catch(e){}
-    const sel=$('settingsSkin');
-    if(sel)sel.value=appearance.skin;
-    const themeSel=$('settingsTheme');
-    if(themeSel)themeSel.value=appearance.theme;
-    if(typeof _syncThemePicker==='function') _syncThemePicker(appearance.theme);
-    if(typeof _syncSkinPicker==='function') _syncSkinPicker(appearance.skin);
-    showToast(t('theme_set')+appearance.skin);
-    return;
-  }
-  showToast(t('theme_usage')+themes.join('|')+' | '+skins.join('|')+' | legacy:'+legacyThemes.join('|'));
+  showToast(t('theme_usage')+themes.join('|')+(legacyThemes.length?' | legacy:'+legacyThemes.join('|'):''));
 }
 
 async function cmdSkills(args){

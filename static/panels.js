@@ -354,7 +354,6 @@ function _beginSettingsPanelSession() {
   }
   _settingsDirty = false;
   _settingsThemeOnOpen = localStorage.getItem('hermes-theme') || 'dark';
-  _settingsSkinOnOpen = localStorage.getItem('hermes-skin') || 'default';
   _settingsFontSizeOnOpen = localStorage.getItem('hermes-font-size') || 'default';
   _pendingSettingsTargetPanel = null;
   if (_settingsAppearanceAutosaveTimer) {
@@ -7551,7 +7550,6 @@ document.addEventListener('drop',e=>{
 
 let _settingsDirty = false;
 let _settingsThemeOnOpen = null; // track theme at open time for discard revert
-let _settingsSkinOnOpen = null; // track skin at open time for discard revert
 let _settingsFontSizeOnOpen = null; // track font size at open time for discard revert
 let _settingsHermesDefaultModelOnOpen = '';
 let _settingsHermesDefaultModelProviderOnOpen = null;
@@ -8514,7 +8512,6 @@ function _appearancePayloadFromUi(){
   const chatActivityModeSel=$('settingsChatActivityDisplayMode');
   return {
     theme: ($('settingsTheme')||{}).value || localStorage.getItem('hermes-theme') || 'dark',
-    skin: ($('settingsSkin')||{}).value || localStorage.getItem('hermes-skin') || 'default',
     font_size: ($('settingsFontSize')||{}).value || localStorage.getItem('hermes-font-size') || 'default',
     chat_activity_display_mode: chatActivityModeSel&&(chatActivityModeSel.value==='transparent_stream'||chatActivityModeSel.value==='hide_all_activity')
       ? chatActivityModeSel.value
@@ -8580,8 +8577,7 @@ function _setAppearanceAutosaveStatus(state){
 
 function _rememberAppearanceSaved(payload){
   if(!payload) return;
-_settingsThemeOnOpen=payload.theme||localStorage.getItem('hermes-theme')||'dark';
-  _settingsSkinOnOpen=payload.skin||localStorage.getItem('hermes-skin')||'default';
+  _settingsThemeOnOpen=payload.theme||localStorage.getItem('hermes-theme')||'dark';
   _settingsFontSizeOnOpen=payload.font_size||localStorage.getItem('hermes-font-size')||'default';
   if(payload.user_avatar_initial) localStorage.setItem('wings_user_avatar_initial',payload.user_avatar_initial);
   if(payload.user_avatar_color) localStorage.setItem('wings_user_avatar_color',payload.user_avatar_color);
@@ -8988,15 +8984,11 @@ async function loadSettingsPanel(){
       agentBadge.textContent = `Agent: ${agentVersion}`;
     }
     // Hydrate appearance controls first so a slow /api/models request
-    // cannot overwrite an in-progress theme/skin selection.
+    // cannot overwrite an in-progress theme selection.
     const themeSel=$('settingsTheme');
     const themeVal=settings.theme||'dark';
     if(themeSel) themeSel.value=themeVal;
     if(typeof _syncThemePicker==='function') _syncThemePicker(themeVal);
-    const skinVal=(localStorage.getItem('hermes-skin')||settings.skin||'default').toLowerCase();
-    const skinSel=$('settingsSkin');
-    if(skinSel) skinSel.value=skinVal;
-    if(typeof _buildSkinPicker==='function') _buildSkinPicker(skinVal);
     const fontSizeVal=settings.font_size||localStorage.getItem('hermes-font-size')||'default';
     localStorage.setItem('hermes-font-size',fontSizeVal);
     if(typeof _applyFontSize==='function') _applyFontSize(fontSizeVal);
@@ -11891,7 +11883,7 @@ async function deletePasskey(id){
 }
 
 function _applySavedSettingsUi(saved, body, opts){
-  const {sendKey,showTokenUsage,showQuotaChip,showConversationOutline,showBusyPlaceholderHint,showTps,fadeTextEffect,showCliSessions,theme,skin,language,sidebarDensity,fontSize}=opts;
+  const {sendKey,showTokenUsage,showQuotaChip,showConversationOutline,showBusyPlaceholderHint,showTps,fadeTextEffect,showCliSessions,theme,language,sidebarDensity,fontSize}=opts;
   window._sendKey=sendKey||'enter';
   window._showTokenUsage=showTokenUsage;
   window._showQuotaChip=showQuotaChip===true;
@@ -11960,7 +11952,6 @@ function _applySavedSettingsUi(saved, body, opts){
   _setSettingsAuthButtonsVisible(!!saved.auth_enabled);
   _settingsDirty=false;
   _settingsThemeOnOpen=theme;
-  _settingsSkinOnOpen=skin||'default';
   _settingsFontSizeOnOpen=fontSize||localStorage.getItem('hermes-font-size')||'default';
   const bar=$('settingsUnsavedBar');
   if(bar) bar.style.display='none';
@@ -12534,7 +12525,6 @@ async function saveSettings(andClose){
   const pinnedSessionsLimit=parseInt(($('settingsPinnedSessionsLimit')||{}).value,10)||3;
   const pw=($('settingsPassword')||{}).value;
   const theme=($('settingsTheme')||{}).value||'dark';
-  const skin=($('settingsSkin')||{}).value||'default';
   const fontSize=($('settingsFontSize')||{}).value||localStorage.getItem('hermes-font-size')||'default';
   const language=($('settingsLanguage')||{}).value||'en';
   const sidebarDensity=($('settingsSidebarDensity')||{}).value==='detailed'?'detailed':'compact';
@@ -12545,7 +12535,6 @@ async function saveSettings(andClose){
 
   if(sendKey) body.send_key=sendKey;
   body.theme=theme;
-  body.skin=skin;
   body.font_size=fontSize;
   body.session_jump_buttons=!!($('settingsSessionJumpButtons')||{}).checked;
   body.session_endless_scroll=!!($('settingsSessionEndlessScroll')||{}).checked;

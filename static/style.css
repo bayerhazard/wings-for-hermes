@@ -140,7 +140,7 @@
   :root[data-font-size="small"] { font-size: 12px; }
   :root[data-font-size="large"] { font-size: 16px; }
   :root[data-font-size="xlarge"] { font-size: 18px; }
-  /* ── Dark mode — navy-black + gold accent matching Hermes terminal ── */
+ /* ── Dark mode (Dunkel) — navy-black + gold accent matching Hermes terminal ── */
   :root.dark {
     --bg:#161616;--surface:#1E1E1E;--sidebar:#141414;--border:transparent;--border2:transparent;
     --text:#FFFFFF;--muted:#9CA3AF;--accent:#C9A45C;--blue:#4DD0E1;--gold:#C9A45C;--code-bg:#202020;
@@ -159,61 +159,32 @@
     --shadow-lg:0 12px 32px -4px rgba(0,0,0,.55),0 4px 12px -2px rgba(0,0,0,.45);
     --shadow-xl:0 20px 48px -6px rgba(0,0,0,.6),0 8px 20px -4px rgba(0,0,0,.5);
   }
-  /* ── Skin: Default (gold — matches base) ── */
-  /* No overrides needed — :root and .dark already use gold accent */
-  /* ── Skin: Midnight — the trendy dark blue (Linear/X caliber) ──
-     Deep navy surfaces with an electric steel-blue accent. The light variant
-     is an ice-blue tinted light theme so the skin reads cleanly in both. */
-  :root[data-skin="midnight"] {
-    --bg:#F4F7FB;--surface:#FFFFFF;--sidebar:#EFF4FA;--border:#DDE5F0;--border2:#C9D6E6;
-    --text:#24344D;--muted:#64748B;--accent:#2F6FE0;--blue:#2F6FE0;--gold:#B8860B;--code-bg:#EAF0F8;
-    --topbar-bg:rgba(255,255,255,.98);--main-bg:rgba(244,247,251,0.5);
-    --focus-ring:rgba(47,111,224,.35);--focus-glow:rgba(47,111,224,.1);
-    --input-bg:rgba(15,40,80,.04);--hover-bg:rgba(15,40,80,.06);
-    --strong:#16233A;--em:#64748B;--code-text:#24344D;--code-inline-bg:rgba(15,40,80,.07);--pre-text:#24344D;
-    --accent-hover:#1F5CC9;--accent-bg:rgba(47,111,224,.09);--accent-bg-strong:rgba(47,111,224,.16);--accent-text:#2F6FE0;
-    --chat-bg:#FBFCFE;
-    --surface-subtle:rgba(15,40,80,.03);--surface-subtle-hover:rgba(15,40,80,.05);
-    --border-subtle:rgba(15,40,80,.08);--border-muted:rgba(15,40,80,.12);
-    --user-bubble-bg:var(--accent);--user-bubble-border:var(--accent-hover);--user-bubble-text:#fff;
-  }
-  :root.dark[data-skin="midnight"] {
-    --bg:#121826;--surface:#1A2438;--sidebar:#121826;--border:transparent;--border2:transparent;
-    --text:#E2E8F0;--muted:#94A3B8;--accent:#4C8DFF;--blue:#4C8DFF;--gold:#C9A45C;--code-bg:#1A2438;
-    --topbar-bg:rgba(18,24,38,.98);--main-bg:rgba(18,24,38,0.5);
-    --focus-ring:rgba(76,141,255,.4);--focus-glow:rgba(76,141,255,.12);
-    --input-bg:rgba(148,163,184,.06);--hover-bg:rgba(148,163,184,.09);
-    --strong:#F1F5F9;--em:#94A3B8;--code-text:#E2E8F0;--code-inline-bg:rgba(148,163,184,.1);--pre-text:#E2E8F0;
-    --accent-hover:#2F6FE0;--accent-bg:rgba(76,141,255,.1);--accent-bg-strong:rgba(76,141,255,.18);--accent-text:#7AABFF;
-    --chat-bg:#161E30;
-    --surface-subtle:rgba(148,163,184,.04);--surface-subtle-hover:rgba(148,163,184,.07);
-    --border-subtle:transparent;--border-muted:transparent;
-    --user-bubble-bg:var(--accent);--user-bubble-border:var(--accent-hover);--user-bubble-text:#fff;
-  }
-  /* ── Skin: Neon — modern, tasteful glow on near-black ──
-     Cyan neon accent; glow is reserved for focus and active states. The light
-     variant keeps the default light surfaces with a deep cyan accent. */
-  :root[data-skin="neon"] {
-    --accent:#0891B2;--accent-hover:#067A9A;--accent-bg:rgba(8,145,178,.08);--accent-bg-strong:rgba(8,145,178,.15);--accent-text:#0891B2;--focus-ring:rgba(8,145,178,.2);
-  }
-  :root.dark[data-skin="neon"] {
-    --bg:#121318;--surface:#1A1C24;--sidebar:#121318;--border:transparent;--border2:transparent;
-    --text:#E6EDF3;--muted:#8B949E;--accent:#22D3EE;--blue:#22D3EE;--gold:#C9A45C;--code-bg:#1A1C24;
-    --topbar-bg:rgba(18,19,24,.98);--main-bg:rgba(18,19,24,0.5);
-    --focus-ring:rgba(34,211,238,.45);--focus-glow:rgba(34,211,238,.14);
-    --input-bg:rgba(255,255,255,.04);--hover-bg:rgba(34,211,238,.07);
+  /* ── Neon theme — synthwave on near-black ── */
+  :root[data-theme="neon"] {
+    --bg:#0D0221;--surface:#1A0B2E;--sidebar:#0D0221;--border:transparent;--border2:transparent;
+    --text:#E6EDF3;--muted:#8B949E;--accent:#FF2D9B;--blue:#00F0FF;--gold:#FF2D9B;--code-bg:#1A0B2E;
+    --topbar-bg:rgba(13,2,33,.98);--main-bg:rgba(13,2,33,0.5);
+    --focus-ring:rgba(255,45,155,.35);--focus-glow:rgba(255,45,155,.1);
+    --input-bg:rgba(255,255,255,.04);--hover-bg:rgba(255,45,155,.08);
     --strong:#FFFFFF;--em:#8B949E;--code-text:#E6EDF3;--code-inline-bg:rgba(255,255,255,.08);--pre-text:#E6EDF3;
-    --accent-hover:#0EC5E0;--accent-bg:rgba(34,211,238,.09);--accent-bg-strong:rgba(34,211,238,.17);--accent-text:#22D3EE;
-    --chat-bg:#16181F;
+    --accent-hover:#FF5DAF;--accent-bg:rgba(255,45,155,0.1);--accent-bg-strong:rgba(255,45,155,0.18);--accent-text:#FF2D9B;
+    --error:#FF4D6A;--success:#39FF14;--warning:#FFB800;--info:#00F0FF;
     --surface-subtle:rgba(255,255,255,.025);--surface-subtle-hover:rgba(255,255,255,.045);
     --border-subtle:transparent;--border-muted:transparent;
-    --user-bubble-bg:var(--accent);--user-bubble-border:var(--accent-hover);--user-bubble-text:#06232B;
+    /* ── Premium redesign tokens (neon) ── */
+    --chat-bg:#120828;
+    --shadow-sm:0 1px 2px rgba(0,0,0,.5);
+    --shadow-md:0 4px 18px -2px rgba(0,0,0,.6),0 2px 6px -1px rgba(0,0,0,.5);
+    --shadow-lg:0 12px 32px -4px rgba(0,0,0,.65),0 4px 12px -2px rgba(0,0,0,.55);
+    --shadow-xl:0 20px 48px -6px rgba(0,0,0,.7),0 8px 20px -4px rgba(0,0,0,.6);
   }
-  /* Neon glow: reserved for focus and active states */
-  :root.dark[data-skin="neon"] .composer-box:focus-within{box-shadow:0 0 0 3px var(--accent-bg-strong),0 0 18px rgba(34,211,238,.18);}
-  :root.dark[data-skin="neon"] .send-btn:not(:disabled){box-shadow:0 0 14px rgba(34,211,238,.35);}
-  :root.dark[data-skin="neon"] .session-item.active{box-shadow:inset 3px 0 0 var(--accent),0 0 12px rgba(34,211,238,.1);}
-  :root.dark[data-skin="neon"] .titlebar-status-pill:hover{box-shadow:0 0 10px rgba(34,211,238,.14);}
+  /* Neon glow: reserved for focus and hover states only */
+  :root[data-theme="neon"] .composer-box:focus-within{box-shadow:0 0 0 3px var(--accent-bg-strong),0 0 18px rgba(255,45,155,.18);}
+  :root[data-theme="neon"] .send-btn:hover:not(:disabled){box-shadow:0 0 14px rgba(255,45,155,.35);}
+  :root[data-theme="neon"] .session-item.active{box-shadow:inset 3px 0 0 var(--accent),0 0 12px rgba(255,45,155,.1);}
+  :root[data-theme="neon"] .titlebar-status-pill:hover{box-shadow:0 0 10px rgba(255,45,155,.14);}
+  :root[data-theme="neon"] .new-chat-btn:hover{box-shadow:0 0 12px rgba(0,240,255,.2);}
+  :root[data-theme="neon"] .btn.primary:hover{box-shadow:0 0 14px rgba(255,45,155,.3);}
 
   /* ── Hide titlebar, disable focus/active highlights, hide basic-mode stats ── */
   .app-titlebar{display:none!important;}
@@ -2668,9 +2639,8 @@ body.resizing .sidebar{transition:none!important;}
   margin:0;
 }
 .tool-worklog-list .tool-card,
-:root[data-skin] .tool-worklog-list .tool-card,
-:root[data-skin] .tool-worklog-list .tool-card:hover,
-:root[data-skin] .tool-worklog-list .tool-card-running{
+.tool-worklog-list .tool-card:hover,
+.tool-worklog-list .tool-card-running{
   margin:0;
   border:0;
   border-left:0;
@@ -2751,8 +2721,7 @@ body.resizing .sidebar{transition:none!important;}
   margin:0;
 }
 .tool-worklog-list > .agent-activity-thinking .thinking-card,
-:root[data-skin] .tool-worklog-list > .agent-activity-thinking .thinking-card,
-:root[data-skin] .tool-worklog-list > .agent-activity-thinking .thinking-card:hover{
+.tool-worklog-list > .agent-activity-thinking .thinking-card:hover{
   margin:0;
   max-width:none;
   border:0;
@@ -3020,12 +2989,7 @@ body.resizing .sidebar{transition:none!important;}
 .transparent-event-row .tool-card:hover,
 .transparent-event-row .tool-card-running,
 .transparent-event-row .thinking-card,
-.transparent-event-row .thinking-card:hover,
-:root[data-skin] .transparent-event-row .tool-card,
-:root[data-skin] .transparent-event-row .tool-card:hover,
-:root[data-skin] .transparent-event-row .tool-card-running,
-:root[data-skin] .transparent-event-row .thinking-card,
-:root[data-skin] .transparent-event-row .thinking-card:hover{
+.transparent-event-row .thinking-card:hover{
   border:0!important;
   border-left:0!important;
   border-radius:0!important;

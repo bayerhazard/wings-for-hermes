@@ -17,7 +17,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Wings">
 <link rel="apple-touch-icon" sizes="512x512" href="static/apple-touch-icon.png">
-<script>(function(){try{var themes={light:1,dark:1,system:1},skins={midnight:1,neon:1,default:1},legacy={},t=(localStorage.getItem('wings-theme')||'dark').toLowerCase(),s=(localStorage.getItem('wings-skin')||'').toLowerCase(),m=legacy[t],theme=m?m[0]:(themes[t]?t:'dark');var pendingExt=s&&s!=='default'&&!skins[s]&&!legacy[s];var skin=skins[s]?s:(pendingExt?s:(m?m[1]:'default'));localStorage.setItem('wings-theme',theme);localStorage.setItem('wings-skin',skin);if(theme==='system')theme=window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';if(theme==='dark')document.documentElement.classList.add('dark');if(skin!=='default')document.documentElement.dataset.skin=skin;}catch(e){document.documentElement.classList.add('dark');}})()</script>
+<script>(function(){try{var themes={light:1,dark:1,neon:1,system:1},legacy={midnight:'dark',neon:'neon',light:'light',dark:'dark',slate:'dark',solarized:'dark',monokai:'neon',nord:'dark',oled:'dark',codex:'dark',terracotta:'dark',graphite:'dark',github:'light',wings-light:'light',wings-dark:'dark'},t=(localStorage.getItem('wings-theme')||'dark').toLowerCase(),m=legacy[t],theme=((m||themes[t])?t:'dark');localStorage.setItem('wings-theme',theme);localStorage.removeItem('wings-skin');if(theme==='system')theme=window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';if(theme==='dark')document.documentElement.classList.add('dark');if(theme==='neon')document.documentElement.dataset.theme='neon';}catch(e){document.documentElement.classList.add('dark');}})()</script>
 <script>(function(){try{var fs=localStorage.getItem('wings-font-size');if(fs&&fs!=='default')document.documentElement.dataset.fontSize=fs;}catch(e){}})()</script>
 <script>(function(){try{var m=(localStorage.getItem('wings-mode')==='advanced')?'advanced':'basic';if(!window.matchMedia('(min-width:641px)').matches)m='basic';document.documentElement.dataset.mode=m;}catch(e){document.documentElement.dataset.mode='basic';}})()</script>
 <!-- theme-color: surfaces the active app chrome color to native status bars (Safari status bar, PWA, native WKWebView wrappers). Updated dynamically by boot.js when theme/skin changes. The light/dark default values match style.css :root --sidebar / :root.dark --sidebar. -->
@@ -1035,31 +1035,31 @@
               <label data-i18n="settings_label_theme">Theme</label>
               <div id="themePickerGrid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:4px">
                 <button type="button" data-theme-val="light" onclick="_pickTheme('light')" class="theme-pick-btn" style="border:1px solid var(--border2);border-radius:10px;padding:10px 8px;text-align:center;cursor:pointer;background:none;transition:all .15s">
-                  <div style="width:100%;height:40px;border-radius:6px;background:#fff;border:1px solid rgba(0,0,0,.12);margin-bottom:6px;display:flex;align-items:center;justify-content:center">
-                    <svg width="16" height="16" fill="none" stroke="#999" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+                  <div style="width:100%;height:40px;border-radius:6px;background:#FEFCF7;border:1px solid rgba(0,0,0,.12);margin-bottom:6px;display:flex;align-items:center;justify-content:center">
+                    <svg width="16" height="16" fill="none" stroke="#B8860B" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
                   </div>
-                  <span style="font-size:12px;font-weight:500;color:var(--text)">Light</span>
+                  <span style="font-size:12px;font-weight:500;color:var(--text)">Hell</span>
                 </button>
                 <button type="button" data-theme-val="dark" onclick="_pickTheme('dark')" class="theme-pick-btn" style="border:1px solid var(--border2);border-radius:10px;padding:10px 8px;text-align:center;cursor:pointer;background:none;transition:all .15s">
-                  <div style="width:100%;height:40px;border-radius:6px;background:#1a1a2e;border:1px solid rgba(255,255,255,.1);margin-bottom:6px;display:flex;align-items:center;justify-content:center">
-                    <svg width="16" height="16" fill="none" stroke="#666" stroke-width="2" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1111.21 3a7 7 0 009.79 9.79z"/></svg>
+                  <div style="width:100%;height:40px;border-radius:6px;background:#141414;border:1px solid rgba(201,164,92,.3);margin-bottom:6px;display:flex;align-items:center;justify-content:center">
+                    <svg width="16" height="16" fill="none" stroke="#C9A45C" stroke-width="2" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1111.21 3a7 7 0 009.79 9.79z"/></svg>
                   </div>
-                  <span style="font-size:12px;font-weight:500;color:var(--text)">Dark</span>
+                  <span style="font-size:12px;font-weight:500;color:var(--text)">Dunkel</span>
+                </button>
+                <button type="button" data-theme-val="neon" onclick="_pickTheme('neon')" class="theme-pick-btn" style="border:1px solid var(--border2);border-radius:10px;padding:10px 8px;text-align:center;cursor:pointer;background:none;transition:all .15s">
+                  <div style="width:100%;height:40px;border-radius:6px;background:linear-gradient(135deg,#0D0221,#1A0B2E);border:1px solid rgba(255,45,155,.4);margin-bottom:6px;display:flex;align-items:center;justify-content:center">
+                    <svg width="16" height="16" fill="none" stroke="#FF2D9B" stroke-width="2" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 13 2 13 22 11 14 3 14 12 14 13 22 13 2"/></svg>
+                  </div>
+                  <span style="font-size:12px;font-weight:500;color:var(--text)">Neon</span>
                 </button>
                 <button type="button" data-theme-val="system" onclick="_pickTheme('system')" class="theme-pick-btn" style="border:1px solid var(--border2);border-radius:10px;padding:10px 8px;text-align:center;cursor:pointer;background:none;transition:all .15s">
-                  <div style="width:100%;height:40px;border-radius:6px;background:linear-gradient(to right,#fff,#1a1a2e);border:1px solid rgba(0,0,0,.12);margin-bottom:6px;display:flex;align-items:center;justify-content:center">
+                  <div style="width:100%;height:40px;border-radius:6px;background:linear-gradient(to right,#FEFCF7,#141414);border:1px solid rgba(0,0,0,.12);margin-bottom:6px;display:flex;align-items:center;justify-content:center">
                     <svg width="16" height="16" fill="none" stroke="#888" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
                   </div>
                   <span style="font-size:12px;font-weight:500;color:var(--text)">System</span>
                 </button>
               </div>
               <input type="hidden" id="settingsTheme" value="dark">
-            </div>
-            <div class="settings-field">
-              <label data-i18n="settings_label_skin">Skin</label>
-              <div id="skinPickerGrid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:4px">
-              </div>
-              <input type="hidden" id="settingsSkin" value="default">
             </div>
                         <div class="settings-field">
               <label data-i18n="settings_label_font_size">Font size</label>

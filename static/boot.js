@@ -2553,35 +2553,38 @@ if(window.visualViewport){
 
 // ── Appearance helpers (theme = light/dark/system, skin = palette/accent) ────
 const _THEMES=[
-  {name:'Light', value:'light', colors:['#FEFCF7','#FAF7F0','#B8860B']},
-  {name:'Dark', value:'dark', colors:['#0D0D1A','#141425','#FFD700']},
-  {name:'System', value:'system', colors:['#FEFCF7','#0D0D1A','#B8860B']},
-];
-const _SKINS=[
-  {name:'Default',     colors:['#FFD700','#FFBF00','#CD7F32']},
-  {name:'Midnight',    value:'midnight', colors:['#4C8DFF','#101828','#0A0F1C']},
-  {name:'Neon',        value:'neon',     colors:['#22D3EE','#10131A','#08090C']},
+  {name:'Hell',    value:'light',  colors:['#FEFCF7','#FAF7F0','#B8860B']},
+  {name:'Dunkel',  value:'dark',   colors:['#0D0D1A','#141425','#C9A45C']},
+  {name:'Neon',    value:'neon',   colors:['#0D0221','#1A0B2E','#FF2D9B']},
+  {name:'System',  value:'system', colors:['#FEFCF7','#0D0D1A','#B8860B']},
 ];
 const _VALID_THEMES=new Set((_THEMES||[]).map(t=>t.value));
-const _VALID_SKINS=new Set((_SKINS||[]).map(s=>(s.value||s.name).toLowerCase()));
 const _LEGACY_THEME_MAP={
-  slate:{theme:'dark',skin:'midnight'},
-  solarized:{theme:'dark',skin:'midnight'},
-  monokai:{theme:'dark',skin:'neon'},
-  nord:{theme:'dark',skin:'midnight'},
-  oled:{theme:'dark',skin:'default'},
+  midnight:{theme:'dark'},
+  neon:{theme:'neon'},
+  light:{theme:'light'},
+  dark:{theme:'dark'},
+  slate:{theme:'dark'},
+  solarized:{theme:'dark'},
+  monokai:{theme:'neon'},
+  nord:{theme:'dark'},
+  oled:{theme:'dark'},
+  codex:{theme:'dark'},
+  terracotta:{theme:'dark'},
+  graphite:{theme:'dark'},
+  github:{theme:'light'},
+  wings-light:{theme:'light'},
+  wings-dark:{theme:'dark'},
 };
 let _systemThemeMq=null;
 let _onSystemThemeChange=null;
 let _resolvedThemeBaseDark=false;
 
-function _normalizeAppearance(theme,skin){
+function _normalizeAppearance(theme){
   const rawTheme=typeof theme==='string'?theme.trim().toLowerCase():'';
-  const rawSkin=typeof skin==='string'?skin.trim().toLowerCase():'';
   const legacy=_LEGACY_THEME_MAP[rawTheme];
   const nextTheme=legacy?legacy.theme:(_VALID_THEMES.has(rawTheme)?rawTheme:'dark');
-  const nextSkin=_VALID_SKINS.has(rawSkin)?rawSkin:(legacy?legacy.skin:'default');
-  return {theme:nextTheme,skin:nextSkin};
+  return {theme:nextTheme};
 }
 
 // Sync <meta name="theme-color"> with the active theme's app chrome color.
@@ -2611,26 +2614,7 @@ function _syncThemeColorMeta(){
   }catch(e){}
 }
 
-function _skinKey(skin){
-  return (skin&&String(skin.value||skin.name||'').toLowerCase())||'';
-}
-
-function _findSkinEntry(key){
-  const normalized=String(key||'default').toLowerCase();
-  return (_SKINS||[]).find(s=>_skinKey(s)===normalized)||null;
-}
-
-function _activeSkinScheme(){
-  const key=(document.documentElement.dataset.skin||'default').toLowerCase();
-  const skin=_findSkinEntry(key);
-  const scheme=skin&&skin._extScheme;
-  return scheme==='light'||scheme==='dark'?scheme:'';
-}
-
 function _effectiveThemeDark(baseIsDark){
-  const skinScheme=_activeSkinScheme();
-  if(skinScheme==='dark') return true;
-  if(skinScheme==='light') return false;
   return !!baseIsDark;
 }
 
@@ -2650,7 +2634,7 @@ function _setResolvedTheme(isDark){
 }
 
 function _applyTheme(name){
-  const normalized=_normalizeAppearance(name,'default');
+  const normalized=_normalizeAppearance(name);
   delete document.documentElement.dataset.theme;
   if(_systemThemeMq&&_onSystemThemeChange){
     _systemThemeMq.removeEventListener('change',_onSystemThemeChange);
@@ -2664,58 +2648,29 @@ function _applyTheme(name){
     _systemThemeMq.addEventListener('change',_onSystemThemeChange);
     return;
   }
-  _setResolvedTheme(normalized.theme==='dark');
-}
-
-function _applySkin(name){
-  const key=(name||'default').toLowerCase();
-  if(key==='default') delete document.documentElement.dataset.skin;
-  else document.documentElement.dataset.skin=key;
-  _setResolvedTheme(_resolvedThemeBaseDark);
+  document.documentElement.dataset.theme=normalized.theme;
+  if(normalized.theme==='neon'){
+    document.documentElement.classList.remove('dark');
+    _resolvedThemeBaseDark=false;
+  }else{
+    _setResolvedTheme(normalized.theme==='dark');
+  }
 }
 
 function _pickTheme(name){
-  const currentSkin=localStorage.getItem('wings-skin');
-  const appearance=_normalizeAppearance(name,currentSkin);
+  const appearance=_normalizeAppearance(name);
   localStorage.setItem('wings-theme',appearance.theme);
-  localStorage.setItem('wings-skin',appearance.skin);
+  localStorage.removeItem('wings-skin');
   _applyTheme(appearance.theme);
-  _applySkin(appearance.skin);
   _syncThemePicker(appearance.theme);
-  _syncSkinPicker(appearance.skin);
   const hidden=$('settingsTheme');
   if(hidden) hidden.value=appearance.theme;
-  const skinHidden=$('settingsSkin');
-  if(skinHidden) skinHidden.value=appearance.skin;
-  if(typeof _scheduleAppearanceAutosave==='function') _scheduleAppearanceAutosave();
-}
-
-function _pickSkin(name){
-  const appearance=_normalizeAppearance(localStorage.getItem('wings-theme'),name);
-  localStorage.setItem('wings-theme',appearance.theme);
-  localStorage.setItem('wings-skin',appearance.skin);
-  _applyTheme(appearance.theme);
-  _applySkin(appearance.skin);
-  _syncThemePicker(appearance.theme);
-  _syncSkinPicker(appearance.skin);
-  const hidden=$('settingsSkin');
-  if(hidden) hidden.value=appearance.skin;
-  const themeHidden=$('settingsTheme');
-  if(themeHidden) themeHidden.value=appearance.theme;
   if(typeof _scheduleAppearanceAutosave==='function') _scheduleAppearanceAutosave();
 }
 
 function _syncThemePicker(active){
   document.querySelectorAll('#themePickerGrid .theme-pick-btn').forEach(btn=>{
     btn.classList.toggle('active',btn.dataset.themeVal===active);
-    btn.style.borderColor='';
-    btn.style.boxShadow='';
-  });
-}
-
-function _syncSkinPicker(active){
-  document.querySelectorAll('#skinPickerGrid .skin-pick-btn').forEach(btn=>{
-    btn.classList.toggle('active',btn.dataset.skinVal===active);
     btn.style.borderColor='';
     btn.style.boxShadow='';
   });
@@ -2746,148 +2701,10 @@ function _syncFontSizePicker(active){
   });
 }
 
-function _buildSkinPicker(activeSkin){
-  const grid=$('skinPickerGrid');
-  if(!grid) return;
-  grid.innerHTML='';
-  for(const skin of _SKINS){
-    const key=(skin.value||skin.name).toLowerCase();
-    const btn=document.createElement('button');
-    btn.type='button';
-    btn.className='skin-pick-btn';
-    btn.dataset.skinVal=key;
-    btn.style.cssText='border:1px solid var(--border2);border-radius:8px;padding:8px 4px;text-align:center;cursor:pointer;background:none;transition:all .15s';
-    btn.onclick=()=>_pickSkin(key);
-    // Build with DOM nodes + textContent so an extension-registered skin's
-    // label/name (registerWingsSkin descriptor) can never inject markup into
-    // the picker. Swatch colors are already value-sanitized upstream, but set
-    // them via element.style.background (not interpolated HTML) as defense in depth.
-    const dotRow=document.createElement('div');
-    dotRow.style.cssText='display:flex;gap:3px;justify-content:center;margin-bottom:4px';
-    for(const c of (skin.colors||[])){
-      const dot=document.createElement('span');
-      dot.style.cssText='display:inline-block;width:10px;height:10px;border-radius:50%';
-      dot.style.background=c;
-      dotRow.appendChild(dot);
-    }
-    const labelEl=document.createElement('span');
-    labelEl.style.cssText='font-size:11px;color:var(--text)';
-    labelEl.textContent=skin.label||skin.name||'';
-    btn.appendChild(dotRow);
-    btn.appendChild(labelEl);
-    grid.appendChild(btn);
-  }
-  _syncSkinPicker((activeSkin||'default').toLowerCase());
-}
-
-// ── Extension-registered skins (theme-registration capability) ───────────────
-// Lets a trusted local extension contribute a custom skin that appears in the
-// NATIVE skin picker (rather than bolting on a parallel theme switcher). An
-// extension calls window.registerWingsSkin(descriptor); core validates +
-// sanitizes it, injects a managed <style> rule for its CSS-variable tokens,
-// appends it to _SKINS so the picker renders it, and re-applies the persisted
-// selection if it was waiting on this (late-registered) skin.
-//
-// Security: token values are written into CSS, so every value is sanitized
-// against a strict allowlist HERE, once, so all theme extensions inherit the
-// guard safe-by-construction. Reserved core skin keys cannot be overwritten.
-const _EXT_SKIN_STYLE_ID='wingsExtensionSkinStyles';
-const _EXT_SKIN_KEYS=new Set();                 // keys we registered (for idempotent re-register)
-const _RESERVED_SKIN_KEYS=new Set((_SKINS||[]).map(s=>(s.value||s.name).toLowerCase()));
-// CSS custom-property names a skin is allowed to set. Mirrors the documented
-// design-token contract; anything outside this set is dropped.
-const _ALLOWED_SKIN_TOKENS=new Set([
-  '--bg','--surface','--surface2','--surface-subtle','--text','--text2','--muted',
-  '--accent','--accent2','--accent3','--accent-contrast','--accent-hover',
-  '--accent-text','--accent-bg','--accent-bg-strong','--accent-rgb',
-  '--border','--border2','--hover-bg','--code-bg','--code-text',
-  '--sidebar','--sidebar-text','--user-bubble','--assistant-bubble',
-  '--success','--warning','--danger','--info','--link'
-]);
-// Accept only safe color / simple numeric-with-unit values, OR a bare RGB triple
-// (e.g. "0, 0, 0" for --accent-rgb, consumed inside rgba(...)). Rejects anything
-// with url(), expression(), semicolons, braces, or other CSS-injection vectors.
-const _SAFE_SKIN_VALUE_RE=/^(#(?:[0-9a-fA-F]{3,8})|rg(?:b|ba)\(\s*[0-9.,%\s/]+\)|hsl(?:a)?\(\s*[0-9.,%\s/deg]+\)|[0-9]{1,3}\s*,\s*[0-9]{1,3}\s*,\s*[0-9]{1,3}|[a-zA-Z]{3,20}|[0-9.]+(?:px|em|rem|%)?)$/;
-
-function _sanitizeSkinScheme(scheme){
-  const value=String(scheme||'').trim().toLowerCase();
-  return value==='light'||value==='dark'?value:'';
-}
-
-function _sanitizeSkinTokens(tokens){
-  const out={};
-  if(!tokens||typeof tokens!=='object') return out;
-  for(const rawKey of Object.keys(tokens)){
-    const key=String(rawKey).trim();
-    if(!_ALLOWED_SKIN_TOKENS.has(key)) continue;          // unknown token → drop
-    const val=String(tokens[rawKey]).trim();
-    if(val.length>64) continue;                            // absurd length → drop
-    if(!_SAFE_SKIN_VALUE_RE.test(val)) continue;          // unsafe value → drop
-    out[key]=val;
-  }
-  return out;
-}
-
-function _renderExtensionSkinStyles(){
-  let styleEl=document.getElementById(_EXT_SKIN_STYLE_ID);
-  if(!styleEl){
-    styleEl=document.createElement('style');
-    styleEl.id=_EXT_SKIN_STYLE_ID;
-    document.head.appendChild(styleEl);
-  }
-  const blocks=[];
-  for(const skin of _SKINS){
-    if(!skin||!skin._extToken) continue;                  // only ext-registered skins
-    const key=(skin.value||skin.name).toLowerCase();
-    const decls=Object.keys(skin._extToken).map(k=>`${k}:${skin._extToken[k]}`).join(';');
-    if(decls) blocks.push(`:root[data-skin="${key}"]{${decls}}`);
-  }
-  styleEl.textContent=blocks.join('\n');
-}
-
-// Public API for extensions. Returns true on success, false if rejected.
-function registerWingsSkin(descriptor){
-  try{
-    if(!descriptor||typeof descriptor!=='object') return false;
-    const name=String(descriptor.name||'').trim();
-    if(!name) return false;
-    const rawVal=String(descriptor.value||name).trim().toLowerCase();
-    // key must be a simple slug (safe as a data-skin attr + CSS attr selector)
-    const key=rawVal.replace(/[^a-z0-9_-]/g,'');
-    if(!key) return false;
-    if(_RESERVED_SKIN_KEYS.has(key)) return false;        // never shadow a core skin
-    const tokens=_sanitizeSkinTokens(descriptor.tokens);
-    if(Object.keys(tokens).length===0) return false;      // nothing valid to apply
-    const scheme=_sanitizeSkinScheme(descriptor.scheme);
-    // 3 swatch colors for the picker (sanitized); fall back to accent/bg/text.
-    let colors=Array.isArray(descriptor.colors)?descriptor.colors.slice(0,3):[];
-    colors=colors.map(c=>String(c).trim()).filter(c=>_SAFE_SKIN_VALUE_RE.test(c));
-    while(colors.length<3) colors.push(tokens['--accent']||tokens['--bg']||tokens['--text']||'#888');
-    const label=String(descriptor.label||name).slice(0,40);
-    const entry={name:name.slice(0,40),value:key,label,colors,_extToken:tokens,_extScheme:scheme,_extension:true};
-
-    const existingIdx=_SKINS.findIndex(s=>(s.value||s.name).toLowerCase()===key);
-    if(existingIdx>=0&&_EXT_SKIN_KEYS.has(key)){
-      _SKINS[existingIdx]=entry;                           // idempotent update
-    }else if(existingIdx>=0){
-      return false;                                        // collides w/ a non-ext skin
-    }else{
-      _SKINS.push(entry);
-    }
-    _EXT_SKIN_KEYS.add(key);
-    _VALID_SKINS.add(key);
-    _renderExtensionSkinStyles();
-    // Refresh the picker if it's already built.
-    if(document.getElementById('skinPickerGrid')){
-      _buildSkinPicker((localStorage.getItem('wings-skin')||'default').toLowerCase());
-    }
-    // If the user had previously selected this (now-available) skin, apply it.
-    if((localStorage.getItem('wings-skin')||'').toLowerCase()===key){
-      _applySkin(key);
-    }
-    return true;
-  }catch(_){ return false; }
-}
+// ── registerWingsSkin — no-op stub (skin system removed, themes unified) ──────
+// Kept for backward compatibility with any extension that may call it.
+// Returns false; no skin registration is performed.
+function registerWingsSkin(_descriptor){ return false; }
 if(typeof window!=='undefined') window.registerWingsSkin=registerWingsSkin;
 
 function applyBotName(){
@@ -3236,35 +3053,22 @@ window._mirrorSpeechSettingsFromServer=_mirrorSpeechSettingsFromServer;
     // empty (new-browser) state is indistinguishable from a user who chose
     // the defaults.  To avoid blocking server→client sync on first visit we
     // only let localStorage override the server when it carries an explicit
-    // user-selectable theme value or a NON-DEFAULT skin.  That keeps the
-    // server in charge for empty first-visit state while preserving explicit
-    // light/dark/system choices after a failed autosave.
-    const srvAppearance=_normalizeAppearance(s.theme,s.skin);
+    // user-selectable theme value. That keeps the server in charge for empty
+    // first-visit state while preserving explicit light/dark/neon/system choices
+    // after a failed autosave.
+    const srvAppearance=_normalizeAppearance(s.theme);
     const lsTheme=(localStorage.getItem('wings-theme')||'').trim().toLowerCase();
-    const lsSkin=(localStorage.getItem('wings-skin')||'').trim().toLowerCase();
-    const lsAppearance=_normalizeAppearance(lsTheme||null,lsSkin||null);
-    // An unknown non-default persisted skin is most likely an extension-provided
-    // skin (registerWingsSkin) whose extension script hasn't registered it yet
-    // at this point in boot. Preserve it verbatim instead of normalizing it away
-    // to 'default' — the extension's registerWingsSkin() will inject the CSS and
-    // re-apply it once it loads. Without this, the boot sync would clobber the
-    // saved choice before the extension runs.
-    const lsSkinIsPendingExt=!!lsSkin&&lsSkin!=='default'&&!_VALID_SKINS.has(lsSkin)&&!_LEGACY_THEME_MAP[lsSkin];
-    const lsHasExplicitSkin=lsSkin&&lsSkin!=='default';
-    const lsHasExplicitTheme=lsTheme&&['system','light','dark'].includes(lsTheme);
+    const lsAppearance=_normalizeAppearance(lsTheme||null);
+    const lsHasExplicitTheme=lsTheme&&['system','light','dark','neon'].includes(lsTheme);
     const theme=lsHasExplicitTheme?lsAppearance.theme:srvAppearance.theme;
-    const skin=lsHasExplicitSkin?(lsSkinIsPendingExt?lsSkin:lsAppearance.skin):srvAppearance.skin;
     localStorage.setItem('wings-theme',theme);
+    localStorage.removeItem('wings-skin');
     _applyTheme(theme);
-    localStorage.setItem('wings-skin',skin);
-    _applySkin(skin);
     // Reconcile: if localStorage and server disagree, push localStorage
-    // values to the server so the next refresh won't revert. Skip the push for a
-    // still-pending extension skin (don't persist it server-side until it's a
-    // confirmed-registered skin — avoids writing a skin the server can't validate).
-    if((lsHasExplicitTheme||lsHasExplicitSkin)&&!lsSkinIsPendingExt&&(theme!==srvAppearance.theme||skin!==srvAppearance.skin)){
+    // values to the server so the next refresh won't revert.
+    if(lsHasExplicitTheme&&theme!==srvAppearance.theme){
       try{
-        api('/api/settings',{method:'POST',body:JSON.stringify({theme,skin})});
+        api('/api/settings',{method:'POST',body:JSON.stringify({theme})});
       }catch(_){}
     }
     const fontSize=(s.font_size||localStorage.getItem('wings-font-size')||'default');
