@@ -125,6 +125,15 @@
   .msg-row:not([data-role="user"]){display:flex;align-items:flex-start;gap:12px;padding:10px 0;}
   .msg-row:not([data-role="user"]) .msg-body{padding-left:0;max-width:600px;}
   .msg-role{display:none;}
+  /* ── Mobile: allow bubbles to use more width on narrow screens ── */
+  @media (max-width: 900px) {
+    .msg-row[data-role="user"] .msg-body { max-width: 78%; }
+    .msg-row:not([data-role="user"]) .msg-body { max-width: 78%; }
+  }
+  @media (max-width: 600px) {
+    .msg-row[data-role="user"] .msg-body { max-width: 90%; }
+    .msg-row:not([data-role="user"]) .msg-body { max-width: 90%; }
+  }
 
   /* Composer textarea (default is 16px in stylesheet) */
   :root[data-font-size="small"] #msg { font-size: 14px; }
@@ -4838,10 +4847,7 @@ main.main > #mainPlugin{display:none;}
 @media (max-width:700px){.compression-recovery-card{flex-direction:column;align-items:stretch;margin-left:0;}.compression-recovery-action{width:100%;}}
 .assistant-segment-anchor { display: none; }
 
-/* ── Classic conversation layout: user right, half-width; assistant left ── */
-.msg-row[data-role="user"] { align-self: flex-end; max-width: 60%; }
-@media (max-width: 900px) { .msg-row[data-role="user"] { max-width: 78%; } }
-@media (max-width: 600px) { .msg-row[data-role="user"] { max-width: 90%; } }
+/* ── Empty tool-anchor assistant row: hide ghost header ── */
 /* Hide the entire "empty tool-anchor" assistant row (content='' with
    tool_calls). renderMessages keeps it in the DOM so tool cards can anchor
    to it, but visually it adds a ghost "Hermes" header above the tool cards.
@@ -4890,7 +4896,7 @@ main.main > #mainPlugin{display:none;}
 .msg-row:hover .msg-actions { opacity: 1; }
 .assistant-turn:hover .msg-actions { opacity: 1; }
 
-/* ── User message: right-aligned bubble; no avatar/label — position identifies sender ── */
+/* ── User message bubble styling (works with Premium avatar layout) ── */
 .msg-row[data-role="user"] .msg-body {
   background: var(--user-bubble-bg);
   border: 1px solid var(--user-bubble-border);
@@ -4899,7 +4905,6 @@ main.main > #mainPlugin{display:none;}
   padding: 10px 18px;
   margin-left: 0;
   padding-left: 18px;
-  max-width: none;
   color: var(--user-bubble-text);
   overflow-wrap: anywhere;
   box-shadow: var(--shadow-sm);
