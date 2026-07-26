@@ -3093,7 +3093,7 @@ window._mirrorSpeechSettingsFromServer=_mirrorSpeechSettingsFromServer;
     // TTS: apply enabled state on boot so buttons show/hide correctly (#499)
     if(typeof _applyTtsEnabled==='function') _applyTtsEnabled(localStorage.getItem('wings-tts-enabled')==='true');
   }catch(e){
-    fetch('/boot-debug/settings-catch/'+encodeURIComponent(e.message||String(e))).catch(()=>{});
+    fetch('/api/boot-debug/settings-catch/'+encodeURIComponent(e.message||String(e))).catch(()=>{});
     window._showTokenUsage=false;
     window._showQuotaChip=false;
     window._showConversationOutline=false;
@@ -3152,7 +3152,7 @@ window._mirrorSpeechSettingsFromServer=_mirrorSpeechSettingsFromServer;
     _applyComposerFooterVisibilitySettings();
     if(typeof _applyTtsEnabled==='function') _applyTtsEnabled(localStorage.getItem('wings-tts-enabled')==='true');
   }
-  fetch('/boot-debug/post-settings').catch(()=>{});
+  fetch('/api/boot-debug/post-settings').catch(()=>{});
   // Non-blocking update check (fire-and-forget, once per tab session)
   // ?test_updates=1 in URL forces banner display for testing (bypasses sessionStorage guards)
   const _testUpdates=new URLSearchParams(location.search).get('test_updates')==='1';
@@ -3247,15 +3247,15 @@ window._mirrorSpeechSettingsFromServer=_mirrorSpeechSettingsFromServer;
   }
 
   // Fetch active profile
-  fetch('/boot-debug/pre-profile').catch(()=>{});
+  fetch('/api/boot-debug/pre-profile').catch(()=>{});
   let activeProfileState;
   try {
     activeProfileState = await _resolveActiveProfileBootstrapState();
   } catch(e) {
-    fetch('/boot-debug/profile-error/'+encodeURIComponent(e.message||String(e))).catch(()=>{});
+    fetch('/api/boot-debug/profile-error/'+encodeURIComponent(e.message||String(e))).catch(()=>{});
     activeProfileState = {status: 'fallback', profile: 'default', isDefault: true};
   }
-  fetch('/boot-debug/profile-ok').catch(()=>{});
+  fetch('/api/boot-debug/profile-ok').catch(()=>{});
   if (activeProfileState.status === 'recovery-redirect') return;
   S.activeProfile = activeProfileState.profile;
   S.activeProfileIsDefault = activeProfileState.isDefault;
@@ -3374,9 +3374,9 @@ window._mirrorSpeechSettingsFromServer=_mirrorSpeechSettingsFromServer;
   try {
     await renderSessionList();
   } catch(e) {
-    fetch('/boot-debug/render-error/'+encodeURIComponent(e.message||String(e))).catch(()=>{});
+    fetch('/api/boot-debug/render-error/'+encodeURIComponent(e.message||String(e))).catch(()=>{});
   }
-  fetch('/boot-debug/sessions-ok').catch(()=>{});
+  fetch('/api/boot-debug/sessions-ok').catch(()=>{});
   await _workspaceListReady;
   await _onboardingReady;
   _initResizePanels();
