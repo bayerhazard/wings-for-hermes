@@ -424,7 +424,7 @@
   .app-titlebar-hamburger{-webkit-app-region:no-drag;align-items:center;justify-content:center;background:none;border:none;color:var(--muted);border-radius:8px;cursor:pointer;padding:0;-webkit-tap-highlight-color:transparent;transition:background-color .15s,color .15s;}
   .app-titlebar-hamburger:hover{background:var(--hover-bg);color:var(--text);}
   /* ── Titlebar status pill: context ring + model in one quiet control ── */
-  .titlebar-status-pill{display:flex;align-items:center;gap:2px;height:34px;padding:0 4px;background:var(--surface);border:1px solid var(--border);border-radius:999px;flex-shrink:0;min-width:0;-webkit-app-region:no-drag;transition:border-color var(--dur) var(--ease),box-shadow var(--dur) var(--ease),background-color var(--dur) var(--ease);}
+  .titlebar-status-pill{display:flex;align-items:center;gap:2px;height:34px;padding:0 4px 0 8px;background:var(--surface);border:1px solid var(--border);border-radius:999px;flex-shrink:0;min-width:0;-webkit-app-region:no-drag;transition:border-color var(--dur) var(--ease),box-shadow var(--dur) var(--ease),background-color var(--dur) var(--ease);}
   .titlebar-status-pill:hover{border-color:var(--border2);box-shadow:var(--shadow-sm);}
   .titlebar-pill-divider{width:1px;height:16px;background:var(--border);flex-shrink:0;margin:0 2px;display:none;}
   .titlebar-status-pill.has-ctx .titlebar-pill-divider{display:block;}
