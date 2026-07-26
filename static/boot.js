@@ -2942,11 +2942,14 @@ function _mirrorSpeechSettingsFromServer(s){
 window._mirrorSpeechSettingsFromServer=_mirrorSpeechSettingsFromServer;
 
 (async()=>{
+  fetch('/api/boot-debug/iife-start').catch(()=>{});
   // Load send key preference
   let _bootSettings={};
   const prefillIntent=(typeof _composerPrefillIntentFromLocation==='function')?_composerPrefillIntentFromLocation():null;
+  fetch('/api/boot-debug/pre-settings').catch(()=>{});
   try{
     const s=await api('/api/settings');
+    fetch('/api/boot-debug/settings-resolved').catch(()=>{});
     _bootSettings=s;
     if(typeof checkWebUIVersionSkew==='function'){try{checkWebUIVersionSkew(s);}catch(_){}}
     window._sendKey=s.send_key||'enter';
