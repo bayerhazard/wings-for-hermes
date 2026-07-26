@@ -16439,10 +16439,9 @@ def _serve_static(handler, parsed):
     # is safe to cache aggressively: any redeploy changes the URL.
     version_values = parse_qs(parsed.query, keep_blank_values=True).get("v", [""])
     has_fingerprint = bool(version_values[0])
-    cache_control = (
-        "public, max-age=31536000, immutable" if has_fingerprint
-        else "public, max-age=300"
-    )
+    # Wings: force no-store on ALL responses to prevent stale cache issues
+    # with the Olares envoy proxy and browser Service Workers.
+    cache_control = "no-store, no-cache, must-revalidate"
 
     # 304 short-circuit on conditional GET.
     if handler.headers.get("If-None-Match") == etag:
@@ -16463,6 +16462,8 @@ def _serve_static(handler, parsed):
     handler.send_header("Content-Length", str(len(body)))
     handler.send_header("ETag", etag)
     handler.send_header("Cache-Control", cache_control)
+    handler.send_header("Pragma", "no-cache")
+    handler.send_header("Expires", "0")
     if gz is not None:
         handler.send_header("Vary", "Accept-Encoding")
     if use_gzip:
