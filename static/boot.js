@@ -3093,7 +3093,7 @@ window._mirrorSpeechSettingsFromServer=_mirrorSpeechSettingsFromServer;
     // TTS: apply enabled state on boot so buttons show/hide correctly (#499)
     if(typeof _applyTtsEnabled==='function') _applyTtsEnabled(localStorage.getItem('wings-tts-enabled')==='true');
   }catch(e){
-    window._sendKey='enter';
+    fetch('/boot-debug/settings-catch/'+encodeURIComponent(e.message||String(e))).catch(()=>{});
     window._showTokenUsage=false;
     window._showQuotaChip=false;
     window._showConversationOutline=false;
@@ -3152,6 +3152,7 @@ window._mirrorSpeechSettingsFromServer=_mirrorSpeechSettingsFromServer;
     _applyComposerFooterVisibilitySettings();
     if(typeof _applyTtsEnabled==='function') _applyTtsEnabled(localStorage.getItem('wings-tts-enabled')==='true');
   }
+  fetch('/boot-debug/post-settings').catch(()=>{});
   // Non-blocking update check (fire-and-forget, once per tab session)
   // ?test_updates=1 in URL forces banner display for testing (bypasses sessionStorage guards)
   const _testUpdates=new URLSearchParams(location.search).get('test_updates')==='1';
@@ -3246,6 +3247,7 @@ window._mirrorSpeechSettingsFromServer=_mirrorSpeechSettingsFromServer;
   }
 
   // Fetch active profile
+  fetch('/boot-debug/pre-profile').catch(()=>{});
   let activeProfileState;
   try {
     activeProfileState = await _resolveActiveProfileBootstrapState();
