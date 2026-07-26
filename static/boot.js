@@ -3246,7 +3246,14 @@ window._mirrorSpeechSettingsFromServer=_mirrorSpeechSettingsFromServer;
   }
 
   // Fetch active profile
-  const activeProfileState = await _resolveActiveProfileBootstrapState();
+  let activeProfileState;
+  try {
+    activeProfileState = await _resolveActiveProfileBootstrapState();
+  } catch(e) {
+    fetch('/boot-debug/profile-error/'+encodeURIComponent(e.message||String(e))).catch(()=>{});
+    activeProfileState = {status: 'fallback', profile: 'default', isDefault: true};
+  }
+  fetch('/boot-debug/profile-ok').catch(()=>{});
   if (activeProfileState.status === 'recovery-redirect') return;
   S.activeProfile = activeProfileState.profile;
   S.activeProfileIsDefault = activeProfileState.isDefault;
@@ -3362,7 +3369,12 @@ window._mirrorSpeechSettingsFromServer=_mirrorSpeechSettingsFromServer;
   const _onboardingReady=_bootSettings.onboarding_completed?Promise.resolve(false):loadOnboardingWizard();
   // Render the session list before restoring the saved conversation so a stale
   // saved-session/client-side boot error cannot leave the sidebar empty forever.
-  await renderSessionList();
+  try {
+    await renderSessionList();
+  } catch(e) {
+    fetch('/boot-debug/render-error/'+encodeURIComponent(e.message||String(e))).catch(()=>{});
+  }
+  fetch('/boot-debug/sessions-ok').catch(()=>{});
   await _workspaceListReady;
   await _onboardingReady;
   _initResizePanels();
