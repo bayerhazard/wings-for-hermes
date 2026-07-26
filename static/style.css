@@ -4819,7 +4819,7 @@ main.main > #mainPlugin{display:none;}
 .msg-body table { font-family: 'SF Mono', ui-monospace, monospace; }
 .msg-body:empty { display: none; }
 .assistant-turn { width: 100%; padding: 10px 0; }
-.assistant-turn-blocks { display: flex; flex-direction: column; }
+.assistant-turn-blocks { display: flex; flex-direction: column; flex: 1; min-width: 0; }
 .status-card{margin:8px 0 8px var(--msg-rail);max-width:min(var(--msg-max),760px);border:1px solid var(--border-subtle);background:var(--surface-subtle);border-radius:var(--radius-card);box-shadow:0 10px 24px rgba(0,0,0,.05);overflow:hidden;}
 .status-card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:14px 16px;border-bottom:1px solid var(--border-subtle);background:linear-gradient(180deg,var(--surface-subtle-hover),var(--surface-subtle));}
 .status-card-title-wrap{min-width:0;}
