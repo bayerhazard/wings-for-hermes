@@ -2573,8 +2573,8 @@ const _LEGACY_THEME_MAP={
   terracotta:{theme:'dark'},
   graphite:{theme:'dark'},
   github:{theme:'light'},
-  wings-light:{theme:'light'},
-  wings-dark:{theme:'dark'},
+  'wings-light':{theme:'light'},
+  'wings-dark':{theme:'dark'},
 };
 let _systemThemeMq=null;
 let _onSystemThemeChange=null;
@@ -2942,14 +2942,11 @@ function _mirrorSpeechSettingsFromServer(s){
 window._mirrorSpeechSettingsFromServer=_mirrorSpeechSettingsFromServer;
 
 (async()=>{
-  fetch('/api/boot-debug/iife-start').catch(()=>{});
   // Load send key preference
   let _bootSettings={};
   const prefillIntent=(typeof _composerPrefillIntentFromLocation==='function')?_composerPrefillIntentFromLocation():null;
-  fetch('/api/boot-debug/pre-settings').catch(()=>{});
   try{
     const s=await api('/api/settings');
-    fetch('/api/boot-debug/settings-resolved').catch(()=>{});
     _bootSettings=s;
     if(typeof checkWebUIVersionSkew==='function'){try{checkWebUIVersionSkew(s);}catch(_){}}
     window._sendKey=s.send_key||'enter';
@@ -3096,7 +3093,6 @@ window._mirrorSpeechSettingsFromServer=_mirrorSpeechSettingsFromServer;
     // TTS: apply enabled state on boot so buttons show/hide correctly (#499)
     if(typeof _applyTtsEnabled==='function') _applyTtsEnabled(localStorage.getItem('wings-tts-enabled')==='true');
   }catch(e){
-    fetch('/api/boot-debug/settings-catch/'+encodeURIComponent(e.message||String(e))).catch(()=>{});
     window._showTokenUsage=false;
     window._showQuotaChip=false;
     window._showConversationOutline=false;
@@ -3155,7 +3151,6 @@ window._mirrorSpeechSettingsFromServer=_mirrorSpeechSettingsFromServer;
     _applyComposerFooterVisibilitySettings();
     if(typeof _applyTtsEnabled==='function') _applyTtsEnabled(localStorage.getItem('wings-tts-enabled')==='true');
   }
-  fetch('/api/boot-debug/post-settings').catch(()=>{});
   // Non-blocking update check (fire-and-forget, once per tab session)
   // ?test_updates=1 in URL forces banner display for testing (bypasses sessionStorage guards)
   const _testUpdates=new URLSearchParams(location.search).get('test_updates')==='1';
@@ -3250,15 +3245,7 @@ window._mirrorSpeechSettingsFromServer=_mirrorSpeechSettingsFromServer;
   }
 
   // Fetch active profile
-  fetch('/api/boot-debug/pre-profile').catch(()=>{});
-  let activeProfileState;
-  try {
-    activeProfileState = await _resolveActiveProfileBootstrapState();
-  } catch(e) {
-    fetch('/api/boot-debug/profile-error/'+encodeURIComponent(e.message||String(e))).catch(()=>{});
-    activeProfileState = {status: 'fallback', profile: 'default', isDefault: true};
-  }
-  fetch('/api/boot-debug/profile-ok').catch(()=>{});
+  const activeProfileState = await _resolveActiveProfileBootstrapState();
   if (activeProfileState.status === 'recovery-redirect') return;
   S.activeProfile = activeProfileState.profile;
   S.activeProfileIsDefault = activeProfileState.isDefault;
@@ -3374,12 +3361,7 @@ window._mirrorSpeechSettingsFromServer=_mirrorSpeechSettingsFromServer;
   const _onboardingReady=_bootSettings.onboarding_completed?Promise.resolve(false):loadOnboardingWizard();
   // Render the session list before restoring the saved conversation so a stale
   // saved-session/client-side boot error cannot leave the sidebar empty forever.
-  try {
-    await renderSessionList();
-  } catch(e) {
-    fetch('/api/boot-debug/render-error/'+encodeURIComponent(e.message||String(e))).catch(()=>{});
-  }
-  fetch('/api/boot-debug/sessions-ok').catch(()=>{});
+  await renderSessionList();
   await _workspaceListReady;
   await _onboardingReady;
   _initResizePanels();
