@@ -2413,17 +2413,9 @@ async function _openSidebarSession(session, loadOpts={}){
     try{await api('/api/session/import_cli',{method:'POST',body:JSON.stringify(_externalImportPayload(session))});}
     catch(_e){ /* import failed -- fall through to read-only view */ }
   }
-  try {
-    await _ensureSidebarSessionProfile(session);
-    await loadSession(session.session_id, loadOpts);
-    renderSessionListFromCache();
-  } catch(e) {
-    console.error('[wings] _openSidebarSession error:', e.message, e.stack);
-    if (typeof api === 'function') {
-      try { api('/api/boot-debug/open-sidebar-error/' + encodeURIComponent(e.message + '|' + (e.stack||'').split('\n')[1]||'')); } catch(_) {}
-    }
-    throw e;
-  }
+  await _ensureSidebarSessionProfile(session);
+  await loadSession(session.session_id, loadOpts);
+  renderSessionListFromCache();
 }
 
 function _isReadOnlySession(session) {

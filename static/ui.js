@@ -6308,7 +6308,12 @@ function _syncCtxIndicator(usage){
     const shortName=modelName.split('/').pop()||modelName;
     if(modelLabel.textContent!==shortName) modelLabel.textContent=shortName;
   }
-  
+  const label=`Context ${pct}%`;
+  const usageText=hasPromptTok?`${_fmtTokens(contextPromptTok)} / ${_fmtTokens(ctxWindow)}`:'';
+  const tokensText=totalTok?`Token ${_fmtTokens(totalTok)}`:'';
+  const thresholdText='';
+  const costText=(cost!=null&&cost>0)?`$${Number(cost).toFixed(4)}`:'';
+  const compressText='';
   _syncMobileCtxDisplay({
     visible:true,hasPromptTok,pct,label,usageText,tokensText,thresholdText,costText,compressText
   });
