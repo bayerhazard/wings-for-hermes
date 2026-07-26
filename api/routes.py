@@ -11789,6 +11789,7 @@ def handle_get(handler, parsed) -> bool:
             handler.send_response(200)
             handler.send_header("Content-Type", "text/html; charset=utf-8")
             handler.send_header("Content-Length", str(len(body)))
+            handler.send_header("Cache-Control", "no-store, no-cache, must-revalidate")
             handler.send_header("Vary", "Accept-Encoding")
             if use_gzip:
                 handler.send_header("Content-Encoding", "gzip")
