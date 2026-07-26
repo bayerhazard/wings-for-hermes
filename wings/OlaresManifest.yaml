@@ -11,7 +11,7 @@ metadata:
   description: Wings for Hermes — AI Agent Web UI with chat, sessions, memory, skills, cron, profiles, workspaces
   appid: wings
   title: Wings for Hermes
-  version: '1.7.13'
+  version: '1.8.0'
   categories:
     - Productivity_v112
     - Developer Tools
@@ -24,15 +24,9 @@ entrances:
     openMethod: window
     authLevel: internal
 spec:
-  versionName: '1.7.13'
+  versionName: '1.8.0'
   upgradeDescription: |
-    v1.7.13: Fixed assistant chat layout — tool calls and chat answer now stack vertically (were rendering in one horizontal line). Added flex:1 to assistant-turn-blocks so it fills the width beside the avatar.
-    v1.7.12: Fixed chat layout — removed CSS conflict between Wings-Premium avatar layout and Classic bubble layout. Fixed JS syntax error. Added responsive mobile adaptation.
-    v1.7.11: Fixed agent connection — removed HERMES_API_URL and HERMES_WEBUI_GATEWAY_API_KEY that caused the health check to probe a remote gateway (blocked by Olares envoy sidecar). Now runs the agent in-process exactly like hermes-webui. Added WANTED_UID/WANTED_GID for proper file ownership.
-    v1.7.10: Fixed Hermes gateway connection — added HERMES_API_URL and HERMES_WEBUI_GATEWAY_API_KEY env vars. The WebUI now connects to the Hermes agent gateway for model listing, session loading, and chat.
-    v1.7.9: Fixed agent source discovery — added HERMES_WEBUI_AGENT_DIR and HERMES_WEBUI_AUTO_INSTALL env vars. The WebUI now explicitly finds the hermes-agent source code and auto-installs dependencies.
-    v1.7.8: Theme system overhaul — merged Skin into unified Theme (Hell, Dunkel, Neon, System). Fixed theme picker always showing "Hell" (localStorage key mismatch). Fixed Service Worker cache serving stale assets (bumped cache suffix, included .git for unique WEBUI_VERSION).
-    v1.6.0: Gauge-Tooltip removed, Smart Download-Card for file creation, Avatar concept (user right-aligned, hermes left-aligned), neutral chatbubble backgrounds (no accent colors).
+    v1.8.0: Fixed assistant chat layout — tool calls and chat answer now stack vertically (were rendering in one horizontal line).
   fullDescription: |
     **Wings for Hermes** — AI Agent Web UI, forked from hermes-webui.
 
