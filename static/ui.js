@@ -14998,15 +14998,12 @@ function renderMessages(options){
   ];
   const headRenderCount=renderHeadVisWithIdx.length;
 
-  // Fast path: switching back to a previously rendered session with same count.
-  // Guard: sid !== _sessionHtmlCacheSid ensures in-session updates (edits,
-  // new messages, tool_complete) always get a fresh rebuild.
-  // Skip cache if this session is still streaming — the live smd parser writes
-  // into a DOM node inside the cached subtree; serving cached HTML detaches it.
-  // Also skip cache for transient transcript cards such as /compress and
-  // cross-channel handoff summaries; otherwise the cached transcript returns
-  // before those cards can be inserted.
-  if(sid&&sid!==_sessionHtmlCacheSid&&!INFLIGHT[sid]&&!hasTransientTranscriptUi){
+  // Session HTML cache fast-path DISABLED for Wings.
+  // The cache caused a visible "glitch" (DOM flash) on session switch because
+  // innerHTML replacement rebuilds the entire message tree. It also cached
+  // broken-layout HTML from the first render and replayed it on every
+  // subsequent render. Fresh rebuilds are fast enough for the Wings use case.
+  if(false&&sid&&sid!==_sessionHtmlCacheSid&&!INFLIGHT[sid]&&!hasTransientTranscriptUi){
     const renderSignature=_messageRenderCacheSignature();
     cachedRenderSignature=renderSignature;
     const cached=_sessionHtmlCache.get(sid);
@@ -15020,7 +15017,8 @@ function renderMessages(options){
       if(typeof _applySessionNavigationPrefs==='function') _applySessionNavigationPrefs();
       _scrollAfterMessageRender(preserveScroll, scrollSnapshot);
       if(_maybeRecoverVirtualizedBlankViewport(options, preserveScroll, virtualWindow)) return;
-      _updateMessageVirtualMeasurements(renderVisWithIdx, renderVisibleIdxs, virtualWindow);
+
+  _updateMessageVirtualMeasurements(renderVisWithIdx, renderVisibleIdxs, virtualWindow);
       requestAnimationFrame(()=>_postProcessWithAnchorSuppression(inner));
       if(typeof _initMediaPlaybackObserver==='function') _initMediaPlaybackObserver();
       if(typeof loadTodos==='function'&&document.getElementById('panelTodos')&&document.getElementById('panelTodos').classList.contains('active')){loadTodos();}
@@ -16471,19 +16469,7 @@ function renderMessages(options){
   // force-opens the settled worklog for height-stability, and caching it would
   // persist the forced-open DOM across session switches / restores, overriding a
   // user-collapsed worklog. The follow-up collapse pass (after disarm) produces
-  // the correct cacheable DOM on its own render. (#5260 gate-cert.) The typeof
-  // guard keeps standalone renderMessages() test harnesses (which don't define
-  // the helper) working — absent helper == not armed == cache normally.
-  const _keepOpenArmed=(typeof _isKeepSettledWorklogOpenArmed==='function')&&_isKeepSettledWorklogOpenArmed();
-  if(sid&&!INFLIGHT[sid]&&!hasTransientTranscriptUi&&!_keepOpenArmed){
-    const _html=inner.innerHTML;
-    // Only cache sessions with <300KB rendered HTML; evict oldest beyond 8 sessions.
-    if(_html.length<300_000){
-      const renderSignature=cachedRenderSignature===null?_messageRenderCacheSignature():cachedRenderSignature;
-      _sessionHtmlCache.set(sid,{html:_html,msgCount,renderWindowKey,signature:renderSignature});
-      if(_sessionHtmlCache.size>8){_sessionHtmlCache.delete(_sessionHtmlCache.keys().next().value);}
-    }
-  }
+  // Session HTML cache WRITE disabled for Wings (see fast-path comment above).
   _updateMessageVirtualMeasurements(renderVisWithIdx, renderVisibleIdxs, virtualWindow);
   // Kill the pinned/tail-follower mid-stream jitter. Schedule the re-anchor in a MICROTASK,
   // not synchronously: inside this render sync stack the browser still reports a transient
