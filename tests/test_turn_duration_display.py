@@ -56,13 +56,8 @@ def test_ui_formats_and_renders_turn_duration_in_footer_and_activity_summary():
     assert "data-turn-duration" in UI_JS, (
         "The spec Activity summary needs a stable data-turn-duration hook so settled duration can update its summary."
     )
-    assert "turnDuration:includeTurnDuration?_turnDurationForAnchor(anchorRow):undefined" in UI_JS, (
-        "Settled compact activity should put turn duration on the first spec Activity row, "
-        "not resurrect the legacy top Run Activity."
-    )
-    assert "compactWorklogForMessage" in UI_JS, (
-        "When folded Worklog detail is present, duration should live on the Worklog row "
-        "instead of being duplicated in the assistant footer."
+    assert "compactWorklogForMessage=false" in UI_JS, (
+        "Worklog groups are removed so duration must always render in msg-foot, never suppressed."
     )
     assert ".msg-duration-inline" in CSS and ".tool-call-group-duration" in CSS, (
         "Duration UI should have explicit CSS hooks for the footer chip and compact activity summary."

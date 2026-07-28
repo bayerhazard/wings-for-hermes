@@ -5361,6 +5361,7 @@ let _lastMessageClientHeight=null;   // #4702: track scroller height to ignore i
 // window after load as suppressed.
 let _lastNonMessageScrollIntentMs=-Infinity;
 let _messageUserUnpinned=false;
+let _streamTurnAnchored=false;
 let _bottomSettleToken=0;
 let _settleRAF=0;
 let _settleRO=null;
@@ -5558,6 +5559,7 @@ function _resetScrollDirectionTracker(){
 function _resetStreamScrollFollow(){
   _clearNewMessageScrollCue();
   _messageUserUnpinned=false;
+  _streamTurnAnchored=false;
   _scrollPinned=true;
   _nearBottomCount=0;
   _lastScrollTop=null;
@@ -6513,6 +6515,22 @@ function scrollIfPinned(){
   }
   if(!_scrollPinned) return;
   if(_recentNonMessageScrollIntent()) return;
+  if(!_streamTurnAnchored){
+    const el=document.getElementById('messages');
+    const turn=document.getElementById('liveAssistantTurn')||el?.querySelector('#msgInner .assistant-turn:last-of-type');
+    if(el&&turn&&turn.offsetHeight>el.clientHeight){
+      const top=turn.offsetTop-12;
+      if(top<el.scrollTop){
+        el.scrollTop=top;
+        _programmaticScroll=true;
+        _scrollPinned=false;
+        _messageUserUnpinned=true;
+        _streamTurnAnchored=true;
+        _deferClearProgrammaticScroll();
+        return;
+      }
+    }
+  }
   if(_messageBottomDistance()>500) _setMessageScrollToBottom();
   _settleMessageScrollToBottom(false);
 }
@@ -10278,7 +10296,8 @@ function _setAssistantTurnTps(turn, tpsText=''){
         chip=document.createElement('span');
         chip.className='msg-tps-inline';
         chip.title='Tokens per second';
-        foot.insertBefore(chip, foot.firstChild);
+        const actions=foot.querySelector('.msg-actions');
+        foot.insertBefore(chip, actions||null);
       }
       chip.textContent=text;
       return;
@@ -15430,7 +15449,6 @@ function renderMessages(options){
     const branchableReadOnlySession=typeof _isBranchableReadOnlySession==='function'
       ? _isBranchableReadOnlySession(S.session)
       : false;
-    const forkBtn  = (readOnlySession&&!branchableReadOnlySession) ? '' : `<button class="msg-action-btn" title="${t('fork_from_here')}" onclick="forkFromMessage(${rawIdx+1})">${li('git-branch',13)}</button>`;
     const ttsBtn   = !isUser ? `<button class="msg-action-btn msg-tts-btn" title="${t('tts_listen')||'Listen'}" onclick="speakMessage(this)">${li('volume-2',13)}</button>` : '';
     const tsVal=m._ts||m.timestamp;
     // _formatInServerTz handles fractional-hour offsets (India +0530 etc.)
@@ -15449,7 +15467,7 @@ function renderMessages(options){
       ? _questionJumpButtonHtml(_qJumpTarget, assistantRawIdxByQuestionRawIdx.get(_qJumpTarget)??rawIdx)
       : '';
     const assistantTpsHtml = (!isUser && isTpsDisplayEnabled() && m._turnTps) ? `<span class="msg-tps-inline" title="Tokens per second">${_formatTurnTps(m._turnTps)}</span>` : '';
-    const footHtml = `<div class="msg-foot">${assistantTpsHtml}${timeHtml}<span class="msg-actions">${editBtn}${ttsBtn}${forkBtn}${copyBtn}${retryBtn}</span>${questionJumpBtn}</div>`;
+    const footHtml = `<div class="msg-foot">${timeHtml}${assistantTpsHtml}<span class="msg-actions">${copyBtn}${ttsBtn}${editBtn}${retryBtn}</span>${questionJumpBtn}</div>`;
 
     if(_isContextCompactionMessage(m)){
       continue;

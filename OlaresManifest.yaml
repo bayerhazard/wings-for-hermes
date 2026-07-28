@@ -11,7 +11,7 @@ metadata:
   description: Wings for Hermes — AI Agent Web UI with chat, sessions, memory, skills, cron, profiles, workspaces
   appid: wings
   title: Wings for Hermes
-  version: '1.8.0'
+  version: '1.9.0'
   categories:
     - Productivity_v112
     - Developer Tools
@@ -24,9 +24,9 @@ entrances:
     openMethod: window
     authLevel: internal
 spec:
-  versionName: '1.8.0'
+  versionName: '1.9.0'
   upgradeDescription: |
-    v1.8.0: Fixed assistant chat layout — tool calls and chat answer now stack vertically (were rendering in one horizontal line).
+    v1.9.0: Chat area refinement — direct streaming render, scroll anchor at message start, refined meta line (timestamp → t/s → copy → TTS), "Thought process" label for reasoning-only turns, composer aligned to chat column, neon theme reworked to midnight navy.
   fullDescription: |
     **Wings for Hermes** — AI Agent Web UI, forked from hermes-webui.
 

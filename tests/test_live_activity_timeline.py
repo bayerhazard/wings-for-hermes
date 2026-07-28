@@ -83,10 +83,8 @@ def test_settled_activity_render_keeps_tools_bound_to_progress_bursts():
     assert "_assistantAnchorForActivity" in render_fn
     assert "const byActivity = new Map()" in render_fn
     assert "tc.activityBurstId" in render_fn
-    assert "activityByTurn" in render_fn
-    assert "_appendWorklogStep(state.group" in render_fn
-    assert "ensureActivityGroup(anchorParent,{" in render_fn
-    assert "_toolWorklogListEl(group)" in render_fn
+    assert "buildToolCard(tc)" in render_fn
+    assert "_thinkingActivityNode(thinkingText,false)" in render_fn
 
 
 def test_settled_final_answer_segment_is_not_folded_into_worklog():
@@ -121,8 +119,8 @@ def test_settled_worklog_can_move_anchor_text_into_reason():
 
 def test_settled_render_skips_empty_activity_buckets():
     render_fn = UI_JS.split("for(const entry of activityOrder){", 1)[1].split("// Render per-turn duration", 1)[0]
-    assert "const anchorReasonHtml=_worklogReasonHtmlFromAnchor(anchorRow);" in render_fn
-    assert "if(!cards.length&&!anchorReasonHtml&&!thinkingText) continue;" in render_fn
+    assert "const thinkingText=thinkingIdx!==null?assistantThinking.get(thinkingIdx):'';" in render_fn
+    assert "if(!cards.length&&!thinkingText) continue;" in render_fn
 
 
 def test_reattach_normalizes_live_activity_group_placement_by_burst_anchor():

@@ -146,7 +146,8 @@
     } else {
       const n = _toolCount(turn);
       const dur = _turnDuration(turn);
-      const verb = n === 1 ? _t('wings_activity_action_one')
+      const verb = n === 0 ? _t('wings_activity_thoughts')
+        : n === 1 ? _t('wings_activity_action_one')
         : _t('wings_activity_actions_many', n);
       _setContent(line, 'settled', verb, dur);
     }

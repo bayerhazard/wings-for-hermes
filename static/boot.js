@@ -2555,7 +2555,7 @@ if(window.visualViewport){
 const _THEMES=[
   {name:'Hell',    value:'light',  colors:['#FEFCF7','#FAF7F0','#B8860B']},
   {name:'Dunkel',  value:'dark',   colors:['#0D0D1A','#141425','#C9A45C']},
-  {name:'Neon',    value:'neon',   colors:['#0D0221','#1A0B2E','#FF2D9B']},
+  {name:'Neon',    value:'neon',   colors:['#050C1A','#0D1B36','#FF2D9B']},
   {name:'System',  value:'system', colors:['#FEFCF7','#0D0D1A','#B8860B']},
 ];
 const _VALID_THEMES=new Set((_THEMES||[]).map(t=>t.value));

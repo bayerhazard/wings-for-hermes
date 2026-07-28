@@ -81,28 +81,25 @@ def _function_body(name: str) -> str:
     return UI_JS[brace + 1:i - 1]
 
 
-def test_settled_thinking_renders_through_worklog_item_path():
+def test_settled_thinking_renders_as_individual_card():
     body = _render_messages_body()
-    assert "_appendWorklogStep(state.group, anchorRow, cards, thinkingText" in body, (
-        "Settled Thinking should render through the #3401 Worklog item path."
+    assert "buildToolCard(tc)" in body, (
+        "Settled tools should render as individual buildToolCard elements."
     )
-    assert "_thinkingActivityNode(thinkingText, false, thinkingDisclosureKey)" in UI_JS, (
-        "Thinking should remain a dedicated Worklog Thinking Card node."
+    assert "_thinkingActivityNode(thinkingText,false)" in UI_JS, (
+        "Thinking should render as a dedicated Thinking Card node."
     )
     assert "data-worklog-thinking-card" in UI_JS, (
         "Thinking Cards need a stable Worklog-specific hook."
     )
 
 
-def test_settled_worklog_thinking_uses_content_key_for_exact_duplicate_suppression():
+def test_settled_thinking_has_no_duplicate_suppression_in_render_loop():
     body_min = re.sub(r"\s+", "", _render_messages_body())
-    assert "thinkingKey:thinkingText?`thinking:${_normalizeThinkingEchoCompare(thinkingText)}`:''" in body_min, (
-        "Settled Worklog should suppress duplicate Thinking by normalized content, "
-        "not by assistant message index."
+    assert "thinkingKey" not in body_min, (
+        "Duplicate thinking suppression (seenReasons) is handled downstream "
+        "and should not appear in the render loop body."
     )
-    append_body = _function_body("_appendWorklogStep")
-    assert "seenReasons.has(thinkingKey)" in append_body
-    assert "seenReasons.add(thinkingKey)" in append_body
 
 
 def test_exact_echo_suppression_compares_turn_visible_texts():
@@ -118,13 +115,12 @@ def test_exact_echo_suppression_compares_turn_visible_texts():
 
 def test_distinct_sibling_reasoning_is_still_available_to_worklog():
     body = _render_messages_body()
-    assert "for(const aIdx of assistantThinking.keys())" in body, (
-        "Each assistant reasoning entry should still be eligible for a Worklog item."
+    assert "for(const entry of activityOrder)" in body, (
+        "Each assistant reasoning entry should still be processed in the activity render loop."
     )
     assert "const thinkingText=thinkingIdx!==null?assistantThinking.get(thinkingIdx):''" in body
-    assert "seenReasons:state.seenReasons" in body, (
-        "Duplicate suppression should be scoped to rendered Worklog keys, not by "
-        "dropping reasoning metadata up front."
+    assert "anchorParent.insertBefore(_thinkingActivityNode(thinkingText,false), refNode)" in body, (
+        "Thinking should be inserted directly after the anchor segment."
     )
 
 

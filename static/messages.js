@@ -4705,10 +4705,15 @@ function attachLiveStream(activeSid, streamId, uploaded=[], options={}){
     _streamFadeWordCarry+=elapsedMs*wordsPerSecond/1000;
     if(!_streamFadeVisibleText) _streamFadeWordCarry=Math.max(_streamFadeWordCarry,1);
     let wordsToReveal=Math.floor(_streamFadeWordCarry);
-    // At very high throughput, cap each frame to a small readable wave. Sustained
-    // playback still catches up, but whole paragraphs no longer pop in at once.
-    const waveCap=backlogWords>=160?3:2;
-    wordsToReveal=Math.min(wordsToReveal,waveCap,backlogWords);
+    // Adaptive catch-up: when the model outruns the fade, dump the backlog
+    // instantly so the transcript never feels stuck. The wave cap keeps the
+    // reveal smooth when the model is slow enough for it to matter.
+    if(backlogWords>=24){
+      wordsToReveal=backlogWords;
+    } else {
+      const waveCap=backlogWords>=160?3:2;
+      wordsToReveal=Math.min(wordsToReveal,waveCap,backlogWords);
+    }
     if(wordsToReveal<1) return {text:_streamFadeVisibleText,caughtUp:false,changed:false};
     _streamFadeWordCarry=Math.max(0,_streamFadeWordCarry-wordsToReveal);
 

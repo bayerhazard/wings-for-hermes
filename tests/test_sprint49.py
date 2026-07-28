@@ -50,11 +50,13 @@ def test_timestamp_footer_stays_on_visible_response_segments():
 
 
 def test_footer_chrome_is_hover_only_for_user_and_assistant_messages():
-    assert ".msg-row[data-role=\"user\"] .msg-foot {\n  opacity: 0;" in UI_CSS
-    assert ".msg-row[data-role=\"user\"]:hover .msg-foot," in UI_CSS
-    assert ".msg-row[data-role=\"assistant\"] .msg-foot," in UI_CSS
-    assert ".assistant-turn .msg-foot {" in UI_CSS
-    assert ".assistant-turn:hover .msg-foot," in UI_CSS
+    # Unified footer system: timestamp always visible, action buttons
+    # hidden at rest (opacity 0, pointer-events none), revealed on hover.
+    assert ".msg-foot .msg-actions { opacity: 0; pointer-events: none;" in UI_CSS
+    assert ".msg-row:hover .msg-foot .msg-actions," in UI_CSS
+    assert ".msg-foot .msg-actions:hover," in UI_CSS
+    assert ".msg-foot .msg-time { font-size: 10px; opacity: .85;" in UI_CSS
+    assert ".assistant-turn:hover .msg-foot .msg-actions," in UI_CSS
 
 
 def test_last_assistant_keeps_usage_visible_and_reveals_time_and_actions_on_hover():
@@ -65,10 +67,8 @@ def test_last_assistant_keeps_usage_visible_and_reveals_time_and_actions_on_hove
         or "targetFoot.insertBefore(fragments[i], targetFoot.firstChild);" in UI_JS
         or "targetFoot.insertBefore(fragments[i], firstChild);" in UI_JS
     )
-    assert ".assistant-turn .msg-foot-with-usage," in UI_CSS
-    assert ".msg-row[data-role=\"assistant\"] .msg-foot-with-usage {\n  opacity: 1;" in UI_CSS
-    assert ".msg-foot-with-usage .msg-time,\n.msg-foot-with-usage .msg-actions {\n  opacity: 0;" in UI_CSS
-    assert ".assistant-turn:hover .msg-foot-with-usage .msg-time," in UI_CSS
+    assert ".msg-foot-with-usage {" in UI_CSS
+    assert ".msg-foot .msg-actions { opacity: 0; pointer-events: none;" in UI_CSS
 
 
 def test_restore_reasoning_metadata_preserves_existing_timestamps():

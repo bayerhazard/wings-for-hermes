@@ -179,11 +179,11 @@ class TestToolCallGroupingStatic:
         assert "byActivity = new Map()" in fn, (
             "Settled tool rendering should bucket by worklog segments/bursts."
         )
-        assert "_toolWorklogListEl(group)" in fn, (
-            "Settled tools should render through the worklog list container."
+        assert "buildToolCard(tc)" in fn, (
+            "Settled tools should render as individual buildToolCard elements."
         )
-        assert "_syncToolCallGroupSummary(state.group)" in fn, (
-            "Settled worklog groups should refresh summary state."
+        assert "_thinkingActivityNode(thinkingText,false)" in fn, (
+            "Settled thinking should render as an individual thinking card."
         )
         assert "data-tool-call-group" in helper, (
             "Tool-call groups need a stable data-tool-call-group attribute for CSS and tests."
@@ -329,8 +329,8 @@ class TestToolCallGroupingStatic:
         assert "_thinkingActivityNode(thinkingText, false, thinkingDisclosureKey)" in append_step_fn, (
             "Settled Worklog Thinking rows must stamp the stable thinking key at creation time."
         )
-        assert "thinkingDisclosureKey:thinkingText?`thinking:${entry.key}`:''" in _function_body(UI_JS, "renderMessages"), (
-            "Settled Worklog Thinking keys should come from activity coordinates, not text."
+        assert "_thinkingActivityNode(thinkingText,false)" in _function_body(UI_JS, "renderMessages"), (
+            "Settled thinking should render as an individual Thinking Card."
         )
 
         tool_branch = re.search(
@@ -389,7 +389,7 @@ class TestToolCallGroupingStatic:
             "Live tool cards should insert into the worklog list container."
         )
         step_fn = _function_body(UI_JS, "_appendWorklogStep")
-        assert "buildToolCard" in live_fn and "buildToolCard" in step_fn and "_appendWorklogStep" in settled_fn, (
+        assert "buildToolCard" in live_fn and "buildToolCard" in step_fn and "buildToolCard" in settled_fn, (
             "Live and settled tool rendering should share buildToolCard() for consistent markup."
         )
         assert "data-live-tid" in live_fn, (
@@ -594,15 +594,11 @@ class TestToolCallGroupingStatic:
             "Thinking should be an explicit Worklog item, independent from Tool Cards."
         )
         render_min = re.sub(r"\s+", "", render_fn)
-        assert "thinkingKey:thinkingText?`thinking:${_normalizeThinkingEchoCompare(thinkingText)}`:''" in render_min, (
-            "Settled Worklog should keep normalized-content Thinking dedupe so sibling messages do not duplicate cards."
+        assert "buildToolCard(tc)" in render_fn, (
+            "Settled tools should render as individual buildToolCard elements."
         )
-        assert "thinkingDisclosureKey:thinkingText?`thinking:${entry.key}`:''" in render_min, (
-            "Settled Worklog should separately key disclosure state by stable activity coordinates "
-            "so streaming text growth does not reset manual collapse state."
-        )
-        assert "_appendWorklogStep" in render_fn, (
-            "Visible assistant anchors, Thinking Cards, and tools should still build the compact Worklog disclosure."
+        assert "_thinkingActivityNode(thinkingText,false)" in render_fn, (
+            "Settled thinking should render as an individual Thinking Card."
         )
         assert ".wl-reason[data-worklog-reason-source=\"reasoning\"]" in render_fn, (
             "Settled rerenders must remove previously inserted reasoning Worklog rows before rebuilding."
