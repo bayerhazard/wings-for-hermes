@@ -28,7 +28,7 @@ env:
   TZ: Etc/UTC
 olaresEnv:
   HERMES_WEBUI_PASSWORD: ""
-  HERMES_WEBUI_DEFAULT_MODEL: "Agent"
+  HERMES_WEBUI_DEFAULT_MODEL: ""
 startupProbe:
   httpGet:
     path: /health

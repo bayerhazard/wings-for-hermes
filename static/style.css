@@ -2282,7 +2282,6 @@
 .ws-suggest-item.active .ws-suggest-parent{color:var(--text);}
 /* ── Message action buttons (copy, edit, retry) ── */
 .msg-actions{display:flex;align-items:center;gap:2px;opacity:0;transition:opacity .15s;margin-left:auto;}
-.msg-row:hover .msg-actions{opacity:1;}
 /* Keep !important so this beats equal-specificity .msg-foot-with-usage fades during measurement rerenders. */
 .vscroll-measuring .msg-foot,
 .vscroll-measuring .msg-actions,
@@ -4925,27 +4924,21 @@ main.main > #mainPlugin{display:none;}
   padding-top: 12px;
 }
 
-/* ── Message footer: quiet meta line — timestamp and t/s always visible as
-   plain text, action buttons revealed subtly on row hover ── */
+/* ── Message footer: timestamp always visible, t/s + actions on hover ── */
 .msg-foot {
   display: flex;
-  align-items: center;
+  align-items: baseline;
   justify-content: flex-end;
-  /* #4724-followup: wrap to a second line on narrow screens (mobile / split panes)
-     instead of overflowing the row. A long model name + duration + token/cost stats
-     can exceed the width; without wrap the per-message action buttons get pushed off
-     the right edge and become unreachable on mobile. Wrapping keeps every stat fully
-     readable (no ellipsis) and the buttons on-screen; on desktop where it already fits,
-     wrap never triggers so nothing changes. */
   flex-wrap: wrap;
   row-gap: 2px;
   gap: 8px;
   margin-top: 4px;
   font-size: 10px;
   color: var(--meta-text);
+  line-height: 1.4;
 }
-.msg-foot .msg-time { font-size: 10px; opacity: .85; flex: 0 0 auto; }
-/* t/s sits next to the timestamp as plain text (no chip chrome). */
+.msg-foot .msg-time { font-size: 10px; opacity: .85; flex: 0 0 auto; line-height: 1.4; }
+/* t/s hidden at rest, revealed on row hover — same font metrics as timestamp. */
 .msg-foot .msg-tps-inline {
   margin: 0;
   padding: 0;
@@ -4954,10 +4947,16 @@ main.main > #mainPlugin{display:none;}
   font-size: 10px;
   font-weight: 400;
   color: var(--meta-text);
+  line-height: 1.4;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .2s ease;
 }
+.msg-row:hover .msg-foot .msg-tps-inline,
+.assistant-turn:hover .msg-foot .msg-tps-inline { opacity: .85; pointer-events: auto; }
 /* Action buttons: hidden at rest, subtle on row hover, full on direct hover.
-   pointer-events follow visibility so the hidden buttons never intercept clicks. */
-.msg-foot .msg-actions { opacity: 0; pointer-events: none; margin-left: 0; flex: 0 0 auto; }
+    pointer-events follow visibility so the hidden buttons never intercept clicks. */
+.msg-foot .msg-actions { opacity: 0; pointer-events: none; margin-left: 0; flex: 0 0 auto; line-height: 1.4; }
 .msg-row:hover .msg-foot .msg-actions,
 .msg-row:focus-within .msg-foot .msg-actions,
 .assistant-turn:hover .msg-foot .msg-actions,
@@ -5352,11 +5351,12 @@ main.main > .main-view:not([id="mainChat"]):not([id="mainSettings"]) .main-view-
 .detail-form-row .skill-picker-tags{margin-top:6px;display:flex;flex-wrap:wrap;gap:4px;}
 
 /* Mobile: message controls always visible on touch screens (no hover available),
-   kept subtle so the transcript stays calm */
+    kept subtle so the transcript stays calm */
 @media(max-width:640px){
-  .msg-foot .msg-actions{opacity:.75;pointer-events:auto;}
-  .msg-actions{gap:4px;}
-  .msg-action-btn{min-width:40px;min-height:40px;padding:8px;display:inline-flex;align-items:center;justify-content:center;}
+   .msg-foot .msg-actions{opacity:.75;pointer-events:auto;}
+   .msg-foot .msg-tps-inline{opacity:.75;pointer-events:auto;}
+   .msg-actions{gap:4px;}
+   .msg-action-btn{min-width:40px;min-height:40px;padding:8px;display:inline-flex;align-items:center;justify-content:center;}
 }
 
 /* ── /btw ephemeral side-question bubble ── */

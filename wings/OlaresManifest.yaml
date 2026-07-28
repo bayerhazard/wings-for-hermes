@@ -84,8 +84,8 @@ envs:
     description: "Optional app-level password for the Web UI (in addition to Olares SSO)."
   - envName: HERMES_WEBUI_DEFAULT_MODEL
     required: false
-    default: "Agent"
+    default: ""
     type: string
     editable: true
     applyOnChange: true
-    description: "Default model name used for new chats."
+    description: "Default model for new chats (empty = use Hermes config.yaml model.default)."
