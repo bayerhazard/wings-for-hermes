@@ -7551,6 +7551,7 @@ document.addEventListener('drop',e=>{
 let _settingsDirty = false;
 let _settingsThemeOnOpen = null; // track theme at open time for discard revert
 let _settingsFontSizeOnOpen = null; // track font size at open time for discard revert
+let _settingsSaving = false; // debounce lock to prevent concurrent save POSTs
 let _settingsHermesDefaultModelOnOpen = '';
 let _settingsHermesDefaultModelProviderOnOpen = null;
 let _settingsSection = 'preferences';
@@ -12506,6 +12507,11 @@ async function _applyAuxModels(){
 }
 
 async function saveSettings(andClose){
+  if(_settingsSaving){
+    if(typeof showToast==='function') showToast(t('settings_saving')||'Settings are being saved...');
+    return;
+  }
+  _settingsSaving=true;
   const model=($('settingsModel')||{}).value;
   const modelState=(typeof _captureModelDropdownSelection==='function'&&$('settingsModel'))
     ? (_captureModelDropdownSelection($('settingsModel'))||{model:String(model||''),model_provider:null})
@@ -12597,6 +12603,7 @@ async function saveSettings(andClose){
     if(_settingsPasswordAuthEnabled && !currentPw.trim()){
       if(currentPwField) currentPwField.focus();
       showToast(t('current_password_required'));
+      _settingsSaving=false;
       return;
     }
     const payload={...body,_set_password:pw.trim()};
@@ -12612,7 +12619,7 @@ async function saveSettings(andClose){
           if(typeof showToast==='function') showToast('Failed to update default model — settings saved');
         }
       }
-      _applySavedSettingsUi(saved, body, {sendKey,showTokenUsage,showQuotaChip,showConversationOutline,showBusyPlaceholderHint,showTps,fadeTextEffect,showCliSessions,theme,skin,language,sidebarDensity,fontSize});
+      _applySavedSettingsUi(saved, body, {sendKey,showTokenUsage,showQuotaChip,showConversationOutline,showBusyPlaceholderHint,showTps,fadeTextEffect,showCliSessions,theme,language,sidebarDensity,fontSize});
       showToast(t(saved.auth_just_enabled?'settings_saved_pw':'settings_saved_pw_updated'));
       const cpField=$('settingsCurrentPassword'); if(cpField) cpField.value='';
       const pwField=$('settingsPassword'); if(pwField) pwField.value='';
@@ -12628,8 +12635,9 @@ async function saveSettings(andClose){
       _resetSettingsPanelState();
       if(!andClose) _pendingSettingsTargetPanel = null;
       if(andClose) _hideSettingsPanel();
+      _settingsSaving=false;
       return;
-    }catch(e){showToast(t('settings_save_failed')+e.message);return;}
+    }catch(e){showToast(t('settings_save_failed')+e.message);_settingsSaving=false;return;}
   }
   try{
     const saved=await api('/api/settings',{method:'POST',body:JSON.stringify(body)});
@@ -12642,7 +12650,7 @@ async function saveSettings(andClose){
         if(typeof showToast==='function') showToast('Failed to update default model — settings saved');
       }
     }
-    _applySavedSettingsUi(saved, body, {sendKey,showTokenUsage,showQuotaChip,showConversationOutline,showBusyPlaceholderHint,showTps,fadeTextEffect,showCliSessions,theme,skin,language,sidebarDensity,fontSize});
+    _applySavedSettingsUi(saved, body, {sendKey,showTokenUsage,showQuotaChip,showConversationOutline,showBusyPlaceholderHint,showTps,fadeTextEffect,showCliSessions,theme,language,sidebarDensity,fontSize});
     showToast(t('settings_saved'));
     _settingsDirty=false;
     _resetSettingsPanelState();
@@ -12650,6 +12658,8 @@ async function saveSettings(andClose){
     if(andClose) _hideSettingsPanel();
   }catch(e){
     showToast(t('settings_save_failed')+e.message);
+  }finally{
+    _settingsSaving=false;
   }
 }
 

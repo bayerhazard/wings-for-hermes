@@ -11,7 +11,7 @@ metadata:
   description: Wings for Hermes — AI Agent Web UI with chat, sessions, memory, skills, cron, profiles, workspaces
   appid: wings
   title: Wings for Hermes
-  version: '1.9.1'
+  version: '1.9.5'
   categories:
     - Productivity_v112
     - Developer Tools
@@ -24,9 +24,9 @@ entrances:
     openMethod: window
     authLevel: internal
 spec:
-  versionName: '1.9.1'
+  versionName: '1.9.5'
   upgradeDescription: |
-    v1.9.1: Meta line polish — timestamp always visible, t/s + actions on hover, baseline-aligned typography. Default model now falls through to Hermes config.yaml instead of hardcoded "Agent".
+    v1.9.5: Code review fixes — removed 7 stale root frontend files, added .dockerignore exclusions, saveSettings debounce lock, removed dead skin code, added i18n settings_saving key, reduced initContainer privileges (removed privileged:true), fixed UID consistency (1024→1000), cleaned dead CSS.
   fullDescription: |
     **Wings for Hermes** — AI Agent Web UI, forked from hermes-webui.
 

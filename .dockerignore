@@ -13,3 +13,11 @@ docs/
 .github/
 node_modules/
 dist/
+# Stale root frontend files — only static/ is served at runtime
+/boot.js
+/ui.js
+/panels.js
+/style.css
+/index.html
+/messages.js
+/i18n.js

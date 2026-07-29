@@ -64,8 +64,8 @@ WORKDIR /apptoo
 
 # Create the unprivileged runtime user. The entrypoint starts as root only for
 # UID/GID alignment and filesystem preparation, then execs the server as this user.
-RUN groupadd -g 1024 hermeswebui \
-    && useradd -u 1024 -d /home/hermeswebui -g hermeswebui -G users -s /bin/bash -m hermeswebui \
+RUN groupadd -g 1000 hermeswebui \
+    && useradd -u 1000 -d /home/hermeswebui -g hermeswebui -G users -s /bin/bash -m hermeswebui \
     && mkdir -p /app /uv_cache /workspace \
     && chown -R hermeswebui:hermeswebui /home/hermeswebui /app /uv_cache /workspace \
     && chmod 0755 /home/hermeswebui \
