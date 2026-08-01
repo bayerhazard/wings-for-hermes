@@ -136,3 +136,76 @@
 | v1.5.5 | 2026-07-24 | Logo-Abstand fix (gap + margin) | Ja |
 | v1.5.4 | 2026-07-24 | Logo-Abstand -33%, ws-panel arrow aus, search focus aus | Ja |
 | v1.5.3 | 2026-07-24 | Design-Redesign, Dark-Theme, Gauge-Card, AImighty-Logo | Ja |
+
+---
+
+## P2 — Feature: Workspace-Panel im Basic Mode
+
+### [ ] Workspace-Panel als Pille im Composer-Footer (Basic Mode)
+**Status:** **GEPLANT** — Konzept erstellt 2026-07-30.
+**Details:** Das Workspace-Panel (`.rightpanel`) ist technisch im Basic Mode nicht versteckt, wird aber nicht aktivierbar gemacht. Ziel: Eine einzelne Pille im Composer-Footer ermöglicht das Öffnen/Schliessen des Panels — analog zum bestehenden Model-Chip.
+
+#### Design-Entscheidungen
+- **Eine Pille** im Composer-Footer (Basic Mode): `[📄 Workspace ▾]`
+- In **Advanced Mode** bleibt der bestehende `.composer-workspace-group` (Icon im Footer) unverändert
+- Die Pille spiegelt den Panel-Status visuell wider (border-color, arrow-rotation)
+- Keine neuen Abhängigkeiten, keine API-Änderungen
+- Mobile (<900px): bestehende Slide-In-Logik greift, Pille ausgeblendet
+
+#### Umsetzung (4 Dateien)
+
+**1. `static/index.html`** — Neue Pille in `#composerFooter` einfügen (ausserhalb `.composer-workspace-group`):
+```html
+<button class="composer-workspace-chip" id="btnWorkspaceChip" type="button"
+        onclick="toggleWorkspacePanel()" aria-pressed="false"
+        title="Toggle workspace panel">
+  <span class="workspace-chip-icon">
+    <svg><!-- folder icon --></svg>
+  </span>
+  <span class="workspace-chip-label">Workspace</span>
+  <span class="workspace-chip-arrow" aria-hidden="true">▾</span>
+</button>
+```
+
+**2. `static/style.css`** — Neue Styles + Basic-Regeln:
+- `.composer-workspace-chip`: Pille-Stil (border, radius, padding, transition)
+- `[data-mode="basic"] .composer-workspace-chip { display: inline-flex; }`
+- `[data-mode="advanced"] .composer-workspace-chip { display: none !important; }`
+- Active-State: `aria-pressed="true"` → accent border + rotated arrow
+
+**3. `static/boot.js`** — `_setWorkspacePanelMode()` um `aria-pressed` erweitern:
+```js
+const chip = $('btnWorkspaceChip');
+if (chip) {
+  chip.setAttribute('aria-pressed', String(open));
+  chip.setAttribute('aria-label', open ? 'Hide workspace panel' : 'Show workspace panel');
+}
+```
+
+**4. `static/panels.js`** — Mode-Handler anpassen:
+- Zeile 39: Statt Panel automatisch zu schliessen, nur Zustand speichern
+- Beim Mode-Wechsel Advanced→Basic: Pille initialisieren
+
+#### State Machine
+```
+Basic, Panel closed  → Klick Pille → Panel öffnet (300px)
+Basic, Panel open    → Klick Pille → Panel schliesst
+Advanced, Panel closed → Klick Composer-Icon → Panel öffnet
+Advanced, Panel open → Klick Composer-Icon → Panel schliesst
+Mode-Wechsel Basic→Advanced → Pille verschwindet, Advanced-Group erscheint
+Mode-Wechsel Advanced→Basic → Pille erscheint, Panel bleibt im letzten Zustand
+```
+
+#### Deploy-Checkliste
+- [ ] `static/index.html` — Pille einfügen
+- [ ] `static/style.css` — Neue Styles + Basic/Advanced Regeln
+- [ ] `static/boot.js` — `aria-pressed` in `_setWorkspacePanelMode()`
+- [ ] `static/panels.js` — Mode-Handler anpassen
+- [ ] Test: Basic Mode → Panel toggle via Pille
+- [ ] Test: Advanced Mode → Panel toggle via Composer-Icon
+- [ ] Test: Mode-Wechsel Basic ↔ Advanced
+- [ ] Test: Mobile (<900px) — Pille ausgeblendet, Slide-In funktioniert
+- [ ] Test: localStorage-Persistenz (`wings-workspace-panel`)
+- [ ] Version bump + deploy
+
+---
