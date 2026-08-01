@@ -1,3 +1,69 @@
+
+---
+
+## P0 — Sync-Analyse (ABGESCHLOSSEN, 2026-08-01)
+
+### Analyse-Ergebnis
+
+**Fork-Status:** Der Fork `bayerhazard/wings-for-hermes` (v1.9.6) hat **exakt den gleichen Code-Stand** wie `upstream/master` (commit `320789ae5`, 31.07.2026).
+
+**Upstream-Divergenz:** Der Fork wurde von `v0.50.43` (14.04.2026) abgezweigt. Seitdem hat Upstream **4738 Commits** und **1690 geänderte Dateien** (+525K Zeilen, -13.5K Zeilen) hinzugefügt.
+
+**Fork-spezifische Änderungen:** 68 Custom-Commits (UI-Redesign, Olares-Deploy, Themes, Basic/Advanced-Mode, Gauge-Card, Activity-Line, SW-Cache-Disable).
+
+### Sync-Strategie
+
+1. **Nicht alles auf einmal!** 4738 Commits auf einmal zu mergen würde die 68 Fork-Änderungen wahrscheinlich brechen.
+2. **Patch-weise mergen** — Security-Fixes zuerst, dann Bugfixes, dann Features.
+3. **Jeden Sync testen** — `olares-cli market upgrade wings -s market.AImighty --watch`
+4. **Fork-Änderungen prüfen** — Nach jedem Merge prüfen, ob Classic-Layout, Neon-Theme, Gauge-Card etc. noch funktionieren.
+
+### Priorisierte Sync-Liste
+
+#### 🔴 P0 — Security (SOFORT)
+| Issue | Titel | Datei(en) | Risiko |
+|-------|-------|-----------|--------|
+| #6174 | Public share links leak local attachments | `api/shares.py`, `static/share.html` | **Kritisch** — LFI/XSS |
+| #6372 | `.ts`/`.tsx` files served as executable | `api/routes.py`, `server.py` | **Kritisch** — XSS |
+| #5797 | `config.yaml` nicht-atomar geschrieben | `api/config.py` | **Hoch** — Datenkorruption |
+
+#### 🟡 P1 — Wichtige Bugfixes
+| Issue | Titel | Datei(en) | Impact |
+|-------|-------|-----------|--------|
+| #6527 | Live SSE relays hang after apperror | `api/streaming.py` | Streaming hängt sich auf |
+| #6196 | Reload prefers stale cache | `api/routes.py`, `static/sw.js` | Datenverlust bei Reload |
+| #6390 | Transcript jumps during streaming | `static/messages.js`, `static/ui.js` | UX-Problem |
+| #6083 | New conversations become unstartable | `api/session_ops.py` | Session-Erstellung bricht |
+| #5990 | False "No response" after tool-call answer | `api/streaming.py` | Falscher Error |
+| #5940 | Failed turn zeigt "no response" statt Error | `api/streaming.py`, `api/routes.py` | Schlechte Error-Meldung |
+| #6117 | Stale sidebar approval attention badge | `api/route_approvals.py` | Falsche Benachrichtigung |
+
+#### 🟢 P2 — Neue Features (zur Diskussion)
+| Issue | Titel | Nutzen | Empfehlung |
+|-------|-------|--------|------------|
+| #5913 | Pinch-to-zoom Mermaid | Mobile UX | **BEREITSTELLEN** |
+| #6062 | Collapsed read_file zeigt Line-Range | Transparenz | **BEREITSTELLEN** |
+| #5798 | Gateway health check single-flight | Performance | **BEREITSTELLEN** |
+| #5799 | Run-journal append O(1) | Performance | **BEREITSTELLEN** |
+| #5994 | Fork from here during active response | UX | **BEREITSTELLEN** |
+| #5751/#5637/#5638 | Mobile scroll jump-back family | Kritisch für Mobile | **BEREITSTELLEN** |
+| #5508 | Extension API | Wings hat kein Extension-System | **SPÄTER** |
+
+### Sync-Checkliste (nach Genehmigung)
+- [ ] `git fetch upstream`
+- [ ] `git diff upstream/v0.50.43...upstream/master --stat` → Diff-Analyse
+- [ ] Security-Fixes (#6174, #6372, #5797) patchen
+- [ ] Empfohlene Bugfixes patchen
+- [ ] Empfohlene Features patchen
+- [ ] Fork-spezifische Änderungen prüfen (Classic-Layout, Gauge-Card, AImighty-Logo, Basic/Advanced)
+- [ ] `helm package wings/` + `_lib.ts` update
+- [ ] `_apps.ts` version bump + upgradeDescription
+- [ ] Git commit + push
+- [ ] Wrangler deploy
+- [ ] Olares market restart + upgrade
+- [ ] Hard-Refresh im Browser
+- [ ] Test: Chat, Sessions, Workspace, Settings, Mobile
+
 # Wings for Hermes — Backlog
 
 > Priorisiertes Backlog für Olares-Deployment. Jeder Eintrag hat eine Versions- und Deploy-Checkliste.
