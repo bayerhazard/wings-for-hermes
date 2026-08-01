@@ -209,3 +209,151 @@ Mode-Wechsel Advanced→Basic → Pille erscheint, Panel bleibt im letzten Zusta
 - [ ] Version bump + deploy
 
 ---
+
+---
+
+## P1 — Fork-Sync: Upstream Hermes WebUI abgleichen
+
+### [ ] Fork mit upstream `nesquena/hermes-webui` auf aktuellen Stand bringen
+**Status:** **GEPLANT** — 2026-08-01 erstellt.
+**Fork-Tag:** v1.9.6 (2026-07-29)
+**Upstream-stabil:** v0.52.106 (2026-07-29)
+**Upstream-experimental:** exp-v0.52.158 (2026-07-30)
+
+**Kontext:** Wings for Hermes ist ein Fork des internen Hermes WebUI. Der Fork hat seit der Abspaltung eigene Design- und Olares-Integrationen (Classic-Layout, Gauge-Card, AImighty-Branding, Basic/Advanced-Mode, Olares-Manifest). Ein Sync muss diese Fork-spezifischen Änderungen bewahren.
+
+#### Sync-Strategie (NICHT automatisch übernehmen!)
+
+1. **Diff analysieren:** `git fetch upstream && git diff main...upstream/master --stat`
+2. **Kategorisieren:** Bugfixes, Features, Breaking Changes, Security
+3. **Priorisieren:** Was muss rein? Was wollen wir? Was intentionally nicht?
+4. **Abstimmen:** Jede Kategorie mit dem User genehmigen
+5. **Patch-weise mergen:** Nicht alles auf einmal — lieber kleine, testbare Commits
+6. **Olares-Tests:** Nach jedem Sync: `olares-cli market upgrade wings -s market.AImighty --watch`
+
+#### A. Security-Fixes (MÜSSEN übernommen werden)
+
+| Issue | Titel | Empfehlung |
+|-------|-------|------------|
+| #6174 | Public share links leak local attachments | **MUST HAVE** — Kritische XSS/LFI-Schwachstelle |
+| #6372 | `.ts`/`.tsx` files served as executable | **MUST HAVE** — XSS über Workspace-Dateien |
+| #5797 | `config.yaml` nicht-atomar geschrieben | **MUST HAVE** — Datenkorruption bei Crash |
+
+#### B. Wichtige Bugfixes (EMPFOHLEN)
+
+| Issue | Titel | Empfehlung |
+|-------|-------|------------|
+| #6527 | Live SSE relays hang after apperror | **EMPFEHLUNG** — Streaming hängt sich auf |
+| #6196 | Reload bevorzugt stale cache über run-journal | **EMPFEHLUNG** — Datenverlust bei Reload |
+| #6390 | Transcript jumps during streaming settlement | **EMPFEHLUNG** — UX-Problem beim Scrollen |
+| #6323/#6309 | Terminal-error Worklog zeigt "still running" | **EMPFEHLUNG** — Falscher Zustand nach Error |
+| #5723 | Message stuck after server restart mid-reply | **EMPFEHLUNG** — Composer blockiert |
+| #6040 | Gateway approval cards routed by run ID | **EMPFEHLUNG** — Approvals auf falschem Run |
+| #6117 | Stale sidebar approval attention badge | **EMPFEHLUNG** — Falsche Benachrichtigung |
+| #6083 | New conversations become unstartable | **EMPFEHLUNG** — Session-Erstellung bricht |
+| #5990 | False "No response" after tool-call answer | **EMPFEHLUNG** — Falscher Error |
+| #5940 | Failed turn zeigt "no response" statt Error | **EMPFEHLUNG** — Schlechte Error-Meldung |
+
+#### C. Neue Features (ZUR DISKUSSION)
+
+| Issue | Titel | Nutzen für Wings | Empfehlung |
+|-------|-------|-------------------|------------|
+| #5508 | Extension API: session-open + transcript | NIEDRIG — Wings hat kein Extension-System | **SPÄTER** |
+| #5913 | Pinch-to-zoom Mermaid | MITTEL — Nützlich für Mobile | **BEREITSTELLEN** |
+| #6062 | Collapsed read_file zeigt Line-Range | MITTEL — Bessere Transparenz | **BEREITSTELLEN** |
+| #6161/#6106 | Artifacts: filename first, mobile headers | MITTEL — Bessere UX | **BEREITSTELLEN** |
+| #5798 | Gateway health check single-flight | HOCH — Performance-Verbesserung | **BEREITSTELLEN** |
+| #5799 | Run-journal append O(1) statt O(n²) | HOCH — Performance bei langen Sessions | **BEREITSTELLEN** |
+| #6362 | Sessions cache cap 300→100 | MITTEL — Weniger Memory-Usage | **BEREITSTELLEN** |
+| #6315 | Image tool-results compaction | MITTEL — Weniger Memory | **BEREITSTELLEN** |
+| #6183 | Hide new-chat welcome panel | HIER EIGENE LÖSUNG — Wings hat eigenes Empty-State | **NICHT ÜBERNEHMEN** |
+| #5701 | Composer above keyboard on iPad | MITTEL — iOS UX | **BEREITSTELLEN** |
+| #5692 | Windows: no console windows for git | NIEDRIG — Wings auf Linux/Olares | **ÜBERSPRINGEN** |
+| #6088 | Manual update check works when auto off | MITTEL — Olares hat eigenes Update-System | **BEREITSTELLEN** |
+| #5994 | Fork from here during active response | HOCH — Wichtige UX-Verbesserung | **BEREITSTELLEN** |
+| #5979 | Proxy providers keep vendor namespace | MITTEL — Wichtig für Multi-Provider | **BEREITSTELLEN** |
+| #6245 | `/sessions` and `/resume` commands | MITTEL — Slash-Commands | **BEREITSTELLEN** |
+| #5836 | Terminal output broadcast to multiple tabs | MITTEL — Multi-Terminal | **BEREITSTELLEN** |
+| #5844 | Abandoned terminal reaper | MITTEL — Resource leak fix | **BEREITSTELLEN** |
+| #5751/#5637/#5638 | Mobile scroll jump-back family | HOCH — Kritisch für Mobile | **BEREITSTELLEN** |
+| #5742 | Desktop scroll jump during streaming | HOCH — UX-Problem | **BEREITSTELLEN** |
+| #5877 | Concurrent chats cross profile boundary | HOCH — Datenisolierung | **BEREITSTELLEN** |
+| #6260 | Fast session recovery for large sidecars | MITTEL — Performance | **BEREITSTELLEN** |
+| #6189 | Transparent Stream duplicate final answer | MITTEL — Rendering-Bug | **BEREITSTELLEN** |
+| #6143 | Background subagent persistence | MITTEL — Subagent-Stabilität | **BEREITSTELLEN** |
+| #5872 | Context-usage after compaction | MITTEL — Genauere Anzeige | **BEREITSTELLEN** |
+| #5895 | Dictation appends instead of replaces | MITTEL — Sprach-Eingabe | **BEREITSTELLEN** |
+| #5717 | Agent closing summary shows iteration limit | MITTEL — Bessere Error-Anzeige | **BEREITSTELLEN** |
+| #5664 | Workspace tree no longer jumps on expand | MITTEL — UX-Verbesserung | **BEREITSTELLEN** |
+| #5696 | Faster session loads on long conversations | HOCH — Performance | **BEREITSTELLEN** |
+| #5674 | Sidebar grouping stays stable | MITTEL — UX-Stabilität | **BEREITSTELLEN** |
+| #5645 | Profile switch serves correct models | HOCH — Profil-Stabilität | **BEREITSTELLEN** |
+| #5560 | Mermaid diagrams min-height on mobile | NIEDRIG — Mobile UX | **BEREITSTELLEN** |
+| #5630 | Steer uploads scoped to session | MITTEL — Upload-Stabilität | **BEREITSTELLEN** |
+| #5633 | Chat header scales with font-size | NIEDRIG — Accessibility | **BEREITSTELLEN** |
+| #5594 | Three-panel desktop layout floor | MITTEL — Layout-Stabilität | **BEREITSTELLEN** |
+| #5644 | Markdown tables tolerate trailing whitespace | MITTEL — Robustheit | **BEREITSTELLEN** |
+| #5653 | No empty italic hint on error cards | NIEDRIG — Cosmetic | **BEREITSTELLEN** |
+| #6227 | Folder downloads work under subpath | MITTEL — Olares-Subpath-Support | **BEREITSTELLEN** |
+| #6105/#6080 | Mobile composer model picker off-screen | HOCH — Mobile Bug | **BEREITSTELLEN** |
+| #6104/#6094 | Approval/clarify popups min-width | MITTEL — Mobile Bug | **BEREITSTELLEN** |
+| #6106 | Stream timestamps no-break on narrow | NIEDRIG — Cosmetic | **BEREITSTELLEN** |
+| #6102 | Streaming sidebar poll cache | MITTEL — CPU-Reduktion | **BEREITSTELLEN** |
+| #6056 | Delegated subagent sidebar titles | MITTEL — Bessere Übersicht | **BEREITSTELLEN** |
+| #5766 | Background wakeup preserves prior reply | MITTEL — UX | **BEREITSTELLEN** |
+| #5762 | Service-tier from model metadata | MITTEL — Auto-detection | **BEREITSTELLEN** |
+| #5773 | Live reasoning no double render | MITTEL — Rendering-Bug | **BEREITSTELLEN** |
+| #5770 | Code block CSS contain | MITTEL — Layout-Stabilität | **BEREITSTELLEN** |
+| #5721 | Workspace switcher screen reader | NIEDRIG — Accessibility | **BEREITSTELLEN** |
+| #5729 | Background child stream no parent reorder | NIEDRIG — Sidebar-Stabilität | **BEREITSTELLEN** |
+| #5786 | Terminal reconnect from dropped connection | MITTEL — Robustheit | **BEREITSTELLEN** |
+| #5785 | Passkey login Content-Length | MITTEL — HTTP-Protokoll | **BEREITSTELLEN** |
+| #5784 | Session delete evicts writer locks | MITTEL — Memory leak | **BEREITSTELLEN** |
+| #5783 | Reaper/drain thread race | MITTEL — Thread-Safety | **BEREITSTELLEN** |
+| #5780 | state.db read-only for lineage/gateway | MITTEL — SQLite-Konkurrenz | **BEREITSTELLEN** |
+| #5772 | MCP list reflects active profile | MITTEL — Profil-Korrektheit | **BEREITSTELLEN** |
+| #5737 | Empty tool_calls rejected by strict providers | MITTEL — Provider-Kompatibilität | **BEREITSTELLEN** |
+| #5567 | Profile switch model provider mismatch | HOCH — Routing-Bug | **BEREITSTELLEN** |
+| #5419 | Session link switches to owning profile | MITTEL — Deep-Linking | **BEREITSTELLEN** |
+| #5688 | Self-update recovers from .git/index.lock | MITTEL — Update-Robustheit | **BEREITSTELLEN** |
+| #5696 | Profile list stale rows | MITTEL — Cache-Freshness | **BEREITSTELLEN** |
+| #5672 | Off-screen tall messages keep real height | HOCH — Mobile Scroll | **BEREITSTELLEN** |
+| #5666 | Android mobile scroll drift | HOCH — Mobile Scroll | **BEREITSTELLEN** |
+| #5681 | History scroll jump during stream | HOCH — Mobile Scroll | **BEREITSTELLEN** |
+| #5685 | Mid-stream scroll jitter | HOCH — Mobile Scroll | **BEREITSTELLEN** |
+| #5605 | Mobile drawer shows dashboard/extension | MITTEL — Mobile Nav | **BEREITSTELLEN** |
+| #5644 | Markdown tables trailing whitespace | MITTEL — Robustheit | **BEREITSTELLEN** |
+| #5653 | Empty italic hint on error cards | NIEDRIG — Cosmetic | **BEREITSTELLEN** |
+
+#### D. Features NICHT übernehmen (intentional)
+
+| Issue | Titel | Grund |
+|-------|-------|-------|
+| #6183 | Hide new-chat welcome panel | Wings hat eigenes Empty-State |
+| #6160 | (Same as above) | |
+| #6403 | Japanese i18n refresh | Wings i18n separat gepflegt |
+| #5761 | OpenCode Go model picker | Wings hat eigenes Model-System |
+| #6329 | Docker experimental builds | Olares hat eigenes Image-System |
+| #5944 | ctl.sh double-start detection | Wings hat eigenes Start-System |
+| #6305 | Test-infra state-dir probe | Test-only |
+| #5970 | Cross-platform test suite | Test-only |
+| #6276 | Windows symlink test fallback | Test-only |
+| #5801 | Login page retry clearInterval | Low-priority |
+
+#### E. Sync-Checkliste (nach Genehmigung)
+
+- [ ] `git fetch upstream`
+- [ ] `git diff main...upstream/master --stat` → Diff-Analyse
+- [ ] Security-Fixes (#6174, #6372, #5797) patchen
+- [ ] Empfohlene Bugfixes patchen
+- [ ] Empfohlene Features patchen
+- [ ] Fork-spezifische Änderungen prüfen (Classic-Layout, Gauge-Card, AImighty-Logo, Basic/Advanced)
+- [ ] `helm package wings/` + `_lib.ts` update
+- [ ] `_apps.ts` version bump + upgradeDescription
+- [ ] Git commit + push
+- [ ] Wrangler deploy
+- [ ] Olares market restart + upgrade
+- [ ] Hard-Refresh im Browser
+- [ ] Test: Chat, Sessions, Workspace, Settings, Mobile
+
+---
