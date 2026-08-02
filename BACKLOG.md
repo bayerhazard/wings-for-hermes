@@ -1,68 +1,28 @@
 
 ---
 
-## P0 — Sync-Analyse (ABGESCHLOSSEN, 2026-08-01)
+## ⚠️ WICHTIG: Sync-Dokumentation umgezogen
 
-### Analyse-Ergebnis
+**Die maßgebliche Upstream-Sync-Dokumentation ist jetzt [`UPSTREAM_SYNC.md`](./UPSTREAM_SYNC.md).**
+Dort stehen:
+- Exakter **Abzweigpunkt** des Forks (upstream `001d7985`, 13.07.2026 — **nicht** v0.50.43, wie früher angenommen)
+- Aktueller **Wings-Stand** (v1.9.8, 14 portierte Fixes) und was bewusst **nicht** übernommen wurde (#6481, #5844, #6389)
+- Die **Sync-Checkliste** und **Deploy-Kette** inkl. aller live gefundenen Fallen
 
-**Fork-Status:** Der Fork `bayerhazard/wings-for-hermes` (v1.9.6) hat **exakt den gleichen Code-Stand** wie `upstream/master` (commit `320789ae5`, 31.07.2026).
+Die untenstehenden Sync-Sektionen sind **historisch** und werden nicht mehr gepflegt.
 
-**Upstream-Divergenz:** Der Fork wurde von `v0.50.43` (14.04.2026) abgezweigt. Seitdem hat Upstream **4738 Commits** und **1690 geänderte Dateien** (+525K Zeilen, -13.5K Zeilen) hinzugefügt.
+## P0 — Sync-Status (ERLEDIGT, 2026-08-02)
 
-**Fork-spezifische Änderungen:** 68 Custom-Commits (UI-Redesign, Olares-Deploy, Themes, Basic/Advanced-Mode, Gauge-Card, Activity-Line, SW-Cache-Disable).
+| Runde | Version | Portierte Fixes | Tests |
+|-------|---------|-----------------|-------|
+| Runde 1 | **v1.9.7** | #6174, #6372, #5797, #6527, #6390, #6083, #6117, #6323/#6309, #6040 (9) | 374 passed |
+| Runde 2 | **v1.9.8** | #6642, #6488, #6529, #6419, #6307 (5) | 587 passed, 45 skipped, 1 pre-existing |
 
-### Sync-Strategie
+**Bereits im Fork enthalten** (vor Abzweigpunkt, nicht portiert): #5990, #5940, #5723
+**Fork-seitig anders gelöst:** #6196 (SW deaktiviert), #6389 (kein `clear_offline_buffer` im Teardown)
+**Bewusst NICHT portiert:** #6481 (blockiert durch fehlendes #6283), #5844-Verfeinerungen (Fork-Terminal-Modell abweichend)
 
-1. **Nicht alles auf einmal!** 4738 Commits auf einmal zu mergen würde die 68 Fork-Änderungen wahrscheinlich brechen.
-2. **Patch-weise mergen** — Security-Fixes zuerst, dann Bugfixes, dann Features.
-3. **Jeden Sync testen** — `olares-cli market upgrade wings -s market.AImighty --watch`
-4. **Fork-Änderungen prüfen** — Nach jedem Merge prüfen, ob Classic-Layout, Neon-Theme, Gauge-Card etc. noch funktionieren.
-
-### Priorisierte Sync-Liste
-
-#### 🔴 P0 — Security (SOFORT)
-| Issue | Titel | Datei(en) | Risiko |
-|-------|-------|-----------|--------|
-| #6174 | Public share links leak local attachments | `api/shares.py`, `static/share.html` | **Kritisch** — LFI/XSS |
-| #6372 | `.ts`/`.tsx` files served as executable | `api/routes.py`, `server.py` | **Kritisch** — XSS |
-| #5797 | `config.yaml` nicht-atomar geschrieben | `api/config.py` | **Hoch** — Datenkorruption |
-
-#### 🟡 P1 — Wichtige Bugfixes
-| Issue | Titel | Datei(en) | Impact |
-|-------|-------|-----------|--------|
-| #6527 | Live SSE relays hang after apperror | `api/streaming.py` | Streaming hängt sich auf |
-| #6196 | Reload prefers stale cache | `api/routes.py`, `static/sw.js` | Datenverlust bei Reload |
-| #6390 | Transcript jumps during streaming | `static/messages.js`, `static/ui.js` | UX-Problem |
-| #6083 | New conversations become unstartable | `api/session_ops.py` | Session-Erstellung bricht |
-| #5990 | False "No response" after tool-call answer | `api/streaming.py` | Falscher Error |
-| #5940 | Failed turn zeigt "no response" statt Error | `api/streaming.py`, `api/routes.py` | Schlechte Error-Meldung |
-| #6117 | Stale sidebar approval attention badge | `api/route_approvals.py` | Falsche Benachrichtigung |
-
-#### 🟢 P2 — Neue Features (zur Diskussion)
-| Issue | Titel | Nutzen | Empfehlung |
-|-------|-------|--------|------------|
-| #5913 | Pinch-to-zoom Mermaid | Mobile UX | **BEREITSTELLEN** |
-| #6062 | Collapsed read_file zeigt Line-Range | Transparenz | **BEREITSTELLEN** |
-| #5798 | Gateway health check single-flight | Performance | **BEREITSTELLEN** |
-| #5799 | Run-journal append O(1) | Performance | **BEREITSTELLEN** |
-| #5994 | Fork from here during active response | UX | **BEREITSTELLEN** |
-| #5751/#5637/#5638 | Mobile scroll jump-back family | Kritisch für Mobile | **BEREITSTELLEN** |
-| #5508 | Extension API | Wings hat kein Extension-System | **SPÄTER** |
-
-### Sync-Checkliste (nach Genehmigung)
-- [ ] `git fetch upstream`
-- [ ] `git diff upstream/v0.50.43...upstream/master --stat` → Diff-Analyse
-- [ ] Security-Fixes (#6174, #6372, #5797) patchen
-- [ ] Empfohlene Bugfixes patchen
-- [ ] Empfohlene Features patchen
-- [ ] Fork-spezifische Änderungen prüfen (Classic-Layout, Gauge-Card, AImighty-Logo, Basic/Advanced)
-- [ ] `helm package wings/` + `_lib.ts` update
-- [ ] `_apps.ts` version bump + upgradeDescription
-- [ ] Git commit + push
-- [ ] Wrangler deploy
-- [ ] Olares market restart + upgrade
-- [ ] Hard-Refresh im Browser
-- [ ] Test: Chat, Sessions, Workspace, Settings, Mobile
+> Details: siehe [`UPSTREAM_SYNC.md`](./UPSTREAM_SYNC.md) §2 und §4.
 
 # Wings for Hermes — Backlog
 
@@ -179,17 +139,20 @@
 
 ## Deploy-Checkliste (alle Versionen)
 
-1. `git add static/ OlaresManifest.yaml wings/ && git commit -m "vX.Y.Z: ..." && git push`
-2. `docker buildx build --platform linux/amd64 -t ghcr.io/bayerhazard/wings-for-hermes:latest --push .`
-3. `helm package wings/` → base64 encode → `_lib.ts` CHARTS dict update
+> **Aktualisiert 2026-08-02:** Die korrigierte, getestete Deploy-Kette (inkl.
+> Fallen wie `--branch main`, uninstall+install statt upgrade, Image-Tag ohne
+> `v`) liegt in [`UPSTREAM_SYNC.md`](./UPSTREAM_SYNC.md) §5. Diese Liste ist die
+> alte Kurzfassung und zeigt die zwei früheren Fehler, die live behoben wurden.
+
+1. `git add . && git commit -m "vX.Y.Z: ..." && git push origin main`
+2. `git tag vX.Y.Z && git push origin vX.Y.Z` → GitHub Actions baut Image **ohne** v (`1.9.8`) ✅
+3. `helm package wings/` → base64 encode → `_lib.ts` CHARTS dict update (**frisch encoden!**)
 4. `_apps.ts` version + upgradeDescription update
 5. `git add functions/ && git commit -m "wings vX.Y.Z" && git push`
-6. `wrangler pages deploy functions/ --project-name=aimighty-market`
-7. `olares-cli cluster workload restart market-deployment -n os-framework --yes --kind Deployment`
-8. Warten bis Version im Market angezeigt wird (60-120s)
-9. `olares-cli market upgrade wings -s market.AImighty --watch`
-10. `olares-cli cluster workload restart wings -n wings-aimighty --yes --kind Deployment`
-11. **Hard-Refresh** (`Cmd+Shift+R`) im Browser
+6. `wrangler pages deploy functions/ --project-name=aimighty-market --branch main` ✅ (nie `--branch production`)
+7. Warten bis Version im Market angezeigt wird (60-120s)
+8. `olares-cli market uninstall wings` + `olares-cli market install wings -s market.AImighty --watch` ✅ (nie `upgrade` — Values-Freeze!)
+9. **Hard-Refresh** (`Cmd+Shift+R`) im Browser
 
 ---
 
@@ -197,6 +160,9 @@
 
 | Version | Datum | Thema | Deployed |
 |---------|-------|-------|----------|
+| v1.9.8 | 2026-08-02 | Runde 2: #6642 Gateway-Terminal-Persistenz, #6488 Qwen-Heuristik, #6529 Title-Echo, #6419 Pending-Merge, #6307 Stale-Workspace-Recovery | — |
+| v1.9.7 | 2026-08-02 | Runde 1: 9 Bugfixes (#6174, #6372, #5797, #6527, #6390, #6083, #6117, #6323/#6309, #6040) | Ja |
+| v1.9.6 | 2026-07-29 | Docker image tag fix (ghcr '1.9.x' ohne v-Präfix) | Ja |
 | v1.6.0 | 2026-07-24 | Gauge-Tooltip löschen, Smart Download-Card, Avatar-Konzept, neutrale Chatbubble-Hintergründe | — |
 | v1.5.6 | 2026-07-24 | Smart timeout, dark dialog bg, remove tooltip title | Ja |
 | v1.5.5 | 2026-07-24 | Logo-Abstand fix (gap + margin) | Ja |
@@ -272,53 +238,54 @@ Mode-Wechsel Advanced→Basic → Pille erscheint, Panel bleibt im letzten Zusta
 - [ ] Test: Mode-Wechsel Basic ↔ Advanced
 - [ ] Test: Mobile (<900px) — Pille ausgeblendet, Slide-In funktioniert
 - [ ] Test: localStorage-Persistenz (`wings-workspace-panel`)
-- [ ] Version bump + deploy
+ - [ ] Version bump + deploy
 
 ---
 
----
+## P1 — Fork-Sync: Upstream Hermes WebUI abgleichen (ERLEDIGT, 2026-08-02)
 
-## P1 — Fork-Sync: Upstream Hermes WebUI abgleichen
+### [x] Fork mit upstream `nesquena/hermes-webui` auf aktuellen Stand bringen
+**Status:** **ABGESCHLOSSEN** — zwei Sync-Runden durchgeführt (v1.9.7 + v1.9.8), 14 Fixes portiert.
 
-### [ ] Fork mit upstream `nesquena/hermes-webui` auf aktuellen Stand bringen
-**Status:** **GEPLANT** — 2026-08-01 erstellt.
-**Fork-Tag:** v1.9.6 (2026-07-29)
-**Upstream-stabil:** v0.52.106 (2026-07-29)
-**Upstream-experimental:** exp-v0.52.158 (2026-07-30)
+**Historischer Kontext (2026-08-01):** Diese Sektion wurde erstellt, bevor der
+echte Abzweigpunkt bekannt war. Die damaligen Annahmen — Abzweigung von
+v0.50.43, 4738 Commits Differenz — sind **durch die Analyse widerlegt**:
+Der Fork basiert auf upstream `001d7985` (13.07.2026). Die korrekte, aktuell
+gepflegte Sync-Dokumentation liegt in **[`UPSTREAM_SYNC.md`](./UPSTREAM_SYNC.md)**.
 
-**Kontext:** Wings for Hermes ist ein Fork des internen Hermes WebUI. Der Fork hat seit der Abspaltung eigene Design- und Olares-Integrationen (Classic-Layout, Gauge-Card, AImighty-Branding, Basic/Advanced-Mode, Olares-Manifest). Ein Sync muss diese Fork-spezifischen Änderungen bewahren.
+Die nachfolgenden Empfehlungs-Tabellen (A–D) sind historische Analyse-Notizen
+und wurden durch die tatsächlich durchgeführten Portierungen abgelöst:
 
-#### Sync-Strategie (NICHT automatisch übernehmen!)
+#### A. Security-Fixes — ✅ ALLE ÜBERNOMMEN (v1.9.7)
 
-1. **Diff analysieren:** `git fetch upstream && git diff main...upstream/master --stat`
-2. **Kategorisieren:** Bugfixes, Features, Breaking Changes, Security
-3. **Priorisieren:** Was muss rein? Was wollen wir? Was intentionally nicht?
-4. **Abstimmen:** Jede Kategorie mit dem User genehmigen
-5. **Patch-weise mergen:** Nicht alles auf einmal — lieber kleine, testbare Commits
-6. **Olares-Tests:** Nach jedem Sync: `olares-cli market upgrade wings -s market.AImighty --watch`
+| Issue | Titel | Status |
+|-------|-------|--------|
+| #6174 | Public share links leak local attachments | ✅ portiert |
+| #6372 | `.ts`/`.tsx` files served as executable | ✅ portiert |
+| #5797 | `config.yaml` nicht-atomar geschrieben | ✅ portiert |
 
-#### A. Security-Fixes (MÜSSEN übernommen werden)
+#### B. Wichtige Bugfixes — ✅ ÜBERNOMMEN bis auf fork-gelöst/-enthalten
 
-| Issue | Titel | Empfehlung |
-|-------|-------|------------|
-| #6174 | Public share links leak local attachments | **MUST HAVE** — Kritische XSS/LFI-Schwachstelle |
-| #6372 | `.ts`/`.tsx` files served as executable | **MUST HAVE** — XSS über Workspace-Dateien |
-| #5797 | `config.yaml` nicht-atomar geschrieben | **MUST HAVE** — Datenkorruption bei Crash |
+| Issue | Titel | Status |
+|-------|-------|--------|
+| #6527 | Live SSE relays hang after apperror | ✅ portiert (v1.9.7) |
+| #6196 | Reload bevorzugt stale cache | ✅ fork-gelöst (SW deaktiviert) |
+| #6390 | Transcript jumps during streaming settlement | ✅ portiert (v1.9.7) |
+| #6323/#6309 | Terminal-error Worklog zeigt "still running" | ✅ portiert (v1.9.7) |
+| #5723 | Message stuck after server restart mid-reply | ✅ bereits im Fork |
+| #6040 | Gateway approval cards routed by run ID | ✅ portiert (v1.9.7) |
+| #6117 | Stale sidebar approval attention badge | ✅ portiert (v1.9.7) |
+| #6083 | New conversations become unstartable | ✅ portiert (v1.9.7) |
+| #5990 | False "No response" after tool-call answer | ✅ bereits im Fork |
+| #5940 | Failed turn zeigt "no response" statt Error | ✅ bereits im Fork |
 
-#### B. Wichtige Bugfixes (EMPFOHLEN)
+#### C. Neue Features (ZUR DISKUSSION) — unverändert offen
 
-| Issue | Titel | Empfehlung |
-|-------|-------|------------|
-| #6527 | Live SSE relays hang after apperror | **EMPFEHLUNG** — Streaming hängt sich auf |
-| #6196 | Reload bevorzugt stale cache über run-journal | **EMPFEHLUNG** — Datenverlust bei Reload |
-| #6390 | Transcript jumps during streaming settlement | **EMPFEHLUNG** — UX-Problem beim Scrollen |
-| #6323/#6309 | Terminal-error Worklog zeigt "still running" | **EMPFEHLUNG** — Falscher Zustand nach Error |
-| #5723 | Message stuck after server restart mid-reply | **EMPFEHLUNG** — Composer blockiert |
-| #6040 | Gateway approval cards routed by run ID | **EMPFEHLUNG** — Approvals auf falschem Run |
-| #6117 | Stale sidebar approval attention badge | **EMPFEHLUNG** — Falsche Benachrichtigung |
-| #6083 | New conversations become unstartable | **EMPFEHLUNG** — Session-Erstellung bricht |
-| #5990 | False "No response" after tool-call answer | **EMPFEHLUNG** — Falscher Error |
-| #5940 | Failed turn zeigt "no response" statt Error | **EMPFEHLUNG** — Schlechte Error-Meldung |
+Die Empfehlungsliste (#5913, #6062, #5798, #5799, #5994, #5751/#5637/#5638,
+u.v.a.) bleibt als **Feature-Pool** bestehen — kein Feature wurde bisher
+übernommen (nur Bugfixes). Bei der nächsten Feature-Runde hieraus wählen.
+
+#### D. Features NICHT übernehmen (intentional) — unverändert gültig
 
 #### C. Neue Features (ZUR DISKUSSION)
 
@@ -406,20 +373,11 @@ Mode-Wechsel Advanced→Basic → Pille erscheint, Panel bleibt im letzten Zusta
 | #6276 | Windows symlink test fallback | Test-only |
 | #5801 | Login page retry clearInterval | Low-priority |
 
-#### E. Sync-Checkliste (nach Genehmigung)
+#### E. Sync-Checkliste — ✅ ABGESCHLOSSEN (2 Runden)
 
-- [ ] `git fetch upstream`
-- [ ] `git diff main...upstream/master --stat` → Diff-Analyse
-- [ ] Security-Fixes (#6174, #6372, #5797) patchen
-- [ ] Empfohlene Bugfixes patchen
-- [ ] Empfohlene Features patchen
-- [ ] Fork-spezifische Änderungen prüfen (Classic-Layout, Gauge-Card, AImighty-Logo, Basic/Advanced)
-- [ ] `helm package wings/` + `_lib.ts` update
-- [ ] `_apps.ts` version bump + upgradeDescription
-- [ ] Git commit + push
-- [ ] Wrangler deploy
-- [ ] Olares market restart + upgrade
-- [ ] Hard-Refresh im Browser
-- [ ] Test: Chat, Sessions, Workspace, Settings, Mobile
+Die frühere Checkliste (fetch → Diff → patchen → deploy → testen) wurde für
+Runde 1 (v1.9.7) und Runde 2 (v1.9.8) **vollständig durchgeführt**. Die
+aktuelle, wiederverwendbare Check-Routine steht in
+[`UPSTREAM_SYNC.md`](./UPSTREAM_SYNC.md) §3.
 
 ---
