@@ -1508,6 +1508,13 @@
   @media (max-width:640px){
     [data-mode="basic"] .icon-btn#btnWorkspaceChip{display:none !important;}
   }
+  /* Attach + workspace controls in the composer: no hover wobble, no scale. */
+  .composer-footer .icon-btn#btnAttach,
+  .composer-footer .icon-btn#btnWorkspaceChip{transition:background .15s ease,color .15s ease,opacity .15s ease;transform:none!important;}
+  .composer-footer .icon-btn#btnAttach:hover,
+  .composer-footer .icon-btn#btnWorkspaceChip:hover{transform:none!important;}
+  .composer-footer .icon-btn#btnAttach:active,
+  .composer-footer .icon-btn#btnWorkspaceChip:active{transform:none!important;}
   .composer-reasoning-chip{display:inline-flex;align-items:center;gap:5px;max-width:none;padding:8px 10px;border-radius:999px;border:1px solid transparent;background-color:transparent;color:var(--muted);font-weight:500;cursor:pointer;transition:color .15s,background-color .15s,border-color .15s;}
   .composer-reasoning-chip.inactive{opacity:.78;}
   .composer-reasoning-chip:hover{color:var(--text);background-color:var(--hover-bg);}
