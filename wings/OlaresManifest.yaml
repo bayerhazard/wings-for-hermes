@@ -11,7 +11,7 @@ metadata:
   description: Wings for Hermes — AI Agent Web UI with chat, sessions, memory, skills, cron, profiles, workspaces
   appid: wings
   title: Wings for Hermes
-  version: '1.9.6'
+  version: '1.9.7'
   categories:
     - Productivity_v112
     - Developer Tools
@@ -24,9 +24,9 @@ entrances:
     openMethod: window
     authLevel: internal
 spec:
-  versionName: '1.9.6'
+  versionName: '1.9.7'
   upgradeDescription: |
-    v1.9.6: Docker image tag fix (ghcr uses untagged '1.9.x' without v prefix). v1.9.5: Code review fixes — removed 7 stale root frontend files, added .dockerignore exclusions, saveSettings debounce lock, removed dead skin code, added i18n settings_saving key, reduced initContainer privileges (removed privileged:true), fixed UID consistency (1024→1000), cleaned dead CSS.
+    v1.9.7: Upstream bugfix port (9 fixes: share-media LFI/XSS, ts/tsx MIME, atomic config writes, SSE relay apperror close, scroll preservation, LRU grace, stale approval badge, terminal-error timing/seal, gateway approvals by run ID). v1.9.6: Code review fixes — removed 7 stale root frontend files, added .dockerignore exclusions, saveSettings debounce lock, removed dead skin code, added i18n settings_saving key, reduced initContainer privileges (removed privileged:true), fixed UID consistency (1024→1000), cleaned dead CSS.
   fullDescription: |
     **Wings for Hermes** — AI Agent Web UI, forked from hermes-webui.
 

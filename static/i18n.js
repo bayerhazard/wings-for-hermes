@@ -17,7 +17,8 @@ const LOCALES = {
     _speech: 'en-US',
     // boot.js
     cancelling: 'Cancelling\u2026',
-    cancel_failed: 'Cancel failed: ',
+    cancel_failed: 'Cancel failed.',
+    approval_pending_count: (n) => `1 of ${n} pending`,
     mic_denied: 'Microphone access denied. Check browser permissions.',
     mic_insecure_origin: 'Voice input needs a secure connection. Open Wings over HTTPS or from localhost to use the microphone.',
     mic_no_speech: 'No speech detected. Try again.',
@@ -1787,7 +1788,8 @@ const LOCALES = {
     _speech: 'de-DE',
     // boot.js
     cancelling: 'Wird abgebrochen\u2026',
-    cancel_failed: 'Abbrechen fehlgeschlagen: ',
+    cancel_failed: 'Abbrechen fehlgeschlagen.',
+    approval_pending_count: (n) => `1 von ${n} ausstehend`,
     mic_denied: 'Mikrofonzugriff verweigert. Überprüfen Sie die Browserberechtigungen.',
     mic_insecure_origin: 'Für die Spracheingabe ist eine sichere Verbindung erforderlich. Öffne Hermes über HTTPS oder von localhost, um das Mikrofon zu verwenden.',
     mic_no_speech: 'Keine Sprache erkannt. Versuchen Sie es erneut.',
