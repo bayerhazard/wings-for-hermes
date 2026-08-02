@@ -1576,6 +1576,7 @@ const LOCALES = {
 
     workspace_drag_hint: 'Drag to reorder',
     workspace_reorder_failed: 'Reorder failed',
+    workspace_recovered_notice: (path) => `This session's deleted workspace was recovered to ${path}.`,
     workspace_added: 'Workspace added',
     workspace_renamed: 'Workspace renamed',
     workspace_remove_confirm_title: 'Remove workspace',
@@ -2905,6 +2906,7 @@ const LOCALES = {
 
     workspace_drag_hint: 'Ziehen zum Neuordnen',
     workspace_reorder_failed: 'Neuordnen fehlgeschlagen',
+    workspace_recovered_notice: (path) => `Der gelöschte Arbeitsbereich dieser Sitzung wurde unter ${path} wiederhergestellt.`,
     open_in_browser: 'Im Browser öffnen',
     settings_section_system_title: 'System',
     settings_tab_appearance: 'Appearance',

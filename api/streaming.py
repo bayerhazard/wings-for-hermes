@@ -30,7 +30,8 @@ from api.config import (
     STREAM_GOAL_RELATED, PENDING_GOAL_CONTINUATION,
     STREAM_LAST_EVENT_ID,
     LOCK, SESSIONS, SESSIONS_MAX, SESSION_DIR,
-    _get_session_agent_lock, _set_thread_env, _clear_thread_env,
+    _get_session_agent_lock, _alias_session_agent_lock,
+    _set_thread_env, _clear_thread_env,
     register_active_run, update_active_run, unregister_active_run,
     unregister_stream_owner,
     SESSION_AGENT_LOCKS, SESSION_AGENT_LOCKS_LOCK,
@@ -2544,13 +2545,19 @@ def _sanitize_generated_title(text: str) -> str:
     s = re.sub(r'^\s*title\s*:\s*', '', s, flags=re.IGNORECASE)
     s = s.strip(" \t\r\n\"'`*_~")
     s = re.sub(r'\s+', ' ', s).strip()
-    # Guard against chain-of-thought leakage and meta-reasoning patterns.
-    if _looks_invalid_generated_title(s):
+    # Guard against chain-of-thought leakage, meta-reasoning, and trivial echo.
+    if _is_bad_new_title(s):
         return ''
     return s[:80]
 
 
 def _looks_invalid_generated_title(text: str) -> bool:
+    """True when an existing/persisted title is structurally invalid (CoT leak).
+
+    Intentionally does NOT reject short conversational words like "Done" or
+    "Cool" — those can be legitimate stored titles. Use ``_is_bad_new_title``
+    when validating a freshly generated candidate.
+    """
     s = str(text or '')
     if not s.strip():
         return True
@@ -2562,7 +2569,31 @@ def _looks_invalid_generated_title(text: str) -> bool:
         or re.search(r'^\s*(i|we)\s+(should|need to|will|can)\b', s, flags=re.IGNORECASE)
         or re.search(r'^\s*let me\b', s, flags=re.IGNORECASE)
         or re.search(r"^\s*here(?:'s| is) (?:a |my )?(?:thinking|thought)", s, flags=re.IGNORECASE)
-        or re.search(r'^\s*(ok|okay|done|all set|complete|completed|finished)\b[\s.!?]*$', s, flags=re.IGNORECASE)
+    )
+
+
+def _is_bad_new_title(text: str) -> bool:
+    """True when a freshly generated title candidate should be discarded.
+
+    Includes structural CoT rejection plus trivial single-token echo replies
+    (pong, yes, done, cool, …) that are useless as first-generation titles.
+    """
+    if _looks_invalid_generated_title(text):
+        return True
+    s = str(text or '').strip()
+    _token = re.sub(r'[\s.!?]+$', '', s, flags=re.IGNORECASE)
+    if re.fullmatch(
+        r'(?:pong|ping|yes|no|yep|nope|hi|hello|hey|thanks|thank you|sure|k|kk|cool|nice|lol|ok|okay|done)',
+        _token,
+        flags=re.IGNORECASE,
+    ):
+        return True
+    return bool(
+        re.search(
+            r'^\s*(ok|okay|done|all set|complete|completed|finished)\b[\s.!?]*$',
+            s,
+            flags=re.IGNORECASE,
+        )
     )
 
 
@@ -2697,7 +2728,7 @@ def _first_exchange_snippets(messages):
             # is asking...", etc.). Assistant rows that carry tool_calls but
             # also contain a substantive answer text are kept — those are
             # agentic first-turn plans that are legitimate title candidates.
-            if m.get('tool_calls') and (not candidate or _looks_invalid_generated_title(candidate)):
+            if m.get('tool_calls') and (not candidate or _is_bad_new_title(candidate)):
                 continue
             if candidate:
                 asst_text = candidate
@@ -2721,7 +2752,7 @@ def _latest_exchange_snippets(messages):
         if role == 'assistant' and not asst_text:
             candidate = _message_text(m.get('content'))
             # Skip tool-call-only preambles
-            if m.get('tool_calls') and (not candidate or _looks_invalid_generated_title(candidate)):
+            if m.get('tool_calls') and (not candidate or _is_bad_new_title(candidate)):
                 continue
             if candidate:
                 asst_text = candidate
@@ -8703,15 +8734,12 @@ def _run_agent_streaming(
                 # registration, and subsequent error persistence all target the
                 # continuation session instead of the stale parent.
                 #
-                # Lock migration: when session_id rotates, we alias the new ID to
-                # the *same* Lock object under SESSION_AGENT_LOCKS so that
-                # subsequent callers using _get_session_agent_lock(new_sid) get the
-                # same Lock the streaming thread is already holding. We then pop
-                # the old-id entry to prevent a leak. This is safe because we
-                # already hold _agent_lock (the Lock object itself), so the
-                # reference stays alive even after the dict entry is removed.
-                # Concurrent readers that already looked up the old ID will still
-                # see the same Lock object until they release it.
+                # Lock migration: when session_id rotates, alias both old and new
+                # IDs to the *same* _agent_lock. Keeping the old alias ensures a
+                # late old-ID request cannot create a second mutation lock while
+                # the streaming holder or an earlier waiter is still active. The
+                # weak registry reclaims both aliases after the final strong
+                # reference to the Lock is released.
                 _compression_origin_session_id = session_id
                 _compression_continuation_session_id = None
                 _agent_sid = getattr(agent, 'session_id', None)
@@ -8786,12 +8814,11 @@ def _run_agent_streaming(
                         SESSIONS[new_sid] = s
                         SESSIONS.move_to_end(new_sid)
                         _evict_sessions_over_cap()  # #4765: safe LRU eviction (never active/unsaved)
-                    # Migrate the per-session lock: alias new_sid to the held
-                    # _agent_lock reference directly (not via old_sid lookup),
-                    # then remove the old_sid entry to prevent a leak.
-                    with SESSION_AGENT_LOCKS_LOCK:
-                        SESSION_AGENT_LOCKS[new_sid] = _agent_lock
-                        SESSION_AGENT_LOCKS.pop(old_sid, None)
+                    # Migrate the per-session lock by aliasing new_sid to the
+                    # held _agent_lock reference directly. Keep old_sid aliased
+                    # too until the weak registry can reclaim both safely after
+                    # all old-ID holders and waiters release the lock.
+                    _alias_session_agent_lock(old_sid, new_sid, _agent_lock)
                     # Migrate cached agent to the new session ID so the turn
                     # count survives context compression.
                     from api.config import SESSION_AGENT_CACHE, SESSION_AGENT_CACHE_LOCK

@@ -35,12 +35,12 @@ bereits im Fork enthalten (u.a. #5990, #5940, #5723). Nur Fixes **nach dem
 
 | Stand | Wert |
 |-------|------|
-| Aktuelle Wings-Version | **v1.9.7** (deployed 2026-08-02) |
-| Image | `ghcr.io/bayerhazard/wings-for-hermes:1.9.7` |
+| Aktuelle Wings-Version | **v1.9.8** (Sync-Runde 2026-08-02) |
+| Image | `ghcr.io/bayerhazard/wings-for-hermes:1.9.8` |
 | Olares-Source | `market.AImighty` |
-| Baseline | upstream `001d7985` (13.07.2026) + 9 portierte Fixes |
+| Baseline | upstream `001d7985` (13.07.2026) + 14 portierte Fixes |
 
-### Bereits portierte Fixes (v1.9.7)
+### Portierte Fixes — Runde 1 (v1.9.7)
 
 | Fix | Inhalt | Bereich |
 |-----|--------|---------|
@@ -53,6 +53,24 @@ bereits im Fork enthalten (u.a. #5990, #5940, #5723). Nur Fixes **nach dem
 | #6117 | Stale Approval-Badge wird korrekt geleert | Bugfix |
 | #6323/#6309 | Terminal-Error: Turn-Duration + Tool-Row-Seal | Bugfix |
 | #6040 | Gateway-Approvals nach Run-ID geroutet (großer Architektur-Batch) | Bugfix |
+
+### Portierte Fixes — Runde 2 (v1.9.8)
+
+| Fix | Inhalt | Bereich |
+|-----|--------|---------|
+| #6642 | Gateway-Terminal-Error-Persistenz + Recovery nach Run-ID (Erweiterung #6040) | Bugfix |
+| #6488 | Qwen-Reasoning-Heuristik für prefixed Model-IDs (z.B. `al-qwen3.8-max-preview`) | Bugfix |
+| #6529 | Trivial-Echo-Titel (pong/ok/cool) werden als Titel verworfen | Bugfix |
+| #6419 | Pending-Merge-Helper: Session-Reconnect-Ordering + Dedupe | Bugfix |
+| #6307 | Stale-File-Workspace-Recovery + Session-Lock-Registry (WeakValueDictionary) | Bugfix |
+
+### Bewusst NICHT portiert (Runde 2 — mit Begründung)
+
+| Fix | Inhalt | Grund |
+|-----|--------|-------|
+| #6481 | Verification-Evidence-Contamination (Streaming-Context) | **Baut auf #6283 auf** (Async-Delegation-Delivery, 2082 Zeilen, neues Modul `api/process_event_utils.py`), das im Fork **komplett fehlt**. Ein Port von #6481 allein crasht (Import-Abhängigkeit). Gemeinsamer Port = ~3800 Zeilen + neues Architektur-Modul + hohe Konfliktrisiken in `streaming.py`. Nutzen im Fork nicht belegt → **nicht übernommen** (Stand 2026-08-02) |
+| #5844 (Verfeinerungen) | Terminal-Reaper-TOCTOU + fd-leak-Feinschliff | Fork hat ein **eigenes Terminal-Modell** (`_sub_lock`/`_backlog` statt upstream `self.output`). Die späteren Reaper-Patches (07d110a0, a31cdb77) passen nicht auf die Fork-Struktur. Basis-Reaper (#5844-Kern) ist bereits im Fork enthalten |
+| #6389 | Stream-Teardown-Leak | **Im Fork bereits gelöst**: Der Fork hat kein `clear_offline_buffer()` im Teardown; `unregister_stream_owner` + `AGENT_INSTANCES.pop` sind schon vorhanden (teils durch #6040-Port-Kontext) |
 
 ### Bereits im Fork enthalten (vor Abzweigpunkt, NICHT portieren)
 
@@ -79,7 +97,9 @@ git rev-list --count <letzter-port-anchor>..upstream/master
 ```
 
 Letzter Port-Anker = der Tag/Commit, bis zu dem Wings die letzte Sync-Runde
-abgeschlossen hat. Für v1.9.7 ist das der #6040-Stand (`d2a4ecb7`, 22.07.2026).
+abgeschlossen hat.
+- Runde 1 (v1.9.7): `#6040`-Stand (`d2a4ecb7`, 22.07.2026)
+- Runde 2 (v1.9.8): `#6307`-Stand (`41321f6f`, 29.07.2026)
 
 ### 3.2 Kategorisieren (nicht automatisch übernehmen!)
 
@@ -116,33 +136,29 @@ Jede neue upstream-Änderung in eine von vier Klassen:
 
 ## 4. Stand: Ist Wings mit dem aktuellen Upstream "sauber"?
 
-**Bewertung 2026-08-02 (nach v1.9.7):**
+**Bewertung 2026-08-02 (nach Runde 2 / v1.9.8):**
 
-- ✅ **Backlog-Fixes aus der letzten Sync-Runde sind vollständig übernommen.**
-  Alle 9 identifizierten Fixes (3 Security + 6 Bugfixes inkl. #6040) sind
-  portiert, getestet und deployed. Die im Backlog gelisteten Fixes
-  (#5990/#5940/#5723) waren bereits im Fork enthalten.
+- ✅ **Runde 2 abgeschlossen:** Die ~115 Commits seit dem 22.07.2026 wurden
+  gesichtet. 5 relevante Fixes portiert (#6642, #6488, #6529, #6419, #6307),
+  jeweils mit Tests (Gesamt: 587 passed, 45 skipped, 1 pre-existing #5260-Fail).
+  #6481/#5844-Verfeinerungen/#6389 bewusst nicht übernommen (Begründungen in §2).
 
-- ⚠️ **Upstream hat sich seit unserem letzten Port weiterbewegt.** Seit dem
-  22.07.2026 (#6040) sind **~115 upstream-Commits** dazugekommen (Stand
-  master `320789ae`, 31.07.2026; neuester exp-Tag `exp-v0.52.158`). Diese
-  **wurden noch nicht gesichtet** — es sind weitere Bugfixes darunter, z.B.:
+- ⚠️ **Upstream bewegt sich weiter.** Nach dem #6307-Stand (29.07.) sind weitere
+  Commits dazugekommen (Stand master `320789ae`, 31.07.2026; neuester exp-Tag
+  `exp-v0.52.158`). Noch **nicht gesichtete** Bereiche für die nächste Runde:
 
   | Issue | Inhalt | Relevanz für Wings |
   |-------|--------|--------------------|
-  | #6419 | Pending-Turn-Recovery vereinheitlicht | hoch (Streaming) |
-  | #6481 | Pending-Turns-Materialisierung / Display-Ownership | hoch (Streaming) |
-  | #6307 | Stale-File-Workspaces-Recovery | mittel |
-  | #6416/#6389 | Stream-Teardown-Leak | hoch (Streaming) |
+  | #6481 | Verification-Evidence-Contamination | siehe §2 — blockiert durch fehlendes #6283 |
+  | #6283 | Async-Delegation-Delivery (Grundlage für #6481) | hoch, aber 2082-Zeilen-Refactor |
   | #6148 | Alias-Präfix-Model-Routing | mittel |
   | #6408/#6349 | Anchor-Prose/Composer-Fixes | mittel (UI) |
-  | Gateway-Terminal-Persistence (#6642 u.a.) | Gateway-Error-Durability | hoch (Gateway) |
+  | #6457 | Reconnect-Transcript-Ordering | mittel (SSE) |
+  | #6507 | Hard-Refresh-Session-Restore | mittel |
 
-  **Fazit:** Wings ist *bezüglich der identifizierten Backlog-Fixes* sauber,
-  aber *bezüglich des aktuellen upstream master* nicht vollständig — es gibt
-  einen Rückstand von ~115 Commits, der bei der nächsten Sync-Runde zu sichten
-  ist. Das ist der Normalzustand nach jedem Release; die Dokumentation in §3
-  beschreibt, wie der nächste Check abläuft.
+  **Fazit:** Wings ist bezüglich der in Runde 2 identifizierten Backlog-Fixes
+  sauber und deployed. Der verbleibende upstream-Rückstand ist der
+  Normalzustand; die nächste Runde startet beim #6307-Anker (`41321f6f`).
 
 ---
 
