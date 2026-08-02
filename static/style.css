@@ -1496,17 +1496,17 @@
   .composer-workspace-chip.active{color:var(--text);background:var(--accent-bg);}
   .composer-workspace-icon,.composer-workspace-chevron{display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;line-height:1;}
   .composer-workspace-label{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-  /* Workspace pill — Basic-mode access to the workspace panel (Advanced uses the group). */
-  .composer-workspace-chip#btnWorkspaceChip{display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border:1px solid var(--border2);border-radius:999px;background-color:transparent;color:var(--muted);font-weight:500;font-size:13px;cursor:pointer;transition:color .15s,border-color .15s,background-color .15s;-webkit-tap-highlight-color:transparent;}
-  .composer-workspace-chip#btnWorkspaceChip:hover{color:var(--text);background-color:var(--hover-bg);border-color:var(--border2);}
-  .composer-workspace-chip#btnWorkspaceChip[aria-pressed="true"]{color:var(--accent-text);background:var(--accent-bg);border-color:var(--accent-bg-strong);}
-  .composer-workspace-chip#btnWorkspaceChip[aria-pressed="true"] .workspace-chip-arrow{transform:rotate(180deg);}
-  .composer-workspace-chip#btnWorkspaceChip .workspace-chip-icon,.composer-workspace-chip#btnWorkspaceChip .workspace-chip-arrow{display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;transition:transform .18s ease;}
-  .composer-workspace-chip#btnWorkspaceChip:disabled{opacity:.45;cursor:not-allowed;}
-  [data-mode="basic"] .composer-workspace-chip#btnWorkspaceChip{display:inline-flex;}
-  [data-mode="advanced"] .composer-workspace-chip#btnWorkspaceChip{display:none !important;}
+  /* Workspace icon button — Basic-mode access to the workspace panel (Advanced
+     uses the group). Mirrors .icon-btn (btnAttach) sizing so the folder sits
+     at the same size as the attach plus, aligned on the same baseline. */
+  .icon-btn#btnWorkspaceChip{width:34px;height:34px;border-radius:8px;padding:0;}
+  .icon-btn#btnWorkspaceChip .composer-workspace-icon{display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .icon-btn#btnWorkspaceChip[aria-pressed="true"]{color:var(--accent-text);background:var(--accent-bg);}
+  .icon-btn#btnWorkspaceChip:disabled{opacity:.45;cursor:not-allowed;}
+  [data-mode="basic"] .icon-btn#btnWorkspaceChip{display:inline-flex;}
+  [data-mode="advanced"] .icon-btn#btnWorkspaceChip{display:none !important;}
   @media (max-width:640px){
-    [data-mode="basic"] .composer-workspace-chip#btnWorkspaceChip{display:none !important;}
+    [data-mode="basic"] .icon-btn#btnWorkspaceChip{display:none !important;}
   }
   .composer-reasoning-chip{display:inline-flex;align-items:center;gap:5px;max-width:none;padding:8px 10px;border-radius:999px;border:1px solid transparent;background-color:transparent;color:var(--muted);font-weight:500;cursor:pointer;transition:color .15s,background-color .15s,border-color .15s;}
   .composer-reasoning-chip.inactive{opacity:.78;}
