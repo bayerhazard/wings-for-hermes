@@ -1,3 +1,37 @@
+function _showStreamTimeoutHint(ms){
+  // While a stream is active, a generic "Request timed out" toast is misleading
+  // (long agent turns routinely exceed the fetch timeout without failing). Show
+  // a non-intrusive inline countdown in the composer instead, and let the stream
+  // lifecycle clear it. Falls back to nothing when the DOM/composer is absent.
+  try{
+    const el=(typeof document!=='undefined')&&document.getElementById('composerTimeout');
+    if(!el) return;
+    const total=Math.max(1,Math.round((Number(ms)||30000)/1000));
+    let remaining=total;
+    const paint=()=>{
+      if(!remaining){el.style.display='none';el.textContent='';return;}
+      el.style.display='inline-flex';
+      el.textContent='⏱ '+remaining+'s…';
+    };
+    paint();
+    const iv=setInterval(()=>{
+      remaining-=1;
+      if(remaining<=0){clearInterval(iv);paint();return;}
+      paint();
+    },1000);
+    // Clear when the turn finishes or the element is removed.
+    const clear=()=>{clearInterval(iv);el.style.display='none';el.textContent='';};
+    el._streamTimeoutClear=clear;
+    if(typeof S!=='undefined'){
+      // Poll cheaply: stop counting as soon as the stream is no longer active.
+      const poll=setInterval(()=>{
+        if(!S.activeStreamId&&!S.busy){clearInterval(poll);clear();}
+      },2000);
+      el._streamTimeoutPoll=poll;
+    }
+  }catch(_){}
+}
+
 async function api(path,opts={}){
   // Strip leading slash so URL resolves relative to location.href (supports subpath mounts)
   const rel = path.startsWith('/') ? path.slice(1) : path;
@@ -116,6 +150,9 @@ async function api(path,opts={}){
             if(retryDelayMs) await new Promise(resolve=>setTimeout(resolve,retryDelayMs*Math.pow(2,attempt)));
             continue;
           }
+          // Stream still running after retries: show a non-intrusive inline
+          // countdown in the composer instead of a blocking toast.
+          if(typeof _showStreamTimeoutHint==='function') _showStreamTimeoutHint(timeoutMs);
           throw lastErr;
         }
         const err=(e&&e.name==='TimeoutError')?e:new Error('Request timed out. Please try again.');

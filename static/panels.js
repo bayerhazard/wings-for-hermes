@@ -38,9 +38,11 @@ function setUIMode(mode) {
   if (getUIMode() === 'basic') {
     // Collapse any open advanced surface so nothing stays visible-but-hidden.
     if (typeof closeComposerTerminal === 'function') closeComposerTerminal();
-    if (document.documentElement.dataset.workspacePanel === 'open' && typeof toggleWorkspacePanel === 'function') toggleWorkspacePanel();
     if (ADVANCED_PANELS.has(_currentPanel)) switchPanel('chat');
     if (ADVANCED_SETTINGS_SECTIONS.has(_currentSettingsSection)) switchSettingsSection('preferences');
+    // The workspace panel has its own Basic-mode gateway (the "Workspace" pill),
+    // so keep its state instead of force-closing it — the pill reflects it.
+    if (typeof syncWorkspacePanelUI === 'function') syncWorkspacePanelUI();
   }
 }
 

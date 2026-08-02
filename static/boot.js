@@ -379,6 +379,13 @@ function syncWorkspacePanelUI(){
   if(collapseBtn){
     _setButtonTooltip(collapseBtn, isCompact?_uiText('workspace_panel_close','Close workspace panel'):_uiText('workspace_panel_hide','Hide workspace panel'));
   }
+  const workspaceChip=$('btnWorkspaceChip');
+  if(workspaceChip){
+    const chipOpen=isCompact?false:desktopOpen;
+    workspaceChip.setAttribute('aria-pressed',chipOpen?'true':'false');
+    workspaceChip.setAttribute('aria-label',chipOpen?_uiText('workspace_panel_hide','Hide workspace panel'):_uiText('workspace_panel_show','Show workspace panel'));
+    workspaceChip.disabled=!canBrowse;
+  }
   const hasSession=!!S.session;
   ['btnUpDir','btnNewFile','btnNewFolder','btnRefreshPanel'].forEach(id=>{
     const el=$(id);
@@ -604,7 +611,17 @@ function toggleWorkspacePanel(force){
     closeWorkspacePanel();
     return;
   }
+  // Basic mode: openWorkspacePanel() intentionally blocks Advanced-only access.
+  // The "Workspace" pill is the explicit Basic-mode gateway, so open directly
+  // (skip the browse guard; the pill is disabled when no session can browse).
+  const uiMode=(typeof getUIMode==='function')?getUIMode():'advanced';
+  const canBrowse=!!S.session||_hasWorkspacePreviewVisible()||!!(S._profileDefaultWorkspace);
+  if(uiMode!=='advanced'&&!canBrowse) return;
   const nextMode=_hasWorkspacePreviewVisible()?'preview':'browse';
+  if(uiMode!=='advanced'){
+    _setWorkspacePanelMode(nextMode);
+    return;
+  }
   openWorkspacePanel(nextMode);
 }
 function mobileSwitchPanel(name){
@@ -2212,6 +2229,71 @@ $('msg').addEventListener('input',()=>{
     hideCmdDropdown();
   }
 });
+// Mobile keyboard dismissal: tapping outside the composer blurs the textarea so
+// the virtual keyboard collapses. Only blur when the tap is NOT inside the
+// composer, NOT on an interactive element that wants focus (buttons, inputs,
+// selects, textareas, links), and NOT on a dropdown/menu surface.
+document.addEventListener('touchstart',(e)=>{
+  try{
+    const ta=document.getElementById('msg');
+    if(!ta||document.activeElement!==ta) return;
+    const composer=document.getElementById('composerWrap');
+    if(composer&&composer.contains(e.target)) return;
+    const t=e.target;
+    if(t&&(t.closest&&t.closest('button,input,select,textarea,a,[contenteditable="true"],[role="dialog"],[role="menu"],[role="listbox"]'))) return;
+    ta.blur();
+  }catch(_){}
+},{passive:true});
+// Mobile horizontal swipe navigation between sessions (touch only). A decisive
+// left swipe moves to the next session row in the sidebar order, a right swipe to
+// the previous one. Only fires when the gesture is clearly horizontal (|dx| > 60px
+// and > 3x |dy|) so vertical scrolling and edge-swipe sidebars are unaffected.
+(function(){
+  if(!('ontouchstart' in window)) return;
+  let startX=0,startY=0,tracking=false;
+  const chat=document.getElementById('mainChat')||document.querySelector('.chat-col,.chat-area,.messages-view');
+  if(!chat) return;
+  const _navSwipe=function(dx){
+    try{
+      if(typeof S==='undefined'||!S.session||S.busy||S.activeStreamId) return;
+      if(typeof loadSession!=='function') return;
+      const list=document.getElementById('sessionList');
+      if(!list) return;
+      const rows=Array.from(list.querySelectorAll('[data-sid],.session-item')).filter(r=>r.dataset&&(r.dataset.sid||r.dataset.sessionId));
+      if(rows.length<2) return;
+      const current=String(S.session.session_id||'');
+      let idx=rows.findIndex(r=>(r.dataset.sid||r.dataset.sessionId)===current);
+      if(idx===-1) return;
+      const target=dx<0?rows[idx+1]:rows[idx-1];
+      if(!target) return;
+      const sid=target.dataset.sid||target.dataset.sessionId;
+      if(!sid||sid===current) return;
+      if(typeof showToast==='function') showToast(dx<0?'→':'\u2190');
+      loadSession(sid);
+    }catch(_){}
+  };
+  chat.addEventListener('touchstart',(e)=>{
+    if(e.touches&&e.touches.length>1) return;
+    startX=e.touches[0].clientX; startY=e.touches[0].clientY; tracking=true;
+  },{passive:true});
+  chat.addEventListener('touchmove',(e)=>{
+    if(!tracking||e.touches.length>1) return;
+    const dx=e.touches[0].clientX-startX;
+    const dy=e.touches[0].clientY-startY;
+    // If the gesture is becoming vertical, abandon the horizontal swipe.
+    if(Math.abs(dy)>Math.abs(dx)*1.2) tracking=false;
+  },{passive:true});
+  chat.addEventListener('touchend',(e)=>{
+    if(!tracking) return;
+    tracking=false;
+    const t=e.changedTouches&&e.changedTouches[0];
+    if(!t) return;
+    const dx=t.clientX-startX,dy=t.clientY-startY;
+    if(Math.abs(dx)<60) return;              // too short
+    if(Math.abs(dy)>Math.abs(dx)*0.5) return; // not horizontal enough
+    _navSwipe(dx);
+  },{passive:true});
+})();
 // #5514/#5515: re-pin the transcript on ANY composer height change, not only the
 // ones that route through the input->autoResize path. A multi-line paste
 // (WisprFlow), a draft restore, an attachment tray / selection-chip appearing, a
