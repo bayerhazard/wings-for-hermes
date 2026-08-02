@@ -4705,14 +4705,26 @@ function attachLiveStream(activeSid, streamId, uploaded=[], options={}){
     _streamFadeWordCarry+=elapsedMs*wordsPerSecond/1000;
     if(!_streamFadeVisibleText) _streamFadeWordCarry=Math.max(_streamFadeWordCarry,1);
     let wordsToReveal=Math.floor(_streamFadeWordCarry);
-    // Adaptive catch-up: when the model outruns the fade, dump the backlog
-    // instantly so the transcript never feels stuck. The wave cap keeps the
-    // reveal smooth when the model is slow enough for it to matter.
-    if(backlogWords>=24){
-      wordsToReveal=backlogWords;
-    } else {
-      const waveCap=backlogWords>=160?3:2;
-      wordsToReveal=Math.min(wordsToReveal,waveCap,backlogWords);
+    // Adaptive catch-up: when the model outruns the fade, the reveal must still
+    // be visible as *streaming* rather than a single block. Dumping the whole
+    // backlog instantly (the old >=24-window) made fast local backends
+    // (beellama ~1750 chunks/s) appear to "type" nothing then emit the whole
+    // answer at once. Instead, cap the per-frame reveal to a rate the eye can
+    // follow; the `maxCatchupWps` floor keeps the transcript from feeling stuck
+    // on long answers while never collapsing the backlog into one frame.
+    const _maxRevealWps=90;                     // absolute reveal ceiling
+    const _catchupFloorWps=30;                  // minimum sustained reveal
+    const _catchupCapWps=Math.max(_catchupFloorWps, Math.min(_maxRevealWps, Math.round(wordsPerSecond*1.1)));
+    const _cappedCarry=Math.min(
+      Math.max(_streamFadeWordCarry, elapsedMs*_catchupFloorWps/1000),
+      elapsedMs*_catchupCapWps/1000
+    );
+    wordsToReveal=Math.max(0, Math.floor(_cappedCarry));
+    if(backlogWords>0){
+      // Never reveal more than a bounded slice per frame: smooth, visible
+      // progress even when the model is far ahead.
+      const _sliceCap=Math.max(3, Math.min(8, Math.ceil(backlogWords/40)));
+      wordsToReveal=Math.min(wordsToReveal, _sliceCap);
     }
     if(wordsToReveal<1) return {text:_streamFadeVisibleText,caughtUp:false,changed:false};
     _streamFadeWordCarry=Math.max(0,_streamFadeWordCarry-wordsToReveal);
