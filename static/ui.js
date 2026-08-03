@@ -7450,7 +7450,9 @@ function _applyBusyComposerPlaceholder(){
   if(_compressionPlaceholderSaved!==null) return;
   if(input.disabled) return;
   if(_composerHasContent()) return;
-  const idlePlaceholder='Message '+assistantDisplayName()+'\u2026';
+  const idlePlaceholder=typeof t==='function'
+    ? (t('composer_placeholder_idle')||'Wie kann ich helfen?')
+    : 'Wie kann ich helfen?';
   if(!window._showBusyPlaceholderHint||!S.busy){
     input.placeholder=idlePlaceholder;
     return;

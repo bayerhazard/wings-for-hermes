@@ -61,7 +61,9 @@ def test_busy_placeholder_helper_preserves_compression_and_drafts():
     assert "if(_compressionPlaceholderSaved!==null)" in helper_block
     assert "if(input.disabled)" in helper_block
     assert "if(_composerHasContent())" in helper_block
-    assert "assistantDisplayName()" in helper_block
+    assert "composer_placeholder_idle" in helper_block, (
+        "idle placeholder must come from the i18n key composer_placeholder_idle"
+    )
     assert "window._showBusyPlaceholderHint" in helper_block
     assert "window._defaultMessageMode||'steer'" in helper_block
     assert "composer_placeholder_busy_queue" in helper_block
@@ -78,10 +80,11 @@ def test_busy_placeholder_helper_preserves_compression_and_drafts():
 
 def test_locale_blocks_cover_new_keys():
     locale_blocks = I18N_JS.count("settings_default_message_mode_steer")
-    assert locale_blocks == 15
+    assert locale_blocks == 2
     for key in [
         "settings_label_busy_placeholder_hint",
         "settings_desc_busy_placeholder_hint",
+        "composer_placeholder_idle",
         "composer_placeholder_busy_queue",
         "composer_placeholder_busy_interrupt",
         "composer_placeholder_busy_steer",

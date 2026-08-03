@@ -2809,7 +2809,7 @@ function applyBotName(){
   const topbarTitle=$('topbarTitle');
   if(topbarTitle && (!S.session)) topbarTitle.textContent=name;
   const msg=$('msg');
-  if(msg) msg.placeholder='Wie kann ich helfen?';
+  if(msg) msg.placeholder=typeof t==='function'?(t('composer_placeholder_idle')||'Wie kann ich helfen?'):'Wie kann ich helfen?';
   if(typeof _applyBusyComposerPlaceholder==='function') _applyBusyComposerPlaceholder();
 }
 
