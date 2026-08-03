@@ -6,7 +6,6 @@ metadata:
   labels:
     app: wings
     applications.app.bytetrade.io/name: wings
-    applications.app.bytetrade.io/owner: {{ .Release.Namespace | splitList "-" | last }}
     applications.app.bytetrade.io/raw-app-name: wings
 spec:
   replicas: {{ .Values.workloads.wings.replicaCount }}
@@ -21,7 +20,6 @@ spec:
       labels:
         app: wings
         applications.app.bytetrade.io/name: wings
-        applications.app.bytetrade.io/owner: {{ .Release.Namespace | splitList "-" | last }}
         applications.app.bytetrade.io/raw-app-name: wings
         io.bytetrade.app: "true"
     spec:
