@@ -17,7 +17,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Wings">
 <link rel="apple-touch-icon" sizes="512x512" href="static/apple-touch-icon.png">
-<script>(function(){try{var themes={light:1,dark:1,neon:1,system:1},legacy={midnight:'dark',neon:'neon',light:'light',dark:'dark',slate:'dark',solarized:'dark',monokai:'neon',nord:'dark',oled:'dark',codex:'dark',terracotta:'dark',graphite:'dark',github:'light','wings-light':'light','wings-dark':'dark'},t=(localStorage.getItem('wings-theme')||localStorage.getItem('hermes-theme')||'dark').toLowerCase(),m=legacy[t],theme=((m||themes[t])?t:'dark');localStorage.setItem('wings-theme',theme);localStorage.setItem('hermes-theme',theme);localStorage.removeItem('wings-skin');if(theme==='system')theme=window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';if(theme==='dark')document.documentElement.classList.add('dark');if(theme==='neon')document.documentElement.dataset.theme='neon';}catch(e){document.documentElement.classList.add('dark');}})()</script>
+<script>(function(){try{var themes={light:1,dark:1,aimighty:1,system:1},legacy={midnight:'dark',neon:'aimighty',light:'light',dark:'dark',slate:'dark',solarized:'dark',monokai:'aimighty',nord:'dark',oled:'dark',codex:'dark',terracotta:'dark',graphite:'dark',github:'light','wings-light':'light','wings-dark':'dark'},t=(localStorage.getItem('wings-theme')||localStorage.getItem('hermes-theme')||'dark').toLowerCase(),m=legacy[t],theme=((m||themes[t])?t:'dark');localStorage.setItem('wings-theme',theme);localStorage.setItem('hermes-theme',theme);localStorage.removeItem('wings-skin');if(theme==='system')theme=window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';if(theme==='dark')document.documentElement.classList.add('dark');if(theme==='aimighty')document.documentElement.dataset.theme='aimighty';}catch(e){document.documentElement.classList.add('dark');}})()</script>
 <script>(function(){try{var fs=localStorage.getItem('wings-font-size');if(fs&&fs!=='default')document.documentElement.dataset.fontSize=fs;}catch(e){}})()</script>
 <script>(function(){try{var m=(localStorage.getItem('wings-mode')==='advanced')?'advanced':'basic';if(!window.matchMedia('(min-width:641px)').matches)m='basic';document.documentElement.dataset.mode=m;}catch(e){document.documentElement.dataset.mode='basic';}})()</script>
 <!-- theme-color: surfaces the active app chrome color to native status bars (Safari status bar, PWA, native WKWebView wrappers). Updated dynamically by boot.js when theme/skin changes. The light/dark default values match style.css :root --sidebar / :root.dark --sidebar. -->
@@ -70,7 +70,7 @@
     };
   }
 })()</script>
-<link rel="stylesheet" href="static/style.css?v=__WEBUI_VERSION__&w=185">
+<link rel="stylesheet" href="static/style.css?v=__WEBUI_VERSION__&w=186">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.css" integrity="sha384-LJcOxlx9IMbNXDqJ2axpfEQKkAYbFjJfhXexLfiRJhjDU81mzgkiQq8rkV0j6dVh" crossorigin="anonymous">
   <!-- KaTeX math rendering CSS (loaded eagerly from vendored assets to prevent font CSP noise) -->
   <link rel="stylesheet" href="static/vendor/katex/0.16.22/katex.min.css">
@@ -1062,11 +1062,11 @@
                   </div>
                   <span style="font-size:12px;font-weight:500;color:var(--text)">Dunkel</span>
                 </button>
-                <button type="button" data-theme-val="neon" onclick="_pickTheme('neon')" class="theme-pick-btn" style="border:1px solid var(--border2);border-radius:10px;padding:10px 8px;text-align:center;cursor:pointer;background:none;transition:all .15s">
-                  <div style="width:100%;height:40px;border-radius:6px;background:linear-gradient(135deg,#050C1A,#0D1B36);border:1px solid rgba(255,45,155,.4);margin-bottom:6px;display:flex;align-items:center;justify-content:center">
-                    <svg width="16" height="16" fill="none" stroke="#FF2D9B" stroke-width="2" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 13 2 13 22 11 14 3 14 12 14 13 22 13 2"/></svg>
+                <button type="button" data-theme-val="aimighty" onclick="_pickTheme('aimighty')" class="theme-pick-btn" style="border:1px solid var(--border2);border-radius:10px;padding:10px 8px;text-align:center;cursor:pointer;background:none;transition:all .15s">
+                  <div style="width:100%;height:40px;border-radius:6px;background:linear-gradient(135deg,#010F20,#0A2238);border:1px solid rgba(201,164,92,.4);margin-bottom:6px;display:flex;align-items:center;justify-content:center">
+                    <svg width="16" height="16" fill="none" stroke="#C9A45C" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2l2.4 4.9 5.4.8-3.9 3.8.9 5.4L12 14.4 7.2 16.9l.9-5.4L4.2 7.7l5.4-.8z"/></svg>
                   </div>
-                  <span style="font-size:12px;font-weight:500;color:var(--text)">Neon</span>
+                  <span style="font-size:12px;font-weight:500;color:var(--text)">AImighty</span>
                 </button>
                 <button type="button" data-theme-val="system" onclick="_pickTheme('system')" class="theme-pick-btn" style="border:1px solid var(--border2);border-radius:10px;padding:10px 8px;text-align:center;cursor:pointer;background:none;transition:all .15s">
                   <div style="width:100%;height:40px;border-radius:6px;background:linear-gradient(to right,#FEFCF7,#141414);border:1px solid rgba(0,0,0,.12);margin-bottom:6px;display:flex;align-items:center;justify-content:center">

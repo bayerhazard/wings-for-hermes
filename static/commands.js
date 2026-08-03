@@ -1050,7 +1050,7 @@ async function cmdUsage(){
 }
 
 async function cmdTheme(args){
-  const themes=['system','dark','light','neon'];
+  const themes=['system','dark','light','aimighty'];
   const legacyThemes=Object.keys(_LEGACY_THEME_MAP||{});
   const val=(args||'').toLowerCase().trim();
   // Check if it's a theme or legacy theme

@@ -2644,18 +2644,18 @@ if(window.visualViewport){
 const _THEMES=[
   {name:'Hell',    value:'light',  colors:['#FEFCF7','#FAF7F0','#B8860B']},
   {name:'Dunkel',  value:'dark',   colors:['#0D0D1A','#141425','#C9A45C']},
-  {name:'Neon',    value:'neon',   colors:['#050C1A','#0D1B36','#FF2D9B']},
+  {name:'AImighty', value:'aimighty', colors:['#051729','#0A2238','#C9A45C']},
   {name:'System',  value:'system', colors:['#FEFCF7','#0D0D1A','#B8860B']},
 ];
 const _VALID_THEMES=new Set((_THEMES||[]).map(t=>t.value));
 const _LEGACY_THEME_MAP={
   midnight:{theme:'dark'},
-  neon:{theme:'neon'},
+  neon:{theme:'aimighty'},
   light:{theme:'light'},
   dark:{theme:'dark'},
   slate:{theme:'dark'},
   solarized:{theme:'dark'},
-  monokai:{theme:'neon'},
+  monokai:{theme:'aimighty'},
   nord:{theme:'dark'},
   oled:{theme:'dark'},
   codex:{theme:'dark'},
@@ -2738,7 +2738,7 @@ function _applyTheme(name){
     return;
   }
   document.documentElement.dataset.theme=normalized.theme;
-  if(normalized.theme==='neon'){
+  if(normalized.theme==='aimighty'){
     document.documentElement.classList.remove('dark');
     _resolvedThemeBaseDark=false;
   }else{
@@ -3148,7 +3148,7 @@ window._mirrorSpeechSettingsFromServer=_mirrorSpeechSettingsFromServer;
     const srvAppearance=_normalizeAppearance(s.theme);
     const lsTheme=(localStorage.getItem('wings-theme')||'').trim().toLowerCase();
     const lsAppearance=_normalizeAppearance(lsTheme||null);
-    const lsHasExplicitTheme=lsTheme&&['system','light','dark','neon'].includes(lsTheme);
+    const lsHasExplicitTheme=lsTheme&&['system','light','dark','neon','aimighty'].includes(lsTheme);
     const theme=lsHasExplicitTheme?lsAppearance.theme:srvAppearance.theme;
     localStorage.setItem('wings-theme',theme);
     localStorage.removeItem('wings-skin');
