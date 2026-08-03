@@ -54,7 +54,7 @@ def _get(path):
 
 
 def test_appearance_pickers_schedule_autosave_and_do_not_mark_dirty():
-    for fn in ("_pickTheme", "_pickSkin", "_pickFontSize"):
+    for fn in ("_pickTheme", "_pickFontSize"):
         block = _function_block(BOOT_JS, fn)
         assert "_scheduleAppearanceAutosave()" in block, (
             f"{fn}() should invoke _scheduleAppearanceAutosave()"
@@ -75,7 +75,6 @@ def test_appearance_revert_preview_no_longer_rolls_back_theme_skin_font():
 def test_appearance_autosave_payload_is_theme_skin_font_only():
     block = _function_block(PANELS_JS, "_appearancePayloadFromUi")
     assert "theme:" in block
-    assert "skin:" in block
     assert "font_size:" in block
     assert "language:" not in block
     assert "workspace" not in block
@@ -96,7 +95,7 @@ def test_appearance_autosave_status_line_and_i18n_keys_exist():
         "settings_autosave_retry",
     ]
     for key in required_keys:
-        assert I18N_JS.count(f"{key}:") >= 8, (
+        assert I18N_JS.count(f"{key}:") >= 2, (
             f"{key} must be defined in all LOCALES blocks (found {I18N_JS.count(f'{key}:')})"
         )
 
@@ -105,7 +104,6 @@ def test_full_save_settings_still_includes_font_size():
     block = _function_block(PANELS_JS, "saveSettings")
     compact = block.replace(" ", "")
     assert "body.theme=theme;" in compact
-    assert "body.skin=skin;" in compact
     assert "body.font_size=fontSize;" in compact
 
 

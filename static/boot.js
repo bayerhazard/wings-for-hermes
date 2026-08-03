@@ -2741,6 +2741,7 @@ function _applyTheme(name){
   if(normalized.theme==='aimighty'){
     document.documentElement.classList.remove('dark');
     _resolvedThemeBaseDark=false;
+    _syncThemeColorMeta();
   }else{
     _setResolvedTheme(normalized.theme==='dark');
   }

@@ -2,11 +2,13 @@
 
 Covers:
 - index.html declares the static prefers-color-scheme media variants (light + dark).
-- index.html declares a single `id="hermes-theme-color"` meta tag for runtime updates.
-- Inline pre-paint script reads localStorage `hermes-theme` and seeds the meta tag
-  before any external JS loads (no flash of wrong colour for native chrome).
+- index.html declares a single `id="wings-theme-color"` meta tag for runtime updates.
+- Inline pre-paint script reads localStorage `wings-theme` (legacy `hermes-theme`
+  accepted) and seeds the meta tag before any external JS loads (no flash of
+  wrong colour for native chrome).
 - boot.js defines `_syncThemeColorMeta()` and calls it from `_setResolvedTheme()`
-  (covering both prism-loaded and prism-absent paths) and from `_applySkin()`.
+  (covering both prism-loaded and prism-absent paths) and from the AImighty
+  branch of `_applyTheme()`.
 - The helper reads `getComputedStyle(html).getPropertyValue('--sidebar')`, which
   means native/mobile chrome follows the app chrome instead of message content.
 - Both the pre-paint script and boot sync update all theme-color tags and remove
@@ -36,14 +38,14 @@ class TestIndexHtmlMetaTags:
         assert 'media="(prefers-color-scheme: dark)"' in src
 
     def test_runtime_theme_color_meta_has_stable_id(self):
-        """A third theme-color meta tag (no media query) carries id="hermes-theme-color"
-        so boot.js can update it on theme/skin change. The id is the contract the
-        Mac Swift app reads via `document.getElementById('hermes-theme-color')`.
+        """A third theme-color meta tag (no media query) carries id="wings-theme-color"
+        so boot.js can update it on theme change. The id is the contract the
+        Mac Swift app reads via `document.getElementById('wings-theme-color')`.
         """
         src = INDEX.read_text(encoding="utf-8")
-        assert 'id="hermes-theme-color"' in src
+        assert 'id="wings-theme-color"' in src
         # Must be on a meta tag (not some other element)
-        assert '<meta name="theme-color" id="hermes-theme-color"' in src
+        assert '<meta name="theme-color" id="wings-theme-color"' in src
 
     def test_inline_pre_paint_script_seeds_all_theme_color_metas(self):
         """An inline script in <head> seeds all theme-color tags from localStorage
@@ -82,7 +84,7 @@ class TestBootJsThemeColorSync:
         Civilization trembles, but mostly the window looks wrong.
         """
         src = BOOT.read_text(encoding="utf-8")
-        assert "getElementById('hermes-theme-color')" in src
+        assert "getElementById('wings-theme-color')" in src
         assert "querySelectorAll('meta[name=\"theme-color\"]')" in src
         assert "setAttribute('content',bg)" in src
         assert "removeAttribute('media')" in src
@@ -105,22 +107,21 @@ class TestBootJsThemeColorSync:
         ) in src
 
     def test_apply_skin_calls_sync(self):
-        """Switching skin (Default → Sienna → Sisyphus, etc.) recomputes --bg and
-        must update the meta tag so the Mac chrome flips with the page.
+        """The skin system was removed. Switching the AImighty theme (data-theme
+        branch that bypasses _setResolvedTheme) must still update the meta tag so
+        native chrome flips with the page.
         """
         src = BOOT.read_text(encoding="utf-8")
-        # The end of _applySkin must re-run resolved-theme application. That
-        # path now accounts for extension skin light/dark schemes and still
-        # calls _syncThemeColorMeta() through _setResolvedTheme().
-        anchor = (
-            "function _applySkin(name){\n"
-            "  const key=(name||'default').toLowerCase();\n"
-            "  if(key==='default') delete document.documentElement.dataset.skin;\n"
-            "  else document.documentElement.dataset.skin=key;\n"
-            "  _setResolvedTheme(_resolvedThemeBaseDark);\n"
-            "}"
-        )
-        assert anchor in src
+        # Skin picker no longer exists.
+        assert "function _applySkin(" not in src
+        # The AImighty branch in _applyTheme must sync the theme-color meta.
+        assert (
+            "if(normalized.theme==='aimighty'){\n"
+            "    document.documentElement.classList.remove('dark');\n"
+            "    _resolvedThemeBaseDark=false;\n"
+            "    _syncThemeColorMeta();\n"
+            "  }"
+        ) in src
         assert "if(!link){ _syncThemeColorMeta(); return; }" in src
 
 
@@ -134,8 +135,8 @@ class TestStyleCssBgVarPresent:
     def test_root_light_defines_bg(self):
         src = STYLE.read_text(encoding="utf-8")
         # :root (light default) at the top of the file defines --bg.
-        assert "--bg:#FEFCF7" in src or "--bg: #FEFCF7" in src
+        assert "--bg:#F5F5F7" in src or "--bg: #F5F5F7" in src
 
     def test_root_dark_defines_bg(self):
         src = STYLE.read_text(encoding="utf-8")
-        assert "--bg:#0D0D1A" in src or "--bg: #0D0D1A" in src
+        assert "--bg:#161616" in src or "--bg: #161616" in src

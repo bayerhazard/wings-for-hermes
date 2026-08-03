@@ -45,15 +45,9 @@ class TestSettingsPickerActiveState:
         )
 
     def test_skin_picker_uses_active_class(self):
-        """_syncSkinPicker must toggle .active class."""
-        idx = BOOT_JS.find("function _syncSkinPicker(")
-        assert idx >= 0, "_syncSkinPicker function not found in boot.js"
-        body = BOOT_JS[idx:idx + 300]
-        assert "classList.toggle" in body, (
-            "_syncSkinPicker must use classList.toggle('active', ...)"
-        )
-        assert "var(--accent)" not in body and "var(--border2)" not in body, (
-            "_syncSkinPicker must not set var(--accent) or var(--border2) inline"
+        """Skin picker was removed from the app — no _syncSkinPicker must exist."""
+        assert "_syncSkinPicker" not in BOOT_JS, (
+            "Skin system was removed; _syncSkinPicker must not be defined"
         )
 
     def test_css_active_rule_beats_base_rule(self):
@@ -64,8 +58,10 @@ class TestSettingsPickerActiveState:
         assert ".font-size-pick-btn.active" in STYLE_CSS, (
             "style.css must have a .font-size-pick-btn.active rule"
         )
-        assert ".skin-pick-btn.active" in STYLE_CSS, (
-            "style.css must have a .skin-pick-btn.active rule"
+        # The skin picker was removed with the skin system — no .skin-pick-btn rule
+        # should remain in the stylesheet.
+        assert ".skin-pick-btn" not in STYLE_CSS, (
+            "style.css must not have a .skin-pick-btn rule (skin system removed)"
         )
         # The active rule must use !important to beat the base !important rule.
         # Search for the GLOBAL #mainSettings-scoped rule (skin-specific overrides
