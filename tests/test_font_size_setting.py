@@ -50,8 +50,8 @@ class TestFontSizeBootScript:
 
     def test_boot_script_reads_hermes_font_size(self):
         html = _read("static/index.html")
-        assert "hermes-font-size" in html, (
-            "index.html boot script must read 'hermes-font-size' from localStorage"
+        assert "wings-font-size" in html, (
+            "index.html boot script must read 'wings-font-size' from localStorage"
         )
         assert "data-font-size" in html, (
             "boot script must set document.documentElement.dataset.fontSize"
@@ -144,7 +144,7 @@ class TestFontSizeJsFunctions:
         boot = _read("static/boot.js")
         idx = boot.find("function _pickFontSize(")
         block = boot[idx:idx+400]
-        assert "localStorage.setItem('hermes-font-size'" in block, (
+        assert "localStorage.setItem('wings-font-size'" in block, (
             "_pickFontSize must persist choice to localStorage"
         )
 
@@ -180,25 +180,25 @@ class TestFontSizeI18nCoverage:
     def test_all_locales_have_font_size_keys(self):
         src = _read("static/i18n.js")
         count = src.count("settings_label_font_size")
-        # 6 locales: en, ru, es, de, zh, zh-Hant
-        assert count >= 6, (
-            f"settings_label_font_size must appear in all 6 locales, found {count}"
+        # 2 locales: en, de
+        assert count >= 2, (
+            f"settings_label_font_size must appear in all 2 locales, found {count}"
         )
 
     def test_font_size_small_key_in_all_locales(self):
         src = _read("static/i18n.js")
         count = src.count("font_size_small")
-        assert count >= 6, f"font_size_small must appear in all 6 locales, found {count}"
+        assert count >= 2, f"font_size_small must appear in all 2 locales, found {count}"
 
     def test_font_size_large_key_in_all_locales(self):
         src = _read("static/i18n.js")
         count = src.count("font_size_large")
-        assert count >= 6, f"font_size_large must appear in all 6 locales, found {count}"
+        assert count >= 2, f"font_size_large must appear in all 2 locales, found {count}"
 
     def test_font_size_extra_large_key_in_all_locales(self):
         src = _read("static/i18n.js")
         count = src.count("font_size_xlarge")
-        assert count >= 6, f"font_size_xlarge must appear in all locales, found {count}"
+        assert count >= 2, f"font_size_xlarge must appear in all locales, found {count}"
 
 
 class TestFontSizeSettingsValidation:
