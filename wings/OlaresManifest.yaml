@@ -11,10 +11,42 @@ metadata:
   description: Wings for Hermes — AI Agent Web UI with chat, sessions, memory, skills, cron, profiles, workspaces
   appid: wings
   title: Wings for Hermes
-  version: '1.9.16'
+  version: '1.9.17'
   categories:
     - Productivity_v112
     - Developer Tools
+  fullDescription: |
+    **Wings for Hermes** — AI Agent Web UI, forked from hermes-webui.
+
+    **Full feature parity with Hermes Web UI:**
+    - Chat with streaming, reasoning display, tool-call cards, approvals
+    - Sessions: create, resume, search, pin, archive, projects, export
+    - Memory: view and edit MEMORY.md / USER.md inline
+    - Skills: list, preview, create, edit, delete (106+ skills)
+    - Tasks: cron jobs — view, create, edit, run, pause/resume, run history
+    - Profiles, workspaces with file browser, todos, themes
+
+    **Shared-state architecture**
+    Runs as a second, additive agent instance on the *same* HERMES_HOME as your existing Hermes Agent app. Sessions, memory, auth, and config are shared. The agent source is copied from the exact running gateway image at pod start, so the WebUI always runs version-matched code.
+
+    **Auto-detection**
+    On startup, the app automatically finds your Hermes Agent home directory — no manual path configuration needed. UID/GID is auto-detected from the hermesagent directory ownership.
+
+    **Access**
+    Protected by Olares SSO (internal). Set an additional app password in the app settings for defense in depth.
+
+    **Requirements**
+    - Requires the Hermes Agent app (hermesagent) installed for the same Olares user.
+    - Upstream project: https://github.com/nesquena/hermes-webui (MIT)
+  upgradeDescription: |
+    v1.9.9: Streaming-Fix — sichtbares progressives Rendering bei extrem schnellem lokalen LLM (beellama ~1750 chunks/s). Der Fade-Reveal rater die Wortanzeige statt den Backlog sofort zu dumpen; fade_text_effect default ON. v1.9.8: Runde 2 (5 Fixes) + Backlog-Umsetzung.
+  developer: Aimighty
+  website: https://github.com/bayerhazard/wings-for-hermes
+  sourceCode: https://github.com/bayerhazard/wings-for-hermes
+  locale:
+    - en-US
+  supportArch:
+    - amd64
 entrances:
   - name: wings
     port: 8787
@@ -24,7 +56,7 @@ entrances:
     openMethod: window
     authLevel: internal
 spec:
-  versionName: '1.9.16'
+  versionName: '1.9.17'
   upgradeDescription: |
     v1.9.9: Streaming-Fix — sichtbares progressives Rendering bei extrem schnellem lokalen LLM (beellama ~1750 chunks/s). Der Fade-Reveal rater die Wortanzeige statt den Backlog sofort zu dumpen; fade_text_effect default ON. v1.9.8: Runde 2 (5 Fixes) + Backlog-Umsetzung.
   fullDescription: |

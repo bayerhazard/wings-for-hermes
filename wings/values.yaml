@@ -1,6 +1,6 @@
 image:
   repository: ghcr.io/bayerhazard/wings-for-hermes
-  tag: "1.9.16"
+  tag: "1.9.17"
   pullPolicy: Always
 agentImage:
   repository: beclab/harveyff-hermes-agent
