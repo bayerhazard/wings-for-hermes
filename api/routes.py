@@ -17993,6 +17993,54 @@ def _tts_host_is_blocked_target(hostname: str) -> bool:
     return False
 
 
+_TTS_TRUSTED_HOSTS_CACHE: tuple[str, ...] | None = None
+
+
+def _tts_trusted_hosts() -> tuple[str, ...]:
+    """Return the explicitly-trusted OpenAI TTS host allowlist.
+
+    Read once from ``HERMES_WEBUI_TTS_TRUSTED_HOSTS`` (comma/semicolon-separated
+    hostnames, case-insensitive, ``host:port`` and trailing-dot forms accepted;
+    the port and trailing dot are stripped for comparison).  When a base_url
+    host is in this allowlist the private/loopback/link-local/reserved address
+    block is lifted for that host ONLY — the user explicitly trusts it to be
+    reachable.  Everything else keeps full SSRF protection.  Malformed entries
+    are skipped, never widening trust (fail closed).
+
+    This exists because a legitimate self-hosted OpenAI-compatible gateway (e.g.
+    an Olares internal LiteLLM endpoint) resolves to a private RFC1918 address
+    that the default SSRF guard rejects.
+    """
+    global _TTS_TRUSTED_HOSTS_CACHE
+    if _TTS_TRUSTED_HOSTS_CACHE is None:
+        raw = os.getenv("HERMES_WEBUI_TTS_TRUSTED_HOSTS", "") or ""
+        hosts: set[str] = set()
+        for token in raw.replace(";", ",").split(","):
+            token = token.strip().lower()
+            if not token:
+                continue
+            # Strip an optional trailing dot (FQDN canonical form).
+            while token.endswith("."):
+                token = token[:-1]
+            if not token or token.startswith(("*", ".", " ")):
+                continue
+            # Strip an optional :port suffix; only a bare hostname is compared.
+            if ":" in token:
+                token = token.rsplit(":", 1)[0].strip()
+            if token:
+                hosts.add(token)
+        _TTS_TRUSTED_HOSTS_CACHE = tuple(sorted(hosts))
+    return _TTS_TRUSTED_HOSTS_CACHE
+
+
+def _tts_host_is_trusted(hostname: str) -> bool:
+    """True when the given hostname is in the explicit TTS trusted allowlist."""
+    host = (hostname or "").strip().lower()
+    while host.endswith("."):
+        host = host[:-1]
+    return host in _tts_trusted_hosts()
+
+
 def _tts_resolve_pinned_addresses(hostname: str, port: int | None) -> list[str]:
     """Resolve once, validate the RRset, and preserve candidate dial order."""
     import socket
@@ -18000,6 +18048,8 @@ def _tts_resolve_pinned_addresses(hostname: str, port: int | None) -> list[str]:
     host = (hostname or "").strip().lower()
     if not host:
         raise ValueError("invalid OpenAI TTS base_url host")
+
+    trusted = _tts_host_is_trusted(host)
 
     try:
         infos = socket.getaddrinfo(host, port, type=socket.SOCK_STREAM)
@@ -18011,7 +18061,8 @@ def _tts_resolve_pinned_addresses(hostname: str, port: int | None) -> list[str]:
         if not sockaddr:
             continue
         pinned_host = str(sockaddr[0])
-        if _tts_addr_is_blocked(pinned_host):
+        # Lifted for explicitly-trusted hosts only; everything else is blocked.
+        if not trusted and _tts_addr_is_blocked(pinned_host):
             raise ValueError("resolved OpenAI TTS target is not allowed")
         pinned_hosts.append(pinned_host)
     if not pinned_hosts:
@@ -18038,7 +18089,9 @@ def _normalized_openai_tts_base_url(base_url: str) -> str:
         # Public https hosts are allowed (a user's own OpenAI-compatible server),
         # but reject private/loopback/link-local/reserved targets to close the
         # SSRF surface (e.g. https://169.254.169.254, https://10.x internal).
-        if _tts_host_is_blocked_target(hostname):
+        # Explicitly-trusted hosts (HERMES_WEBUI_TTS_TRUSTED_HOSTS) bypass this
+        # block only for that host.
+        if not _tts_host_is_trusted(hostname) and _tts_host_is_blocked_target(hostname):
             raise ValueError("invalid OpenAI base_url in config")
     elif parsed.scheme == "http" and hostname in _TTS_LOCALHOST_HOSTS:
         # Explicit localhost-over-http dev/self-hosted case only.

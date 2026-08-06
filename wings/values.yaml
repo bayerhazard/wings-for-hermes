@@ -1,6 +1,6 @@
 image:
   repository: ghcr.io/bayerhazard/wings-for-hermes
-  tag: "1.9.21"
+  tag: "1.9.22"
   pullPolicy: Always
 agentImage:
   repository: beclab/harveyff-hermes-agent
@@ -29,6 +29,7 @@ env:
 olaresEnv:
   HERMES_WEBUI_PASSWORD: ""
   HERMES_WEBUI_DEFAULT_MODEL: ""
+  HERMES_WEBUI_TTS_TRUSTED_HOSTS: "llm.aimighty.olares.de"
 startupProbe:
   httpGet:
     path: /health

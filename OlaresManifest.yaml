@@ -10,7 +10,7 @@ metadata:
   appid: wings
   icon: https://raw.githubusercontent.com/bayerhazard/wings-for-hermes/main/icon.png
   title: Wings for Hermes
-  version: 1.9.21
+  version: 1.9.22
   categories:
     - Productivity_v112
     - Developer Tools
@@ -38,7 +38,7 @@ metadata:
     **Requirements**
     - Requires the Hermes Agent app (hermesagent) installed for the same Olares user.
     - Upstream project: https://github.com/nesquena/hermes-webui (MIT)
-  upgradeDescription: "v1.9.21: OpenAI-TTS fix — Server fällt jetzt für den API-Key auf tts.openai.api_key aus der geteilten config.yaml zurück (bisher nur Env/.env -> 503). v1.9.20: client-side VAD auto-stop; v1.9.17: OlaresManifest v3 metadata-Struktur vervollständigt (fullDescription/upgradeDescription/developer etc. wie rewind); v1.9.16: Chart-Bereinigung — verschachtelte Helm-tgz entfernt; v1.9.15: Composer-Placeholder-Fix (kein Message-Wings-Flash); v1.9.13: AImighty-Rebrand (Geist-Fonts, Hanseatenblau/Gold-Theme)."
+  upgradeDescription: "v1.9.22: OpenAI-TTS SSRF-Allowlist — HERMES_WEBUI_TTS_TRUSTED_HOSTS erlaubt explizit getraute Hosts (z.B. internes LiteLLM llm.aimighty.olares.de) trotz privater IP. v1.9.21: OpenAI-TTS fix — Server fällt für den API-Key auf tts.openai.api_key aus der geteilten config.yaml zurück (bisher nur Env/.env -> 503). v1.9.20: client-side VAD auto-stop; v1.9.17: OlaresManifest v3 metadata-Struktur vervollständigt (fullDescription/upgradeDescription/developer etc. wie rewind); v1.9.16: Chart-Bereinigung — verschachtelte Helm-tgz entfernt; v1.9.15: Composer-Placeholder-Fix (kein Message-Wings-Flash); v1.9.13: AImighty-Rebrand (Geist-Fonts, Hanseatenblau/Gold-Theme)."
   developer: Aimighty
   website: https://github.com/bayerhazard/wings-for-hermes
   sourceCode: https://github.com/bayerhazard/wings-for-hermes
@@ -48,7 +48,7 @@ metadata:
     - amd64
 
 spec:
-  versionName: '1.9.21'
+  versionName: '1.9.22'
   fullDescription: >
     **Wings for Hermes** — AI Agent Web UI, forked from hermes-webui.
 
@@ -72,7 +72,7 @@ spec:
     **Requirements**
     - Requires the Hermes Agent app (hermesagent) installed for the same Olares user.
     - Upstream project: https://github.com/nesquena/hermes-webui (MIT)
-  upgradeDescription: "v1.9.21: OpenAI-TTS fix — Server fällt jetzt für den API-Key auf tts.openai.api_key aus der geteilten config.yaml zurück (bisher nur Env/.env -> 503). v1.9.20: client-side VAD auto-stop; v1.9.17: OlaresManifest v3 metadata-Struktur vervollständigt (fullDescription/upgradeDescription/developer etc. wie rewind); v1.9.16: Chart-Bereinigung — verschachtelte Helm-tgz entfernt; v1.9.15: Composer-Placeholder-Fix (kein Message-Wings-Flash); v1.9.13: AImighty-Rebrand (Geist-Fonts, Hanseatenblau/Gold-Theme)."
+  upgradeDescription: "v1.9.22: OpenAI-TTS SSRF-Allowlist — HERMES_WEBUI_TTS_TRUSTED_HOSTS erlaubt explizit getraute Hosts (z.B. internes LiteLLM llm.aimighty.olares.de) trotz privater IP. v1.9.21: OpenAI-TTS fix — Server fällt für den API-Key auf tts.openai.api_key aus der geteilten config.yaml zurück (bisher nur Env/.env -> 503). v1.9.20: client-side VAD auto-stop; v1.9.17: OlaresManifest v3 metadata-Struktur vervollständigt (fullDescription/upgradeDescription/developer etc. wie rewind); v1.9.16: Chart-Bereinigung — verschachtelte Helm-tgz entfernt; v1.9.15: Composer-Placeholder-Fix (kein Message-Wings-Flash); v1.9.13: AImighty-Rebrand (Geist-Fonts, Hanseatenblau/Gold-Theme)."
   developer: Aimighty
   website: https://github.com/bayerhazard/wings-for-hermes
   sourceCode: https://github.com/bayerhazard/wings-for-hermes

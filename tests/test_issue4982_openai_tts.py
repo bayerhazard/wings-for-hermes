@@ -107,6 +107,8 @@ def _fresh_tts_limiter(monkeypatch):
     monkeypatch.setattr(_auth, "is_auth_enabled", lambda: False)
     monkeypatch.setattr(routes, "is_auth_enabled", lambda: False, raising=False)
     monkeypatch.delenv("HERMES_WEBUI_TRUST_FORWARDED_FOR", raising=False)
+    monkeypatch.delenv("HERMES_WEBUI_TTS_TRUSTED_HOSTS", raising=False)
+    monkeypatch.setattr(routes, "_TTS_TRUSTED_HOSTS_CACHE", None)
     monkeypatch.delenv("VOICE_TOOLS_OPENAI_KEY", raising=False)
     monkeypatch.delenv("OPENAI_API_KEY", raising=False)
     _reset_limiter()
@@ -483,6 +485,90 @@ def test_openai_tts_rejects_invalid_base_url_config(monkeypatch, base_url):
         "tts": {"openai": {"base_url": base_url}}
     })
     h = _post({"text": "Hello", "engine": "openai"}, client="10.82.0.5")
+    routes._handle_tts(h, None)
+
+    assert h.status == 400
+    assert "base_url" in (h.payload() or {}).get("error", "")
+
+
+def test_openai_tts_trusted_host_bypasses_private_address_block(monkeypatch):
+    # A self-hosted gateway on a private address (e.g. an internal LiteLLM
+    # endpoint) is rejected by the SSRF guard by default, but an explicitly
+    # trusted host must be allowed to dial its private address.
+    captured = {}
+    response_bytes = _http_response_bytes(200, b"audio-trusted")
+
+    def _fake_getaddrinfo(target_host, *_args, **_kwargs):
+        assert target_host == "internal-gateway.example.com"
+        return [(0, 0, 0, "", ("172.20.0.4", 443))]
+
+    class _FakeConn:
+        def __init__(self, resp):
+            self.writes = []
+            self.response = io.BytesIO(resp)
+            self.closed = False
+
+        def sendall(self, data):
+            self.writes.append(data)
+
+        def setsockopt(self, *_a, **_k):
+            return None
+
+        def makefile(self, *_a, **_k):
+            return self.response
+
+        def shutdown(self, *_a, **_k):
+            return None
+
+        def close(self):
+            self.closed = True
+
+    fake_sock = _FakeConn(response_bytes)
+
+    def _fake_create_connection(address, *_a, **_k):
+        captured["dialed"] = address
+        return fake_sock
+
+    def _fake_wrap_socket(_ctx, sock, *a, **kw):
+        return sock
+
+    import api.config as config
+
+    monkeypatch.setenv("HERMES_WEBUI_TTS_TRUSTED_HOSTS", "internal-gateway.example.com")
+    monkeypatch.setenv("OPENAI_API_KEY", "sk-openai")
+    monkeypatch.setattr(socket, "getaddrinfo", _fake_getaddrinfo)
+    monkeypatch.setattr(socket, "create_connection", _fake_create_connection)
+    monkeypatch.setattr(ssl.SSLContext, "wrap_socket", _fake_wrap_socket)
+    monkeypatch.setattr(config, "get_config", lambda: {
+        "tts": {"openai": {"base_url": "https://internal-gateway.example.com/v1"}}
+    })
+    # Force the env allowlist cache to re-read the patched env.
+    monkeypatch.setattr(routes, "_TTS_TRUSTED_HOSTS_CACHE", None)
+
+    h = _post({"text": "Hello", "engine": "openai"}, client="10.82.0.13")
+    routes._handle_tts(h, None)
+
+    assert h.status == 200
+    assert h.wfile.getvalue() == b"audio-trusted"
+    assert captured["dialed"] == ("172.20.0.4", 443)
+
+
+def test_openai_tts_private_address_still_blocked_when_not_trusted(monkeypatch):
+    # Without the allowlist entry, a private-resolving host must remain blocked.
+    def _fake_getaddrinfo(*_args, **_kwargs):
+        return [(0, 0, 0, "", ("172.20.0.4", 443))]
+
+    import api.config as config
+
+    monkeypatch.delenv("HERMES_WEBUI_TTS_TRUSTED_HOSTS", raising=False)
+    monkeypatch.setenv("OPENAI_API_KEY", "sk-openai")
+    monkeypatch.setattr(socket, "getaddrinfo", _fake_getaddrinfo)
+    monkeypatch.setattr(config, "get_config", lambda: {
+        "tts": {"openai": {"base_url": "https://private-gateway.example.com/v1"}}
+    })
+    monkeypatch.setattr(routes, "_TTS_TRUSTED_HOSTS_CACHE", None)
+
+    h = _post({"text": "Hello", "engine": "openai"}, client="10.82.0.14")
     routes._handle_tts(h, None)
 
     assert h.status == 400
