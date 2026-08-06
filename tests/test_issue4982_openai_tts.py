@@ -124,6 +124,29 @@ def test_openai_tts_no_key_returns_503(monkeypatch):
     assert "OpenAI API key not configured" in (h.payload() or {}).get("error", "")
 
 
+def test_openai_tts_uses_api_key_from_shared_config(monkeypatch):
+    # Wings and Hermes share HERMES_HOME, so tts.openai.api_key from the shared
+    # config.yaml must be honoured as the last-resort key source. Regression for
+    # the local-lite-tts setup: server previously returned 503 despite the key
+    # existing in config.yaml.
+    captured = {}
+    import api.config as config
+
+    def _fake_urlopen(req, timeout=0):
+        captured["auth"] = req.headers.get("Authorization")
+        return _StreamOnceResponse([b"config-key-audio"])
+
+    monkeypatch.setattr(config, "get_config", lambda: {
+        "tts": {"openai": {"base_url": "https://custom.example.com/v1/", "api_key": "sk-config-key"}}
+    })
+    monkeypatch.setattr(routes, "_tts_open", lambda req, **kw: _fake_urlopen(req))
+    h = _post({"text": "Hello", "engine": "openai"}, client="10.82.0.20")
+    routes._handle_tts(h, None)
+
+    assert h.status == 200
+    assert captured["auth"] == "Bearer sk-config-key"
+
+
 def test_openai_tts_success_returns_audio(monkeypatch):
     captured = {}
 

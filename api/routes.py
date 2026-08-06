@@ -18332,26 +18332,16 @@ def _handle_tts(handler, parsed):
 
     # ── OpenAI-compatible TTS ──────────────────────────────────────────
     if engine == "openai":
-        api_key = os.getenv("VOICE_TOOLS_OPENAI_KEY", "").strip()
-        if not api_key:
-            api_key = os.getenv("OPENAI_API_KEY", "").strip()
-        if not api_key:
-            try:
-                from api.onboarding import _load_env_file
-                from api.profiles import get_active_hermes_home
-                env_cfg = _load_env_file(get_active_hermes_home() / ".env")
-                api_key = env_cfg.get("VOICE_TOOLS_OPENAI_KEY", "") or env_cfg.get("OPENAI_API_KEY", "")
-            except Exception:
-                pass
-        if not api_key:
-            from api.helpers import bad as _bad
-            return _bad(handler, "OpenAI API key not configured", 503)
-
         from urllib.parse import urlunsplit as _urlunsplit
 
+        # Resolve the shared Hermes config.yaml once so both the endpoint
+        # (base_url/model/voice) and the API key can fall back to it. Wings
+        # and Hermes share the same HERMES_HOME, so tts.openai.* here is the
+        # same config the user set up in Hermes.
         base_url = _urlunsplit(("https", "api.openai.com", "/v1", "", ""))
         model = "gpt-4o-mini-tts"
         oai_voice = "alloy"
+        oai_cfg = None
         try:
             from api.config import get_config
             tts_cfg = (get_config() or {}).get("tts", {})
@@ -18370,6 +18360,23 @@ def _handle_tts(handler, parsed):
             return _bad(handler, "invalid OpenAI base_url in config", 400)
         except Exception:
             pass
+
+        api_key = os.getenv("VOICE_TOOLS_OPENAI_KEY", "").strip()
+        if not api_key:
+            api_key = os.getenv("OPENAI_API_KEY", "").strip()
+        if not api_key:
+            try:
+                from api.onboarding import _load_env_file
+                from api.profiles import get_active_hermes_home
+                env_cfg = _load_env_file(get_active_hermes_home() / ".env")
+                api_key = env_cfg.get("VOICE_TOOLS_OPENAI_KEY", "") or env_cfg.get("OPENAI_API_KEY", "")
+            except Exception:
+                pass
+        if not api_key and isinstance(oai_cfg, dict):
+            api_key = (oai_cfg.get("api_key") or "").strip()
+        if not api_key:
+            from api.helpers import bad as _bad
+            return _bad(handler, "OpenAI API key not configured", 503)
 
         url = f"{base_url}/audio/speech"
         req_body = json.dumps({
