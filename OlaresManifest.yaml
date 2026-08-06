@@ -10,7 +10,7 @@ metadata:
   appid: wings
   icon: https://raw.githubusercontent.com/bayerhazard/wings-for-hermes/main/icon.png
   title: Wings for Hermes
-  version: 1.9.19
+  version: 1.9.20
   categories:
     - Productivity_v112
     - Developer Tools
@@ -48,7 +48,7 @@ metadata:
     - amd64
 
 spec:
-  versionName: '1.9.19'
+  versionName: '1.9.20'
   fullDescription: >
     **Wings for Hermes** — AI Agent Web UI, forked from hermes-webui.
 

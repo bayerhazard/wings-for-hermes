@@ -5,14 +5,6 @@
   @font-face { font-family:'Geist'; font-style:normal; font-weight:600; font-display:swap; src:url('fonts/Geist-SemiBold.woff2') format('woff2'); }
   @font-face { font-family:'Geist'; font-style:normal; font-weight:700; font-display:swap; src:url('fonts/Geist-Bold.woff2') format('woff2'); }
   @font-face { font-family:'Geist Mono'; font-style:normal; font-weight:400; font-display:swap; src:url('fonts/GeistMono-Regular.woff2') format('woff2'); }
-  /* ── Inter (fallback, self-hosted variable font, weights 100–900) ── */
-  @font-face {
-    font-family: 'Inter';
-    src: url('vendor/inter/InterVariable.woff2') format('woff2');
-    font-weight: 100 900;
-    font-style: normal;
-    font-display: swap;
-  }
   /* ── Light mode (default) — warm gold-tinted palette from Hermes brand ── */
   :root {
     --bg:#F5F5F7;--surface:#FFFFFF;--sidebar:#F5F8FA;--border:#DFE3EB;--border2:#CBD5E1;
@@ -138,20 +130,20 @@
   :root[data-font-size="small"] { font-size: 12px; }
   :root[data-font-size="large"] { font-size: 16px; }
   :root[data-font-size="xlarge"] { font-size: 18px; }
- /* ── Dark mode (Dunkel) — navy-black + gold accent matching Hermes terminal ── */
+ /* ── Dark mode (Dunkel) — AImighty navy scale + butterfly gold accent ── */
   :root.dark {
-    --bg:#161616;--surface:#1E1E1E;--sidebar:#141414;--border:transparent;--border2:transparent;
-    --text:#FFFFFF;--muted:#9CA3AF;--accent:#C9A45C;--blue:#4DD0E1;--gold:#C9A45C;--code-bg:#202020;
-    --topbar-bg:rgba(22,22,22,.98);--main-bg:rgba(22,22,22,0.5);
+    --bg:#000815;--surface:#051729;--sidebar:#010f20;--border:#142e47;--border2:#294766;
+    --text:#ebeff3;--muted:#6683a2;--accent:#c9a45c;--blue:#4DD0E1;--gold:#c9a45c;--code-bg:#0c213c;
+    --topbar-bg:rgba(0,8,23,.98);--main-bg:rgba(0,8,23,0.5);
     --focus-ring:rgba(201,164,92,.35);--focus-glow:rgba(201,164,92,.1);
     --input-bg:rgba(255,255,255,.04);--hover-bg:rgba(255,255,255,.06);
-    --strong:#FFFFFF;--em:#9CA3AF;--code-text:#E2E8F0;--code-inline-bg:rgba(255,255,255,.08);--pre-text:#E2E8F0;
-    --accent-hover:#B8935F;--accent-bg:rgba(201,164,92,0.08);--accent-bg-strong:rgba(201,164,92,0.15);--accent-text:#C9A45C;
+    --strong:#ffffff;--em:#8ca1b7;--code-text:#d3dae1;--code-inline-bg:rgba(255,255,255,.08);--pre-text:#d3dae1;
+    --accent-hover:#d5b371;--accent-bg:color-mix(in oklab, var(--gold) 12%, transparent);--accent-bg-strong:color-mix(in oklab, var(--gold) 44%, transparent);--accent-text:#c9a45c;
     --error:#EF5350;--success:#4CAF50;--warning:#FFA726;--info:#4DD0E1;
     --surface-subtle:rgba(255,255,255,.025);--surface-subtle-hover:rgba(255,255,255,.045);
-    --border-subtle:transparent;--border-muted:transparent;
+    --border-subtle:rgba(212,218,232,.08);--border-muted:rgba(212,218,232,.14);
     /* ── Premium redesign tokens (dark) ── */
-    --chat-bg:#1A1A1E;
+    --chat-bg:#0a1c30;
     --shadow-sm:0 1px 2px rgba(0,0,0,.4);
     --shadow-md:0 4px 18px -2px rgba(0,0,0,.5),0 2px 6px -1px rgba(0,0,0,.4);
     --shadow-lg:0 12px 32px -4px rgba(0,0,0,.55),0 4px 12px -2px rgba(0,0,0,.45);
@@ -201,8 +193,8 @@
   :root.dark .panel-head{border-bottom:none;}
 
 
-  /* Dark mode: dialog bg must match the anthrazit page background (#141414 / #1A1A1E) */
-  :root.dark .app-dialog{background:linear-gradient(180deg,#1A1A1E,#141414)!important;border-color:var(--border2)!important;box-shadow:0 18px 60px rgba(0,0,0,.6)!important;}
+  /* Dark mode: dialog bg must match the navy page background (#051729 / #000815) */
+  :root.dark .app-dialog{background:linear-gradient(180deg,#0a1c30,#000815)!important;border-color:var(--border2)!important;box-shadow:0 18px 60px rgba(0,0,0,.6)!important;}
   :root.dark .app-dialog-overlay{background:rgba(0,0,0,.7)!important;backdrop-filter:blur(8px)!important;}
   /* #594: app-dialog light mode overrides — base styles use hardcoded dark gradients */
   :root:not(.dark) .app-dialog{

@@ -22,9 +22,9 @@
 <script>(function(){try{var m=(localStorage.getItem('wings-mode')==='advanced')?'advanced':'basic';if(!window.matchMedia('(min-width:641px)').matches)m='basic';document.documentElement.dataset.mode=m;}catch(e){document.documentElement.dataset.mode='basic';}})()</script>
 <!-- theme-color: surfaces the active app chrome color to native status bars (Safari status bar, PWA, native WKWebView wrappers). Updated dynamically by boot.js when theme/skin changes. The light/dark default values match style.css :root --sidebar / :root.dark --sidebar. -->
 <meta name="theme-color" content="#F5F8FA" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#141414" media="(prefers-color-scheme: dark)">
-<meta name="theme-color" id="wings-theme-color" content="#141414">
-<script>(function(){try{var t=localStorage.getItem('wings-theme')||'dark';if(t==='system')t=window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';var c=t==='dark'?'#0A0A0A':'#F5F8FA';document.querySelectorAll('meta[name="theme-color"]').forEach(function(m){m.setAttribute('content',c);m.removeAttribute('media');});}catch(e){}})()</script>
+<meta name="theme-color" content="#010f20" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" id="wings-theme-color" content="#010f20">
+<script>(function(){try{var t=localStorage.getItem('wings-theme')||'dark';if(t==='system')t=window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';var c=t==='dark'?'#010f20':'#F5F8FA';document.querySelectorAll('meta[name="theme-color"]').forEach(function(m){m.setAttribute('content',c);m.removeAttribute('media');});}catch(e){}})()</script>
 <script>(function(){try{var adv=localStorage.getItem('wings-mode')==='advanced';if(!window.matchMedia('(min-width:641px)').matches)adv=false;var wp=(adv&&localStorage.getItem('wings-workspace-panel')==='open')?'open':'closed';document.documentElement.dataset.workspacePanel=wp;}catch(e){document.documentElement.dataset.workspacePanel='closed';}})()</script>
 <script>(function(){try{if(localStorage.getItem('wings-sidebar-collapsed')==='1')document.documentElement.dataset.sidebarCollapsed='1';}catch(e){}})()</script>
 <link rel="preload" href="static/pwa-startup.js?v=__WEBUI_VERSION__&w=185" as="script">
@@ -1057,7 +1057,7 @@
                   <span style="font-size:12px;font-weight:500;color:var(--text)">Hell</span>
                 </button>
                 <button type="button" data-theme-val="dark" onclick="_pickTheme('dark')" class="theme-pick-btn" style="border:1px solid var(--border2);border-radius:10px;padding:10px 8px;text-align:center;cursor:pointer;background:none;transition:all .15s">
-                  <div style="width:100%;height:40px;border-radius:6px;background:#141414;border:1px solid rgba(201,164,92,.3);margin-bottom:6px;display:flex;align-items:center;justify-content:center">
+                  <div style="width:100%;height:40px;border-radius:6px;background:#051729;border:1px solid rgba(201,164,92,.3);margin-bottom:6px;display:flex;align-items:center;justify-content:center">
                     <svg width="16" height="16" fill="none" stroke="#C9A45C" stroke-width="2" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1111.21 3a7 7 0 009.79 9.79z"/></svg>
                   </div>
                   <span style="font-size:12px;font-weight:500;color:var(--text)">Dunkel</span>
@@ -1069,7 +1069,7 @@
                   <span style="font-size:12px;font-weight:500;color:var(--text)">AImighty</span>
                 </button>
                 <button type="button" data-theme-val="system" onclick="_pickTheme('system')" class="theme-pick-btn" style="border:1px solid var(--border2);border-radius:10px;padding:10px 8px;text-align:center;cursor:pointer;background:none;transition:all .15s">
-                  <div style="width:100%;height:40px;border-radius:6px;background:linear-gradient(to right,#FEFCF7,#141414);border:1px solid rgba(0,0,0,.12);margin-bottom:6px;display:flex;align-items:center;justify-content:center">
+                  <div style="width:100%;height:40px;border-radius:6px;background:linear-gradient(to right,#FEFCF7,#051729);border:1px solid rgba(0,0,0,.12);margin-bottom:6px;display:flex;align-items:center;justify-content:center">
                     <svg width="16" height="16" fill="none" stroke="#888" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
                   </div>
                   <span style="font-size:12px;font-weight:500;color:var(--text)">System</span>

@@ -742,6 +742,101 @@ function _micToastKeyForRecognitionError(error){
   let _micStartSeq=0;
   const _micHoldThresholdMs=300;
 
+  // ── Client-side VAD for the server-STT (MediaRecorder) path ──────────────
+  // MediaRecorder has no built-in silence detection the way browser
+  // SpeechRecognition does. When server STT is active (_forceMediaRecorder),
+  // the only way the recording stops is an explicit mic click / hold-release —
+  // a natural pause never ends it. This lightweight Web-Audio VAD restores the
+  // auto-stop-on-silence behaviour the browser engine used to provide: it
+  // watches the live captureStream level and calls _stopMic() after the
+  // configured silence window, so the existing recorder.onstop → _transcribeBlob
+  // → _autoSendAfterDictation pipeline takes over unchanged.
+  let _micVadCtx=null;        // AudioContext (lazy; shared for the session)
+  let _micVadSource=null;     // MediaStreamAudioSourceNode
+  let _micVadAnalyser=null;   // AnalyserNode
+  let _micVadRafId=null;      // requestAnimationFrame id for the level loop
+  let _micVadSilenceTimer=null;
+  let _micVadHasSpeech=false; // set once real speech is heard (lead-in guard)
+  const _micVadThreshold=0.012; // normalized RMS above which counts as speech
+  const _micVadReadIntervalMs=120; // analyser poll cadence
+
+  function _micSilenceMs(){
+    try{
+      const raw=parseInt(localStorage.getItem('wings-voice-silence-ms'),10);
+      return (Number.isFinite(raw)&&raw>0)?Math.max(200,raw):1800;
+    }catch(_){ return 1800; }
+  }
+
+  function _micVadLevel(){
+    if(!_micVadAnalyser) return 0;
+    const buf=new Uint8Array(_micVadAnalyser.fftSize);
+    _micVadAnalyser.getByteTimeDomainData(buf);
+    let sum=0;
+    for(let i=0;i<buf.length;i++){
+      const v=(buf[i]-128)/128;
+      sum+=v*v;
+    }
+    return Math.sqrt(sum/buf.length);
+  }
+
+  function _micVadPoll(){
+    if(!_micVadAnalyser||!window._micActive) return;
+    const level=_micVadLevel();
+    if(level>=_micVadThreshold){
+      _micVadHasSpeech=true;
+      if(_micVadSilenceTimer){
+        clearTimeout(_micVadSilenceTimer);
+        _micVadSilenceTimer=null;
+      }
+    }else if(_micVadHasSpeech){
+      if(!_micVadSilenceTimer){
+        _micVadSilenceTimer=setTimeout(()=>{
+          _micVadSilenceTimer=null;
+          // Still recording + still on the server-transcribe path → stop now.
+          if(window._micActive&&_activeCaptureMode==='media-transcribe'){
+            _stopMic();
+          }
+        },_micSilenceMs());
+      }
+    }
+    _micVadRafId=requestAnimationFrame(_micVadPoll);
+  }
+
+  function _micVadStart(stream){
+    _micVadStop();
+    try{
+      const Ctx=window.AudioContext||window.webkitAudioContext;
+      if(!Ctx) return;
+      _micVadCtx=new Ctx();
+      _micVadSource=_micVadCtx.createMediaStreamSource(stream);
+      _micVadAnalyser=_micVadCtx.createAnalyser();
+      _micVadAnalyser.fftSize=2048;
+      _micVadSource.connect(_micVadAnalyser);
+      _micVadHasSpeech=false;
+      _micVadRafId=requestAnimationFrame(_micVadPoll);
+    }catch(_){
+      _micVadStop();
+    }
+  }
+
+  function _micVadStop(){
+    if(_micVadSilenceTimer){
+      clearTimeout(_micVadSilenceTimer);
+      _micVadSilenceTimer=null;
+    }
+    if(_micVadRafId){
+      cancelAnimationFrame(_micVadRafId);
+      _micVadRafId=null;
+    }
+    try{ if(_micVadSource){_micVadSource.disconnect();} }catch(_){}
+    _micVadSource=null;
+    try{ if(_micVadAnalyser){_micVadAnalyser.disconnect();} }catch(_){}
+    _micVadAnalyser=null;
+    try{ if(_micVadCtx&&_micVadCtx.state!=='closed'){_micVadCtx.close();} }catch(_){}
+    _micVadCtx=null;
+    _micVadHasSpeech=false;
+  }
+
   function _setButtonTooltipAndKey(btn, key){
     const text = t(key);
     btn.setAttribute('data-i18n-title', key);
@@ -1195,6 +1290,10 @@ function _micToastKeyForRecognitionError(error){
       const preferredTypes=['audio/webm;codecs=opus','audio/webm','audio/ogg;codecs=opus','audio/ogg'];
       const mimeType=preferredTypes.find(type=>window.MediaRecorder.isTypeSupported?.(type))||'';
       const captureMode=_rawAudioMode?'media-raw':'media-transcribe';
+      // Server-STT (media-transcribe) path: MediaRecorder has no silence
+      // detection, so arm the lightweight client-side VAD to auto-stop on a
+      // natural pause. Raw-audio mode stays manual (user clicks / holds).
+      if(captureMode==='media-transcribe') _micVadStart(captureStream);
       const recorder=new MediaRecorder(captureStream,mimeType?{mimeType}:undefined);
       audioChunks=[];
       const captureChunks=audioChunks;
@@ -1220,6 +1319,7 @@ function _micToastKeyForRecognitionError(error){
         const prefixSnapshot = _prefix;
         const blob=new Blob(captureChunks,{type:recorder.mimeType||mimeType||'audio/webm'});
         if(isCurrentCapture) _setRecording(false);
+        _micVadStop();
         _stopTracks(captureStream);
         if(blob.size){
           if(captureMode==='media-raw'){
@@ -1241,6 +1341,7 @@ function _micToastKeyForRecognitionError(error){
       if(startSeq!==_micStartSeq) return;
       _isRecording=false;
       window._micPendingSend=false;
+      _micVadStop();
       _stopTracks();
       showToast(t(_micToastKeyForRecognitionError('not-allowed')||'mic_denied'));
     }
