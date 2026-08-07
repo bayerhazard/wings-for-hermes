@@ -686,6 +686,38 @@ function _micToastKeyForRecognitionError(error){
   return msgs[error]||null;
 }
 
+// ── WAV encoder for server-STT (PCM → WAV) ───────────────────────────────────
+// The server-STT backend (vLLM ASR / qwen3-asr) cannot decode the WebM/Opus
+// container that MediaRecorder emits ("Error opening <_io.BytesIO object>:
+// Format not recognised"). Recording via the Web Audio API and encoding
+// 16-bit PCM WAV guarantees a backend-compatible upload — the same approach
+// the qwen3-asr dashboard uses ("WAV-Aufnahme, garantiert backend-kompatibel").
+function _micEncodeWav(samples, sampleRate){
+  const buffer=new ArrayBuffer(44+samples.length*2);
+  const view=new DataView(buffer);
+  const writeStr=(o,s)=>{for(let i=0;i<s.length;i++)view.setUint8(o+i,s.charCodeAt(i));};
+  writeStr(0,'RIFF');
+  view.setUint32(4,36+samples.length*2,true);
+  writeStr(8,'WAVE');
+  writeStr(12,'fmt ');
+  view.setUint32(16,16,true);
+  view.setUint16(20,1,true);   // PCM
+  view.setUint16(22,1,true);   // mono
+  view.setUint32(24,sampleRate,true);
+  view.setUint32(28,sampleRate*2,true);
+  view.setUint16(32,2,true);   // block align
+  view.setUint16(34,16,true);  // bits per sample
+  writeStr(36,'data');
+  view.setUint32(40,samples.length*2,true);
+  let offset=44;
+  for(let i=0;i<samples.length;i++){
+    const s=Math.max(-1,Math.min(1,samples[i]));
+    view.setInt16(offset,s<0?s*0x8000:s*0x7FFF,true);
+    offset+=2;
+  }
+  return new Blob([buffer],{type:'audio/wav'});
+}
+
 (function(){
   const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
   const _canRecordAudio=!!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia&&window.MediaRecorder);
@@ -722,6 +754,7 @@ function _micToastKeyForRecognitionError(error){
   let mediaRecorder=null;
   let mediaStream=null;
   let audioChunks=[];
+  let wavRecorder=null;   // { ctx, processor, chunks } for the server-STT WAV path
   let _finalText='';
   let _prefix='';
   let _isRecording=false;
@@ -835,6 +868,53 @@ function _micToastKeyForRecognitionError(error){
     try{ if(_micVadCtx&&_micVadCtx.state!=='closed'){_micVadCtx.close();} }catch(_){}
     _micVadCtx=null;
     _micVadHasSpeech=false;
+  }
+
+  // ── WAV capture for the server-STT path ──────────────────────────────────
+  // MediaRecorder emits WebM/Opus, which the vLLM ASR backend cannot decode.
+  // Capture raw PCM via the Web Audio API and encode WAV on stop so the
+  // upstream /v1/audio/transcriptions call receives a decodable format. The
+  // ScriptProcessor keeps a zero-gain tail to stay active without feedback.
+  function _micWavStart(captureStream){
+    _micWavStop();
+    try{
+      const Ctx=window.AudioContext||window.webkitAudioContext;
+      if(!Ctx) return false;
+      const ctx=new Ctx();
+      const source=ctx.createMediaStreamSource(captureStream);
+      const processor=ctx.createScriptProcessor(4096,1,1);
+      const chunks=[];
+      processor.onaudioprocess=e=>{chunks.push(new Float32Array(e.inputBuffer.getChannelData(0)));};
+      const gain=ctx.createGain();
+      gain.gain.value=0;
+      source.connect(processor);
+      processor.connect(gain);
+      gain.connect(ctx.destination);
+      wavRecorder={ctx:ctx,processor:processor,chunks:chunks,captureStream:captureStream};
+      return true;
+    }catch(_){
+      _micWavStop();
+      return false;
+    }
+  }
+
+  function _micWavStop(prefixSnapshot){
+    const rec=wavRecorder;
+    if(!rec) return;
+    wavRecorder=null;
+    try{ if(rec.processor) rec.processor.onaudioprocess=null; }catch(_){}
+    try{ if(rec.processor) rec.processor.disconnect(); }catch(_){}
+    try{ if(rec.ctx&&rec.ctx.state!=='closed') rec.ctx.close(); }catch(_){}
+    const chunks=rec.chunks||[];
+    if(!chunks.length) return;
+    let total=0;
+    for(const c of chunks) total+=c.length;
+    const merged=new Float32Array(total);
+    let off=0;
+    for(const c of chunks){ merged.set(c,off); off+=c.length; }
+    const sampleRate=rec.ctx?rec.ctx.sampleRate:48000;
+    const wav=_micEncodeWav(merged,sampleRate);
+    if(wav.size) _transcribeBlob(wav, prefixSnapshot);
   }
 
   function _setButtonTooltipAndKey(btn, key){
@@ -953,9 +1033,10 @@ function _micToastKeyForRecognitionError(error){
   }
 
   async function _transcribeBlob(blob, prefixSnapshot){
-    const ext=(blob.type&&blob.type.includes('ogg'))?'ogg':'webm';
+    const _bt=String(blob&&blob.type||'');
+    const ext=_bt.includes('wav')?'wav':(_bt.includes('ogg')?'ogg':'webm');
     const form=new FormData();
-    form.append('file',new File([blob],`voice-input.${ext}`,{type:blob.type||`audio/${ext}`}));
+    form.append('file',new File([blob],`voice-input.${ext}`,{type:_bt||`audio/${ext}`}));
     // Snapshot is passed in from the recorder.onstop handler — taken there
     // BEFORE _setRecording(false) clears _prefix (async server STT path).
     setComposerStatus('Transcribing…');
@@ -1069,6 +1150,17 @@ function _micToastKeyForRecognitionError(error){
     if(recognition && _activeCaptureMode==='speech'){
       _speechStopRequested=true;
       recognition.stop();
+      return;
+    }
+    if(wavRecorder && _activeCaptureMode==='media-transcribe'){
+      // WAV capture path: stop the ScriptProcessor, encode PCM→WAV, and hand
+      // the blob to _transcribeBlob (which re-enters via _micWavStop). Capture
+      // the composer prefix BEFORE _setRecording(false) clears _prefix.
+      const prefixSnapshot = _prefix;
+      _setRecording(false);
+      _micVadStop();
+      _micWavStop(prefixSnapshot);
+      _stopTracks();
       return;
     }
     if(mediaRecorder&&mediaRecorder.state!=='inactive'){
@@ -1290,10 +1382,21 @@ function _micToastKeyForRecognitionError(error){
       const preferredTypes=['audio/webm;codecs=opus','audio/webm','audio/ogg;codecs=opus','audio/ogg'];
       const mimeType=preferredTypes.find(type=>window.MediaRecorder.isTypeSupported?.(type))||'';
       const captureMode=_rawAudioMode?'media-raw':'media-transcribe';
-      // Server-STT (media-transcribe) path: MediaRecorder has no silence
-      // detection, so arm the lightweight client-side VAD to auto-stop on a
-      // natural pause. Raw-audio mode stays manual (user clicks / holds).
-      if(captureMode==='media-transcribe') _micVadStart(captureStream);
+      // Server-STT (media-transcribe) path: capture raw PCM via the Web Audio
+      // API and encode WAV on stop — MediaRecorder's WebM/Opus output is not
+      // decodable by the upstream vLLM ASR backend ("Format not recognised").
+      // VAD provides the auto-stop on a natural pause; raw-audio mode stays
+      // manual (user clicks / holds) and keeps MediaRecorder.
+      if(captureMode==='media-transcribe'){
+        _micVadStart(captureStream);
+        if(_micWavStart(captureStream)){
+          _activeCaptureMode='media-transcribe';
+          _setRecording(true);
+          return;
+        }
+        // WAV capture unavailable (no AudioContext) → fall through to MediaRecorder.
+        _micVadStop();
+      }
       const recorder=new MediaRecorder(captureStream,mimeType?{mimeType}:undefined);
       audioChunks=[];
       const captureChunks=audioChunks;
@@ -1342,6 +1445,7 @@ function _micToastKeyForRecognitionError(error){
       _isRecording=false;
       window._micPendingSend=false;
       _micVadStop();
+      _micWavStop();
       _stopTracks();
       showToast(t(_micToastKeyForRecognitionError('not-allowed')||'mic_denied'));
     }
