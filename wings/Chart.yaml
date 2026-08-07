@@ -1,9 +1,9 @@
 apiVersion: v2
 name: wings
-description: Wings for Hermes — AI Agent Web UI
+description: AI Agent Web UI for Hermes — chat, sessions, memory, skills, cron
 type: application
-version: 1.9.22
-appVersion: "0.50.43"
+version: 26.08.1
+appVersion: "26.08.1"
 keywords:
   - ai
   - hermes
