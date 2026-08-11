@@ -8193,6 +8193,7 @@ let _ttsChunkQueue=[];
 let _ttsChunkIndex=0;
 let _ttsActiveBtn=null;
 let _playingEdgeAudio=null;
+let _ttsStreamAbort=null;
 
 function _buildBrowserUtterance(text, btn){
   const utter=new SpeechSynthesisUtterance(text);
@@ -8382,18 +8383,57 @@ function _playElevenLabsTts(text, btn){
   .catch(function(e){ _fail((e&&e.message)||'ElevenLabs TTS failed'); });
 }
 
-function _playOpenaiTts(text, btn){
+function _playOpenaiTts(text, btn, onDone){
+  // Streaming path: the server synthesizes sentence-by-sentence and pushes
+  // each completed sentence as an SSE event; the browser plays them back to
+  // back, so a long reply starts speaking after the first sentence instead
+  // of after the whole synthesis. Falls back to the buffered /api/tts
+  // endpoint when the response body is not a readable stream.
+  if(_ttsStreamAbort){ try{_ttsStreamAbort.abort();}catch(_){}
+    _ttsStreamAbort=null; }
   if(btn) btn.dataset.speaking='1';
   _ttsSpeaking=true;
-  const _fail=function(msg){
+  const _finish=function(errMsg){
+    if(_ttsStreamAbort){ try{_ttsStreamAbort.abort();}catch(_){}
+      _ttsStreamAbort=null; }
     _ttsSpeaking=false;_playingEdgeAudio=null;
     if(btn)btn.dataset.speaking='0';
-    if(msg&&typeof showToast==='function') showToast(msg,4000,'error');
+    if(errMsg&&typeof showToast==='function') showToast(errMsg,4000,'error');
+    if(typeof onDone==='function') onDone();
   };
-  fetch(new URL('api/tts', document.baseURI || location.href).href, {
+  const _abort=new AbortController();
+  _ttsStreamAbort=_abort;
+  const _queue=[];
+  let _playing=false;
+  const _playNext=function(){
+    if(!_ttsSpeaking){ _playing=false; return; }
+    if(!_queue.length){ _playing=false; return; }
+    _playing=true;
+    const blob=_queue.shift();
+    const url=URL.createObjectURL(blob);
+    const audio=new Audio(url);
+    _playingEdgeAudio=audio;
+    audio.onended=function(){
+      URL.revokeObjectURL(url);
+      _playingEdgeAudio=null;
+      _playNext();
+    };
+    audio.onerror=function(){
+      URL.revokeObjectURL(url);
+      _playingEdgeAudio=null;
+      _playNext();
+    };
+    audio.play().catch(function(){
+      URL.revokeObjectURL(url);
+      _playingEdgeAudio=null;
+      _playNext();
+    });
+  };
+  fetch(new URL('api/tts/stream', document.baseURI || location.href).href, {
     method:'POST',
     headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({text:text, engine:'openai'})
+    body:JSON.stringify({text:text}),
+    signal:_abort.signal
   })
   .then(function(r){
     if(!r.ok){
@@ -8401,12 +8441,63 @@ function _playOpenaiTts(text, btn){
         throw new Error((j&&j.error)||('TTS request failed: '+r.status));
       });
     }
-    return r.arrayBuffer();
+    if(!r.body||typeof r.body.getReader!=='function'){
+      return r.arrayBuffer()
+        .then(function(buf){ return _playAudioBuf(buf, btn, 'OpenAI TTS'); })
+        .then(function(){ _finish(); });
+    }
+    const reader=r.body.getReader();
+    const decoder=new TextDecoder();
+    let buffer='';
+    let done=false;
+    const _pump=function(){
+      if(!_ttsSpeaking){ reader.cancel().catch(function(){}); return Promise.resolve(); }
+      return reader.read().then(function(res){
+        if(res.done){ done=true; return; }
+        buffer+=decoder.decode(res.value,{stream:true});
+        let idx;
+        while((idx=buffer.indexOf('\n\n'))!==-1){
+          const chunk=buffer.slice(0,idx);
+          buffer=buffer.slice(idx+2);
+          const line=chunk.split('\n').find(function(l){ return l.indexOf('data: ')!==-1; });
+          if(!line) continue;
+          let payload=null;
+          try{ payload=JSON.parse(line.slice(6)); }catch(_){}
+          if(!payload) continue;
+          if(payload.b64){
+            try{
+              const bin=atob(payload.b64);
+              const bytes=new Uint8Array(bin.length);
+              for(let i=0;i<bin.length;i++) bytes[i]=bin.charCodeAt(i);
+              _queue.push(new Blob([bytes],{type:'audio/mpeg'}));
+              if(!_playing) _playNext();
+            }catch(_){}
+          }else if(payload.error){
+            _finish(payload.error);
+            return;
+          }
+        }
+        return _pump();
+      }).catch(function(e){
+        if(e&&e.name==='AbortError') return;
+        _finish('OpenAI TTS failed: '+(e&&e.message||e));
+      });
+    };
+    return _pump().then(function(){
+      if(done&&_ttsSpeaking){
+        const _wait=function(){
+          if(!_ttsSpeaking){ _finish(); return; }
+          if(_playing||_queue.length){ setTimeout(_wait,150); return; }
+          _finish();
+        };
+        _wait();
+      }
+    });
   })
-  .then(function(buf){
-    return _playAudioBuf(buf, btn, 'OpenAI TTS');
-  })
-  .catch(function(e){ _fail((e&&e.message)||'OpenAI TTS failed'); });
+  .catch(function(e){
+    if(e&&e.name==='AbortError') return;
+    _finish((e&&e.message)||'OpenAI TTS failed');
+  });
 }
 
 // ── Shared AudioContext for TTS playback (no blob URLs needed) ──
@@ -8452,6 +8543,12 @@ function _playAudioBuf(arrayBuffer, btn, label){
   });
 }
 function stopTTS(){
+  // Abort the streaming-TTS fetch (the reader cancels in _pump on _ttsSpeaking
+  // false; aborting also unblocks the browser immediately).
+  if(_ttsStreamAbort){
+    try{ _ttsStreamAbort.abort(); }catch(_){}
+    _ttsStreamAbort=null;
+  }
   if('speechSynthesis' in window){
     speechSynthesis.cancel();
   }

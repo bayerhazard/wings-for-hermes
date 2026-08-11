@@ -13762,6 +13762,9 @@ def handle_post(handler, parsed) -> bool:
     if parsed.path == "/api/tts":
         return _handle_tts(handler, parsed)
 
+    if parsed.path == "/api/tts/stream":
+        return _handle_tts_stream(handler, parsed)
+
     if parsed.path == "/api/client-events/log":
         if diag:
             diag.stage("read_client_event_body")
@@ -17925,6 +17928,51 @@ def _normalize_tts_prosody(value, *, unit: str) -> str | None:
 
 _TTS_PROXY_MAX_BYTES = 16 * 1024 * 1024
 _TTS_LOCALHOST_HOSTS = {"127.0.0.1", "::1", "localhost"}
+# Per-sentence upstream timeout for the streaming TTS proxy. The sync endpoint
+# hardcoded 30s, which long local-TTS responses (Voxtral ~1.5-3x realtime)
+# routinely exceeded — the proxy then answered 500 and the browser heard
+# nothing. Env-configurable: HERMES_WEBUI_TTS_TIMEOUT (seconds, default 300).
+_TTS_TIMEOUT = max(30, int(os.getenv("HERMES_WEBUI_TTS_TIMEOUT", "300") or "300"))
+
+
+class _SpeechSentenceChunker:
+    """Incremental sentence cutter for TTS streaming (port of the Hermes
+    agent's ``tools.tts_streaming.SentenceChunker``, same split rules and
+    ``min_len`` semantics so Wings and the agent cut speech identically).
+
+    Splits on ``[.!?]`` + whitespace or blank lines; strips ``<think>``
+    blocks (even split across deltas); fragments shorter than ``min_len``
+    ride along with the following sentence so a tiny clip never stalls the
+    queue.
+    """
+
+    _BOUNDARY_RE = re.compile(r"(?<=[.!?])(?:\s|\n)|(?:\n\n)")
+    _THINK_RE = re.compile(r"<think[\s>].*?</think>", flags=re.DOTALL)
+
+    def __init__(self, min_len: int = 20):
+        self.min_len = min_len
+        self.buf = ""
+
+    def feed(self, delta: str):
+        self.buf = self._THINK_RE.sub("", self.buf + delta)
+        if "<think" in self.buf and "</think>" not in self.buf:
+            return []
+        out = []
+        start = 0
+        while m := self._BOUNDARY_RE.search(self.buf, start):
+            head = self.buf[: m.end()]
+            if len(head.strip()) < self.min_len:
+                start = m.end()
+                continue
+            out.append(head)
+            self.buf = self.buf[m.end():]
+            start = 0
+        return out
+
+    def flush(self):
+        tail = self._THINK_RE.sub("", self.buf).strip()
+        self.buf = ""
+        return [tail] if tail else []
 
 
 def _tts_addr_is_blocked(ip_str: str) -> bool:
@@ -18198,6 +18246,128 @@ def _tts_open(req, *, timeout=30, opener_factory=None):
     return _urlopen(req, timeout=timeout)
 
 
+class _TtsRateLimiter:
+    """Per-client 2 s window limiter shared by the sync and streaming TTS
+    endpoints (single instance, created lazily and owned by
+    ``_handle_tts._tts_limiter`` so tests can reset it)."""
+
+    def __init__(self, window_seconds=2.0, prune_interval=50):
+        self.window = window_seconds
+        self.prune_interval = prune_interval
+        self._hits = {}
+        self._lock = threading.Lock()
+        self._checks = 0
+
+    def _get_client_key(self, h):
+        trust_proxy = os.getenv("HERMES_WEBUI_TRUST_FORWARDED_FOR", "").strip().lower()
+        if trust_proxy in ("1", "true", "yes", "on"):
+            for hdr in ("X-Forwarded-For", "X-Real-IP", "Forwarded"):
+                val = h.headers.get(hdr)
+                if val:
+                    ip = val.split(",")[0].strip().split(";")[0].strip()
+                    if ip:
+                        return ip
+        return getattr(h, "client_address", ("unknown",))[0]
+
+    def check(self, handler, session_cookie=None):
+        key = self._get_client_key(handler)
+        if session_cookie and "." in str(session_cookie):
+            key = str(session_cookie).split(".", 1)[0]
+        now = time.time()
+        with self._lock:
+            self._checks += 1
+            if self._checks % self.prune_interval == 0:
+                cutoff = now - (self.window * 10)
+                self._hits = {k: v for k, v in self._hits.items() if v > cutoff}
+            last = self._hits.get(key, 0)
+            if now - last < self.window:
+                return False
+            self._hits[key] = now
+            return True
+
+
+def _ensure_tts_rate_limiter():
+    """Return the shared TTS rate limiter.
+
+    Owned as ``_handle_tts._tts_limiter`` (function attribute) so the existing
+    test reset hook (``del routes._handle_tts._tts_limiter``) keeps working;
+    the streaming endpoint reuses the same limiter as the sync endpoint.
+    """
+    limiter = getattr(_handle_tts, "_tts_limiter", None)
+    if limiter is None:
+        limiter = _TtsRateLimiter(window_seconds=2.0)
+        _handle_tts._tts_limiter = limiter
+    return limiter
+
+
+def _resolve_openai_tts_config():
+    """Resolve (base_url, model, voice, api_key) for the OpenAI-compatible TTS
+    engine. Mirrors the sync endpoint's resolution order: shared Hermes
+    config.yaml ``tts.openai.*`` (base_url passed through the SSRF guard),
+    then VOICE_TOOLS_OPENAI_KEY / OPENAI_API_KEY / .env, then the config's
+    api_key. Raises ValueError on an invalid base_url."""
+    from urllib.parse import urlunsplit as _urlunsplit
+
+    base_url = _urlunsplit(("https", "api.openai.com", "/v1", "", ""))
+    model = "gpt-4o-mini-tts"
+    voice = "alloy"
+    api_key = ""
+    oai_cfg = None
+    try:
+        from api.config import get_config
+        tts_cfg = (get_config() or {}).get("tts", {})
+        if isinstance(tts_cfg, dict):
+            oai_cfg = tts_cfg.get("openai", {})
+            if isinstance(oai_cfg, dict):
+                base_url = _normalized_openai_tts_base_url(oai_cfg.get("base_url") or base_url)
+                model = oai_cfg.get("model") or model
+                voice = oai_cfg.get("voice") or voice
+            else:
+                base_url = _normalized_openai_tts_base_url(base_url)
+        else:
+            base_url = _normalized_openai_tts_base_url(base_url)
+    except ValueError:
+        raise ValueError("invalid OpenAI base_url in config")
+    except Exception:
+        pass
+
+    api_key = os.getenv("VOICE_TOOLS_OPENAI_KEY", "").strip()
+    if not api_key:
+        api_key = os.getenv("OPENAI_API_KEY", "").strip()
+    if not api_key:
+        try:
+            from api.onboarding import _load_env_file
+            from api.profiles import get_active_hermes_home
+            env_cfg = _load_env_file(get_active_hermes_home() / ".env")
+            api_key = env_cfg.get("VOICE_TOOLS_OPENAI_KEY", "") or env_cfg.get("OPENAI_API_KEY", "")
+        except Exception:
+            pass
+    if not api_key and isinstance(oai_cfg, dict):
+        api_key = (oai_cfg.get("api_key") or "").strip()
+    return base_url, model, voice, api_key
+
+
+def _synthesize_openai_sentence(base_url, model, voice, api_key, sentence):
+    """Synthesize one sentence through the OpenAI-compatible speech endpoint
+    and return the buffered audio bytes (empty on a non-audio upstream)."""
+    from urllib.request import Request
+
+    url = f"{base_url}/audio/speech"
+    req_body = json.dumps({
+        "model": model,
+        "input": sentence,
+        "voice": voice,
+    }).encode("utf-8")
+
+    req = Request(url, data=req_body, headers={
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json",
+        "Accept": "audio/mpeg",
+    })
+    with _tts_open(req, timeout=_TTS_TIMEOUT, opener_factory=lambda: build_opener(ProxyHandler({}), _NoRedirectTtsHandler(), _PinnedHTTPSHandler())) as resp:
+        return _buffer_tts_audio_response(resp)
+
+
 def _handle_tts(handler, parsed):
     """Generate TTS audio via supported server TTS engines. POST JSON body only.
 
@@ -18258,47 +18428,9 @@ def _handle_tts(handler, parsed):
             from api.helpers import bad as _bad
             return _bad(handler, "unauthorized", 401)
 
-    # High-quality per-client rate limiting for TTS.
-    if not hasattr(_handle_tts, "_tts_limiter"):
-        import time as _time, threading as _threading
-        class _TtsRateLimiter:
-            def __init__(self, window_seconds=2.0, prune_interval=50):
-                self.window = window_seconds
-                self.prune_interval = prune_interval
-                self._hits = {}
-                self._lock = _threading.Lock()
-                self._checks = 0
-
-            def _get_client_key(self, h):
-                trust_proxy = os.getenv("HERMES_WEBUI_TRUST_FORWARDED_FOR", "").strip().lower()
-                if trust_proxy in ("1", "true", "yes", "on"):
-                    for hdr in ("X-Forwarded-For", "X-Real-IP", "Forwarded"):
-                        val = h.headers.get(hdr)
-                        if val:
-                            ip = val.split(",")[0].strip().split(";")[0].strip()
-                            if ip:
-                                return ip
-                return getattr(h, "client_address", ("unknown",))[0]
-
-            def check(self, handler, session_cookie=None):
-                key = self._get_client_key(handler)
-                if session_cookie and "." in str(session_cookie):
-                    key = str(session_cookie).split(".", 1)[0]
-                now = _time.time()
-                with self._lock:
-                    self._checks += 1
-                    if self._checks % self.prune_interval == 0:
-                        cutoff = now - (self.window * 10)
-                        self._hits = {k: v for k, v in self._hits.items() if v > cutoff}
-                    last = self._hits.get(key, 0)
-                    if now - last < self.window:
-                        return False
-                    self._hits[key] = now
-                    return True
-
-        _handle_tts._tts_limiter = _TtsRateLimiter(window_seconds=2.0)
-
-    limiter = _handle_tts._tts_limiter
+    # High-quality per-client rate limiting for TTS (shared by the sync
+    # endpoint and the streaming endpoint).
+    limiter = _ensure_tts_rate_limiter()
     if not limiter.check(handler, cv):
         logger.warning("TTS rate limit hit for client=%s", limiter._get_client_key(handler))
         from api.helpers import bad as _bad
@@ -18361,7 +18493,7 @@ def _handle_tts(handler, parsed):
         # payloads. A hard cap keeps the buffered path bounded even if the
         # upstream misbehaves.
         try:
-            with _tts_open(req, timeout=30, opener_factory=lambda: build_opener(ProxyHandler({}), _NoRedirectTtsHandler())) as resp:
+            with _tts_open(req, timeout=_TTS_TIMEOUT, opener_factory=lambda: build_opener(ProxyHandler({}), _NoRedirectTtsHandler())) as resp:
                 audio_data = _buffer_tts_audio_response(resp)
         except ValueError:
             logger.warning("ElevenLabs TTS rejected an invalid upstream response", exc_info=True)
@@ -18385,48 +18517,18 @@ def _handle_tts(handler, parsed):
 
     # ── OpenAI-compatible TTS ──────────────────────────────────────────
     if engine == "openai":
-        from urllib.parse import urlunsplit as _urlunsplit
-
         # Resolve the shared Hermes config.yaml once so both the endpoint
         # (base_url/model/voice) and the API key can fall back to it. Wings
         # and Hermes share the same HERMES_HOME, so tts.openai.* here is the
         # same config the user set up in Hermes.
-        base_url = _urlunsplit(("https", "api.openai.com", "/v1", "", ""))
-        model = "gpt-4o-mini-tts"
-        oai_voice = "alloy"
-        oai_cfg = None
         try:
-            from api.config import get_config
-            tts_cfg = (get_config() or {}).get("tts", {})
-            if isinstance(tts_cfg, dict):
-                oai_cfg = tts_cfg.get("openai", {})
-                if isinstance(oai_cfg, dict):
-                    base_url = _normalized_openai_tts_base_url(oai_cfg.get("base_url") or base_url)
-                    model = oai_cfg.get("model") or model
-                    oai_voice = oai_cfg.get("voice") or oai_voice
-                else:
-                    base_url = _normalized_openai_tts_base_url(base_url)
-            else:
-                base_url = _normalized_openai_tts_base_url(base_url)
+            base_url, model, oai_voice, api_key = _resolve_openai_tts_config()
         except ValueError:
             from api.helpers import bad as _bad
             return _bad(handler, "invalid OpenAI base_url in config", 400)
         except Exception:
-            pass
-
-        api_key = os.getenv("VOICE_TOOLS_OPENAI_KEY", "").strip()
-        if not api_key:
-            api_key = os.getenv("OPENAI_API_KEY", "").strip()
-        if not api_key:
-            try:
-                from api.onboarding import _load_env_file
-                from api.profiles import get_active_hermes_home
-                env_cfg = _load_env_file(get_active_hermes_home() / ".env")
-                api_key = env_cfg.get("VOICE_TOOLS_OPENAI_KEY", "") or env_cfg.get("OPENAI_API_KEY", "")
-            except Exception:
-                pass
-        if not api_key and isinstance(oai_cfg, dict):
-            api_key = (oai_cfg.get("api_key") or "").strip()
+            from api.helpers import bad as _bad
+            return _bad(handler, "invalid OpenAI base_url in config", 400)
         if not api_key:
             from api.helpers import bad as _bad
             return _bad(handler, "OpenAI API key not configured", 503)
@@ -18448,7 +18550,7 @@ def _handle_tts(handler, parsed):
         # dialed. Keep the no-redirect handler in the same chain to block
         # bearer leaks and SSRF bounce redirects after hostname validation.
         try:
-            with _tts_open(req, timeout=30, opener_factory=lambda: build_opener(ProxyHandler({}), _NoRedirectTtsHandler(), _PinnedHTTPSHandler())) as resp:
+            with _tts_open(req, timeout=_TTS_TIMEOUT, opener_factory=lambda: build_opener(ProxyHandler({}), _NoRedirectTtsHandler(), _PinnedHTTPSHandler())) as resp:
                 audio_data = _buffer_tts_audio_response(resp)
         except ValueError:
             logger.warning("OpenAI TTS rejected an invalid upstream response", exc_info=True)
@@ -18528,6 +18630,100 @@ def _handle_tts(handler, parsed):
         logger.exception("Edge TTS generation failed")
         from api.helpers import bad as _bad
         return _bad(handler, "TTS generation failed", 500)
+
+
+def _handle_tts_stream(handler, parsed):
+    """Streaming OpenAI-compatible TTS (POST JSON ``{"text": "..."}``).
+
+    Splits the text into sentences (same cutter as the Hermes agent's
+    streaming TTS), synthesizes each sentence through the configured
+    OpenAI-compatible endpoint, and forwards every completed sentence as an
+    SSE ``data:`` event so the browser starts speaking after the first
+    sentence instead of after the whole reply. Payloads:
+
+    ``{"b64": "<audio>", "idx": N}`` — one completed sentence's audio
+    ``{"done": true}``                                — end of stream
+    ``{"error": "..."}``                              — terminal failure
+    """
+    if handler.command != "POST":
+        from api.helpers import bad as _bad
+        return _bad(handler, "POST required for /api/tts/stream", 405)
+
+    try:
+        data = read_body(handler)
+        text = (data.get("text") or "").strip()
+    except Exception:
+        from api.helpers import bad as _bad
+        return _bad(handler, "invalid request body", 400)
+
+    if not text:
+        from api.helpers import bad as _bad
+        return _bad(handler, "text is required", 400)
+    if len(text) > 5000:
+        from api.helpers import bad as _bad
+        return _bad(handler, "text too long (max 5000 characters)", 400)
+
+    from api.auth import is_auth_enabled, parse_cookie, verify_session
+    cv = None
+    if is_auth_enabled():
+        cv = parse_cookie(handler)
+        if not (cv and verify_session(cv)):
+            from api.helpers import bad as _bad
+            return _bad(handler, "unauthorized", 401)
+
+    limiter = _ensure_tts_rate_limiter()
+    if not limiter.check(handler, cv):
+        logger.warning("TTS rate limit hit for client=%s", limiter._get_client_key(handler))
+        from api.helpers import bad as _bad
+        return _bad(handler, "rate limit exceeded — please wait", 429)
+
+    try:
+        base_url, model, oai_voice, api_key = _resolve_openai_tts_config()
+    except ValueError:
+        from api.helpers import bad as _bad
+        return _bad(handler, "invalid OpenAI base_url in config", 400)
+    if not api_key:
+        from api.helpers import bad as _bad
+        return _bad(handler, "OpenAI API key not configured", 503)
+
+    chunker = _SpeechSentenceChunker()
+    sentences = chunker.feed(text) + chunker.flush()
+    if not sentences:
+        # Single block too short to cut — speak it whole.
+        sentences = [text]
+
+    handler.send_response(200)
+    handler.send_header("Content-Type", "text/event-stream; charset=utf-8")
+    handler.send_header("Cache-Control", "no-store")
+    handler.send_header("X-Accel-Buffering", "no")
+    handler.end_headers()
+
+    import base64 as _b64
+
+    def _emit(payload):
+        handler.wfile.write(f"data: {json.dumps(payload)}\n\n".encode("utf-8"))
+        handler.wfile.flush()
+
+    try:
+        for idx, sentence in enumerate(sentences):
+            try:
+                audio_data = _synthesize_openai_sentence(base_url, model, oai_voice, api_key, sentence)
+            except ValueError:
+                logger.warning("Streaming TTS rejected an invalid upstream response", exc_info=True)
+                continue
+            if not audio_data:
+                continue
+            _emit({"b64": _b64.b64encode(audio_data).decode("ascii"), "idx": idx})
+        _emit({"done": True})
+    except (BrokenPipeError, ConnectionResetError):
+        return True
+    except Exception:
+        logger.exception("Streaming TTS failed")
+        try:
+            _emit({"error": "TTS generation failed"})
+        except Exception:
+            pass
+    return True
 def _html_preview_with_blank_base(raw: bytes) -> bytes:
     base = '<base target="_blank">'
     text = raw.decode("utf-8", errors="replace")

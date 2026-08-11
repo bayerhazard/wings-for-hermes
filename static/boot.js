@@ -1750,6 +1750,7 @@ window._wingsTtsSynth=function(id, text, opts){
       showToast(t('mic_insecure_origin'));
       return;
     }
+    _bargeStop();
     _clearBrowserTtsRecovery();
     _setState('listening');
 
@@ -1823,20 +1824,147 @@ window._wingsTtsSynth=function(id, text, opts){
 
   function _voiceModeSend(){
     if(!_voiceModeActive) return;
-    const text=(ta.value||'').trim();
+    let text=(ta.value||'').trim();
     if(!text){
       ta.value='';
       setTimeout(()=>{ if(_voiceModeActive) _startListening(); },300);
       return;
     }
+    // Barge-in latch: if the user interrupted the previous spoken reply, tell
+    // the model (same note text as the Hermes agent's take_speech_interrupted).
+    if(_bargeInterrupted){
+      _bargeInterrupted=false;
+      text='[Note: the user interrupted your previous spoken reply before it finished.] '+text;
+    }
+    ta.value=text;
     _setState('thinking');
     // Pin the active session id so the TTS callback won't speak a different
     // session's reply if the user navigates away mid-stream.
     _voiceModeThinkingSid=(typeof S!=='undefined'&&S.session)?S.session.session_id:null;
     try{ if(_recognition) _recognition.abort(); }catch(_){}
     _recognition=null;
+    // Arm the full-duplex barge monitor: the user can cut in by voice during
+    // generation AND playback, not only while listening.
+    _bargeStart();
     // send() is global from boot.js
     if(typeof send==='function') send();
+  }
+
+  // ── Barge-in (Unterbrechungserkennung) ────────────────────────────────
+  // Port of the Hermes agent's listen_for_speech VAD (rolling noise-floor
+  // calibration, 8x trigger, 300ms sustained) to the Web Audio API. Armed at
+  // turn start (_voiceModeSend) so the user can cut in by voice during
+  // generation AND playback — the classic half-duplex gap (mic only open
+  // while idle/listening) is closed. Best-effort: if the mic can't be opened
+  // or Web Audio is unavailable, barge-in silently degrades to normal voice
+  // mode.
+  const _BARGE_BLOCK_MS=30;
+  const _BARGE_CALIB_BLOCKS=13;     // ~400ms quiet-room calibration
+  const _BARGE_TRIP_BLOCKS=10;      // ~300ms sustained above trigger
+  const _BARGE_WINDOW_BLOCKS=100;   // ~3s rolling floor window
+  const _BARGE_SILENCE_RMS=200;
+  const _BARGE_MIN_FLOOR=_BARGE_SILENCE_RMS*2;   // floor never below 400
+  const _BARGE_TRIGGER_MULT=8;      // TTS speaker-bleed headroom
+  const _BARGE_TRIGGER_CAP=4000;    // never let trigger exceed this
+  let _bargeActive=false;
+  let _bargeInterrupted=false;
+  let _bargeCtx=null;
+  let _bargeStream=null;
+  let _bargeAnalyser=null;
+  let _bargeBuf=null;
+  let _bargeTimer=null;
+  let _bargeFloor=[];
+  let _bargeMinFloor=0;
+  let _bargeConsecutive=0;
+
+  function _bargePercentile(values,p){
+    if(!values.length) return 0;
+    const sorted=values.slice().sort((a,b)=>a-b);
+    const idx=Math.min(sorted.length-1,Math.floor((p/100)*(sorted.length-1)));
+    return sorted[idx];
+  }
+
+  function _bargeStop(){
+    _bargeActive=false;
+    if(_bargeTimer){ clearInterval(_bargeTimer); _bargeTimer=null; }
+    if(_bargeStream){
+      try{ _bargeStream.getTracks().forEach(t=>t.stop()); }catch(_){}
+      _bargeStream=null;
+    }
+    if(_bargeCtx){
+      try{ _bargeCtx.close(); }catch(_){}
+      _bargeCtx=null;
+    }
+    _bargeAnalyser=null;
+    _bargeBuf=null;
+    _bargeFloor=[];
+    _bargeMinFloor=0;
+    _bargeConsecutive=0;
+  }
+
+  function _bargeStart(){
+    if(!_voiceModeActive||_bargeActive) return;
+    if(_micOriginNeedsSecureContext()) return;
+    const C=window.AudioContext||window.webkitAudioContext;
+    if(!C||!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia) return;
+    _bargeActive=true;
+    _bargeFloor=[];
+    _bargeMinFloor=0;
+    _bargeConsecutive=0;
+    navigator.mediaDevices.getUserMedia({audio:true}).then(stream=>{
+      if(!_bargeActive){
+        try{ stream.getTracks().forEach(t=>t.stop()); }catch(_){}
+        return;
+      }
+      _bargeStream=stream;
+      try{
+        _bargeCtx=new C();
+        const src=_bargeCtx.createMediaStreamSource(stream);
+        _bargeAnalyser=_bargeCtx.createAnalyser();
+        _bargeAnalyser.fftSize=2048;
+        _bargeAnalyser.smoothingTimeConstant=0;
+        src.connect(_bargeAnalyser);
+        _bargeBuf=new Float32Array(_bargeAnalyser.fftSize);
+        _bargeTimer=setInterval(_bargeTick,_BARGE_BLOCK_MS);
+      }catch(_){ _bargeStop(); }
+    }).catch(()=>{ _bargeActive=false; });
+  }
+
+  function _bargeTick(){
+    if(!_bargeActive||!_bargeAnalyser||!_bargeBuf) return;
+    _bargeAnalyser.getFloatTimeDomainData(_bargeBuf);
+    let sum=0;
+    for(let i=0;i<_bargeBuf.length;i++){ const v=_bargeBuf[i]; sum+=v*v; }
+    const rms=Math.sqrt(sum/_bargeBuf.length)*32768;   // int16-scale RMS
+    if(_bargeFloor.length<_BARGE_CALIB_BLOCKS){
+      _bargeFloor.push(rms);
+      return;
+    }
+    if(_bargeMinFloor===0){
+      _bargeMinFloor=Math.max(_bargePercentile(_bargeFloor,90),_BARGE_MIN_FLOOR);
+    }
+    const floor=Math.max(_bargePercentile(_bargeFloor,90),_bargeMinFloor);
+    let trigger=Math.max(_BARGE_MIN_FLOOR,floor*_BARGE_TRIGGER_MULT);
+    trigger=Math.min(trigger,_BARGE_TRIGGER_CAP);
+    if(rms<trigger){
+      if(_bargeFloor.length>=_BARGE_WINDOW_BLOCKS) _bargeFloor.shift();
+      _bargeFloor.push(rms);
+    }
+    _bargeConsecutive = (rms>=trigger) ? _bargeConsecutive+1 : 0;
+    if(_bargeConsecutive>=_BARGE_TRIP_BLOCKS){
+      _bargeConsecutive=0;
+      _bargeTripped();
+    }
+  }
+
+  function _bargeTripped(){
+    _bargeInterrupted=true;
+    _bargeStop();
+    // Cut any playing TTS immediately, then listen for the interruption.
+    if(typeof stopTTS==='function') stopTTS();
+    if(_voiceModeActive&&_voiceModeState!=='listening'){
+      _startListening();
+    }
   }
 
   function _speakResponse(){
@@ -1959,42 +2087,12 @@ window._wingsTtsSynth=function(id, text, opts){
       return;
     }
     if(engine==="openai"){
-      _ttsSpeaking=true;
-      fetch(new URL('api/tts', document.baseURI || location.href).href, {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({text: clean, engine: 'openai'})
-      })
-      .then(r => {
-        if(!r.ok) throw new Error('TTS request failed: ' + r.status);
-        return r.blob();
-      })
-      .then(blob => {
-        const url = URL.createObjectURL(blob);
-        const audio = new Audio(url);
-        _playingEdgeAudio=audio;
-        audio.onended = () => {
-          _ttsSpeaking=false;
-          if(_playingEdgeAudio===audio) _playingEdgeAudio=null;
-          URL.revokeObjectURL(url);
-          if(_voiceModeActive) setTimeout(()=>_startListening(),500);
-        };
-        audio.onerror = () => {
-          _ttsSpeaking=false;
-          if(_playingEdgeAudio===audio) _playingEdgeAudio=null;
-          URL.revokeObjectURL(url);
-          if(_voiceModeActive) setTimeout(()=>_startListening(),1000);
-        };
-        audio.play().catch(() => {
-          _ttsSpeaking=false;
-          if(_playingEdgeAudio===audio) _playingEdgeAudio=null;
-          URL.revokeObjectURL(url);
-          if(_voiceModeActive) setTimeout(()=>_startListening(),1000);
-        });
-      })
-      .catch(() => {
-        _ttsSpeaking=false;
-        if(_voiceModeActive) setTimeout(()=>_startListening(),1000);
+      // Streaming path: the server synthesizes sentence-by-sentence and the
+      // browser plays each completed sentence immediately (first audio after
+      // ~1 sentence instead of after the whole reply). onDone returns to
+      // listening when the queue drains.
+      _playOpenaiTts(clean, null, function(){
+        if(_voiceModeActive) setTimeout(()=>_startListening(),500);
       });
       return;
     }
@@ -2117,6 +2215,8 @@ window._wingsTtsSynth=function(id, text, opts){
       _speakResponse();
       return;
     }
+    // The user cut in mid-reply (barge-in) — never auto-read over them.
+    if(_voiceModeActive&&_bargeInterrupted) return;
     if(_origAutoRead) _origAutoRead.apply(this,arguments);
   };
 
@@ -2143,6 +2243,8 @@ window._wingsTtsSynth=function(id, text, opts){
     _voiceModeActive=false;
     _voiceModeState='idle';
     _voiceModeThinkingSid=null;
+    _bargeInterrupted=false;
+    _bargeStop();
     _browserTtsSuppressNextErrorRearm=false;
     modeBtn.classList.remove('active');
     _setButtonTooltip(modeBtn, t('voice_mode_toggle'));

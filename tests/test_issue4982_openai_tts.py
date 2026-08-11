@@ -643,11 +643,17 @@ def test_openai_voice_placeholder_in_panels():
 
 def test_play_openai_tts_exists_in_ui_js():
     src = (STATIC_DIR / "ui.js").read_text(encoding="utf-8")
-    assert 'function _playOpenaiTts(text, btn)' in src
-    assert "body:JSON.stringify({text:text, engine:'openai'})" in src
+    assert 'function _playOpenaiTts(text, btn' in src
+    # Streaming path: sentence-level synthesis via /api/tts/stream with
+    # progressive browser playback (conversational voice).
+    assert "api/tts/stream" in src
+    assert "body:JSON.stringify({text:text})" in src
 
 
 def test_boot_js_handles_openai_engine():
     src = (STATIC_DIR / "boot.js").read_text(encoding="utf-8")
     assert 'if(engine==="openai")' in src
-    assert "body: JSON.stringify({text: clean, engine: 'openai'})" in src
+    # Voice mode uses the streaming player and returns to listening when the
+    # sentence queue drains.
+    assert "_playOpenaiTts(clean, null, function(){" in src
+    assert "_startListening();" in src

@@ -1,10 +1,10 @@
 image:
   repository: ghcr.io/bayerhazard/wings-for-hermes
-  tag: "26.08.2"
+  tag: "26.08.3"
   pullPolicy: Always
 agentImage:
   repository: beclab/harveyff-hermes-agent
-  tag: "v2026.7.1-uid1000"
+  tag: "v2026.8.3-uid1000"
   pullPolicy: IfNotPresent
 workloads:
   wings:
@@ -23,6 +23,7 @@ env:
   HERMES_WEBUI_SSE_CHUNKED: "1"
   HERMES_WEBUI_AGENT_DIR: "/home/hermeswebui/.hermes/hermes-agent"
   HERMES_WEBUI_AUTO_INSTALL: "1"
+  HERMES_WEBUI_TTS_TIMEOUT: "300"
   WANTED_UID: "1000"
   WANTED_GID: "1000"
   TZ: Etc/UTC
