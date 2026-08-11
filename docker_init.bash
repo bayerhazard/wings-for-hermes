@@ -466,7 +466,11 @@ else
     fi
     chmod -R u+w "$_stage_src" \
       || error_exit "Failed to make staged hermes-agent source writable (rsync/cp preserved :ro mount perms)"
-    uv pip install "$_stage_src[all]" --trusted-host pypi.org --trusted-host files.pythonhosted.org \
+    # Editable install: hermes-agent >= v2026.8.3 refuses sdist/wheel builds
+    # ("Building wheels or sdists for hermes-agent is not supported"), so a
+    # plain `uv pip install "$_stage_src[all]"` aborts with exit 42. `-e`
+    # (editable) is the officially supported dev path.
+    uv pip install -e "$_stage_src[all]" --trusted-host pypi.org --trusted-host files.pythonhosted.org \
       || error_exit "Failed to install hermes-agent's requirements"
     rm -rf "$_stage_src"
   else
