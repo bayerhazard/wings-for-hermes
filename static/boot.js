@@ -1798,8 +1798,15 @@ window._wingsTtsSynth=function(id, text, opts){
     _recognition.onerror=(event)=>{
       clearTimeout(_silenceTimer);
       if(event.error==='no-speech'||event.error==='aborted'){
-        // Restart if still active
-        if(_voiceModeActive){
+        // Restart ONLY while actually listening — never over an in-flight
+        // turn. _voiceModeSend() aborts the recognition, which fires
+        // 'aborted' here moments later; without the state guard this yanks
+        // voice mode back to "Hören" ~800ms after every send, so the
+        // assistant's reply arrives while the mic is already listening
+        // again, the autoReadLastAssistant guard (state==='thinking')
+        // blocks _speakResponse, and no TTS ever plays. The onend handler
+        // below already has the same 'listening' guard.
+        if(_voiceModeActive&&_voiceModeState==='listening'){
           setTimeout(()=>{ if(_voiceModeActive) _startListening(); },800);
         }
         return;
@@ -1810,8 +1817,8 @@ window._wingsTtsSynth=function(id, text, opts){
         showToast(messageKey?t(messageKey):t('mic_error')+event.error);
         return;
       }
-      // Other errors — try to restart
-      if(_voiceModeActive){
+      // Other errors — restart only while actually listening.
+      if(_voiceModeActive&&_voiceModeState==='listening'){
         setTimeout(()=>{ if(_voiceModeActive) _startListening(); },1500);
       }
     };
