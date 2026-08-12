@@ -1889,6 +1889,9 @@ window._wingsTtsSynth=function(id, text, opts){
   const _BARGE_PLAYBACK_SEED_BLOCKS=60;   // ~1.8s bleed-floor seed
   const _BARGE_MIC_RETRIES=3;
   const _BARGE_MIC_RETRY_MS=400;
+  const _BARGE_PREROLL_CHUNKS=18;         // ~1.5s pre-roll ring buffer (4096/48k)
+  const _BARGE_CAPTURE_MAX_MS=10000;      // interruption capture cap
+  const _BARGE_CAPTURE_ENDPOINT_MS=1200;  // silence endpointing
   let _bargeActive=false;
   let _bargeInterrupted=false;
   let _bargeCtx=null;
@@ -1896,6 +1899,8 @@ window._wingsTtsSynth=function(id, text, opts){
   let _bargeAnalyser=null;
   let _bargeBuf=null;
   let _bargeTimer=null;
+  let _bargeProc=null;
+  let _bargePreRoll=[];
   let _bargeMicAttempts=0;
   let _bargeAmbient=[];
   let _bargeQuietFloor=0;
@@ -1920,11 +1925,16 @@ window._wingsTtsSynth=function(id, text, opts){
     return !!_playingEdgeAudio;
   }
 
-  function _bargeStop(){
+  function _bargeStop(keepStream){
     _bargeActive=false;
     if(_bargeTimer){ clearInterval(_bargeTimer); _bargeTimer=null; }
+    if(_bargeProc){ try{ _bargeProc.onaudioprocess=null; _bargeProc.disconnect(); }catch(_){} _bargeProc=null; }
     if(_bargeStream){
-      try{ _bargeStream.getTracks().forEach(t=>t.stop()); }catch(_){}
+      // keepStream=true hands the mic to the interruption capture
+      // (transcribe-from-pre-roll); otherwise release the device.
+      if(!keepStream){
+        try{ _bargeStream.getTracks().forEach(t=>t.stop()); }catch(_){}
+      }
       _bargeStream=null;
     }
     if(_bargeCtx){
@@ -1933,6 +1943,7 @@ window._wingsTtsSynth=function(id, text, opts){
     }
     _bargeAnalyser=null;
     _bargeBuf=null;
+    _bargePreRoll=[];
     _bargeAmbient=[];
     _bargeQuietFloor=0;
     _bargeFloorLocked=false;
@@ -1974,6 +1985,25 @@ window._wingsTtsSynth=function(id, text, opts){
         _bargeAnalyser.smoothingTimeConstant=0;
         src.connect(_bargeAnalyser);
         _bargeBuf=new Float32Array(_bargeAnalyser.fftSize);
+        // Pre-roll ring buffer: continuously capture the mic PCM so a barge-in
+        // can be transcribed FROM ITS FIRST WORD (the VAD trip only fires
+        // after ~300-500ms of speech — without pre-roll those first words are
+        // lost and the interruption comes back empty).
+        try{
+          const proc=_bargeCtx.createScriptProcessor(4096,1,1);
+          _bargePreRoll=[];
+          proc.onaudioprocess=function(e){
+            const d=e.inputBuffer.getChannelData(0);
+            if(_bargePreRoll.length>=_BARGE_PREROLL_CHUNKS) _bargePreRoll.shift();
+            _bargePreRoll.push(new Float32Array(d));
+          };
+          const silent=_bargeCtx.createGain();
+          silent.gain.value=0;
+          src.connect(proc);
+          proc.connect(silent);
+          silent.connect(_bargeCtx.destination);
+          _bargeProc=proc;
+        }catch(_){ _bargePreRoll=[]; _bargeProc=null; }
         _bargeTimer=setInterval(_bargeTick,_BARGE_BLOCK_MS);
         console.debug('[wings-barge] monitor armed');
       }catch(_){ _bargeStop(); }
@@ -2084,13 +2114,123 @@ window._wingsTtsSynth=function(id, text, opts){
 
   function _bargeTripped(){
     _bargeInterrupted=true;
-    _bargeStop();
-    // Cut any playing TTS immediately, then listen for the interruption.
-    // Small delay lets the mic tracks release before SpeechRecognition
-    // re-opens the device (avoids an 'audio-capture' race).
+    // Cut any playing TTS immediately.
     if(typeof stopTTS==='function') stopTTS();
-    if(_voiceModeActive&&_voiceModeState!=='listening'){
+    // Hand the mic to the interruption capture: the pre-roll ring buffer
+    // holds the last ~1.5s of mic audio, so the user's spoken interruption
+    // is transcribed FROM ITS FIRST WORD (a fresh SpeechRecognition here
+    // would start too late — the first words, often the whole "Stopp",
+    // fall into the VAD-trip detection gap and the transcript comes back
+    // empty, leaving the mode stuck on "Höre zu...").
+    const stream=_bargeStream;
+    const preRoll=_bargePreRoll.slice();
+    _bargeStop(true);
+    if(stream&&_voiceModeActive&&_voiceModeState!=='listening'){
+      _captureInterruption(stream, preRoll);
+    }else if(_voiceModeActive&&_voiceModeState!=='listening'){
       setTimeout(()=>{ if(_voiceModeActive) _startListening(); },150);
+    }
+  }
+
+  // Encode captured Float32 mono PCM chunks into a 16-bit WAV blob.
+  function _bargeEncodeWav(chunks, sampleRate){
+    let total=0;
+    for(let c=0;c<chunks.length;c++) total+=chunks[c].length;
+    const data=new Int16Array(total);
+    let off=0;
+    for(let c=0;c<chunks.length;c++){
+      const d=chunks[c];
+      for(let i=0;i<d.length;i++){
+        const v=Math.max(-1,Math.min(1,d[i]));
+        data[off++]=(v<0?v*32768:v*32767)|0;
+      }
+    }
+    const bytes=new Uint8Array(44+data.length*2);
+    const dv=new DataView(bytes.buffer);
+    const wstr=function(s,o){for(let i=0;i<s.length;i++)bytes[o+i]=s.charCodeAt(i);};
+    wstr('RIFF',0); dv.setUint32(4,36+data.length*2,true); wstr('WAVE',8);
+    wstr('fmt ',12); dv.setUint32(16,16,true); dv.setUint16(20,1,true);
+    dv.setUint16(22,1,true); dv.setUint32(24,sampleRate,true);
+    dv.setUint32(28,sampleRate*2,true); dv.setUint16(32,2,true); dv.setUint16(34,16,true);
+    wstr('data',36); dv.setUint32(40,data.length*2,true);
+    new Uint8Array(data.buffer,data.byteOffset,data.byteLength).forEach((b,i)=>bytes[44+i]=b);
+    return new Blob([bytes],{type:'audio/wav'});
+  }
+
+  // Record the interruption from the pre-roll ring + live mic until silence
+  // endpointing, transcribe it via the server STT and send it (with the
+  // interrupt note). Falls back to plain listening on empty/failure.
+  function _captureInterruption(stream, preRoll){
+    if(!_voiceModeActive) return;
+    _setState('listening');
+    console.debug('[wings-barge] capture start, preRoll=' + preRoll.length + ' chunks (' + Math.round(preRoll.length*4096/48) + 'ms)');
+    let ctx=null, proc=null, src=null;
+    let done=false;
+    const frames=preRoll.slice();
+    let quietBlocks=0;
+    let totalBlocks=0;
+    const BLOCK_MS=4096/48; // 4096 samples @48kHz ≈ 85ms
+    const endpointBlocks=Math.max(1,_BARGE_CAPTURE_ENDPOINT_MS/BLOCK_MS);
+    const maxBlocks=Math.max(1,_BARGE_CAPTURE_MAX_MS/BLOCK_MS);
+    const finish=function(ok){
+      if(done) return;
+      done=true;
+      if(proc){ try{ proc.onaudioprocess=null; proc.disconnect(); }catch(_){} }
+      try{ if(src) src.disconnect(); }catch(_){}
+      try{ if(ctx&&ctx.state!=='closed') ctx.close(); }catch(_){}
+      try{ stream.getTracks().forEach(t=>t.stop()); }catch(_){}
+      console.debug('[wings-barge] capture finished ok=' + ok + ' frames=' + frames.length + ' totalMs=' + Math.round(totalBlocks*BLOCK_MS));
+      if(!ok||!frames.length||!_voiceModeActive){ _startListening(); return; }
+      const wav=_bargeEncodeWav(frames, ctx?ctx.sampleRate:48000);
+      const fd=new FormData();
+      fd.append('file',new File([wav],'barge.wav',{type:'audio/wav'}));
+      fetch(new URL('api/transcribe', document.baseURI||location.href).href,{
+        method:'POST',body:fd
+      }).then(function(r){ return r.json().catch(function(){return {};}); })
+      .then(function(d){
+        const t=String((d&&d.transcript)||'').trim();
+        console.debug('[wings-barge] transcribe result: ' + JSON.stringify(t.slice(0,80)) + ' (wav ' + wav.size + ' bytes)');
+        if(t&&_voiceModeActive){
+          ta.value=t;
+          if(typeof autoResize==='function') autoResize();
+          _voiceModeSend();
+        }else{
+          _startListening();
+        }
+      }).catch(function(e){
+        console.debug('[wings-barge] transcribe fetch failed: ' + ((e&&e.message)||e));
+        _startListening();
+      });
+    };
+    try{
+      const C=window.AudioContext||window.webkitAudioContext;
+      ctx=new C();
+      if(ctx.state==='suspended'){ try{ ctx.resume().catch(function(){}); }catch(_){} }
+      src=ctx.createMediaStreamSource(stream);
+      proc=ctx.createScriptProcessor(4096,1,1);
+      proc.onaudioprocess=function(e){
+        const d=e.inputBuffer.getChannelData(0);
+        frames.push(new Float32Array(d));
+        totalBlocks++;
+        let sum=0;
+        for(let i=0;i<d.length;i++) sum+=d[i]*d[i];
+        const rms=Math.sqrt(sum/d.length)*32768;
+        if(rms<_BARGE_SILENCE_RMS*2) quietBlocks++;
+        else quietBlocks=0;
+        if(quietBlocks>=endpointBlocks||totalBlocks>=maxBlocks){
+          finish(true);
+        }
+      };
+      const silent=ctx.createGain();
+      silent.gain.value=0;
+      src.connect(proc);
+      proc.connect(silent);
+      silent.connect(ctx.destination);
+      // Safety net in case the capture graph never fires (suspended context
+      // without gesture, mic already dead, ...) — never leave the mode stuck.
+      setTimeout(function(){ finish(true); }, _BARGE_CAPTURE_MAX_MS+2000);
+    }catch(_){
+      finish(false);
     }
   }
 
