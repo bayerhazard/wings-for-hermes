@@ -1873,15 +1873,20 @@ window._wingsTtsSynth=function(id, text, opts){
   const _BARGE_CALIB_BLOCKS=15;     // ~450ms quiet-room calibration
   const _BARGE_TRIP_BLOCKS=10;      // ~300ms detection window
   const _BARGE_TRIP_NEEDED=8;       // >=80% of window above trigger
-  const _BARGE_GRACE_BLOCKS=16;     // ~500ms grace after playback onset
+  const _BARGE_GRACE_BLOCKS=60;     // ~1.8s trip-free playback onset (covers
+                                    // the bleed-floor seed phase)
   const _BARGE_WINDOW_BLOCKS=100;   // ~3s ambient drift window
   const _BARGE_SILENCE_RMS=200;     // agent SILENCE_RMS_THRESHOLD
   const _BARGE_MULT=3.0;            // agent DEFAULT_BARGE_MULTIPLIER
   const _BARGE_PLAYBACK_MIN_TRIGGER=1500; // agent PLAYBACK_MIN_TRIGGER
-  const _BARGE_PLAYBACK_MAX_TRIGGER=3000; // bleed can raise the trigger, but
-                                          // normal speech (3000-8000 RMS) must
-                                          // stay able to trip it
   const _BARGE_TRIGGER_CEILING=4000;
+  // Playback bleed handling: the first ~2s of playback are trip-free
+  // (grace + seed) while the bleed floor fills; afterwards the trigger is
+  // raised adaptively to clear the speaker bleed (4x over the rolling
+  // 90th-percentile floor), so loud speakers no longer false-trip the
+  // VAD while real speech (3000-8000 RMS) still can.
+  const _BARGE_BLEED_MULT=4.0;
+  const _BARGE_PLAYBACK_SEED_BLOCKS=60;   // ~1.8s bleed-floor seed
   const _BARGE_MIC_RETRIES=3;
   const _BARGE_MIC_RETRY_MS=400;
   let _bargeActive=false;
@@ -2023,20 +2028,23 @@ window._wingsTtsSynth=function(id, text, opts){
     // actually plays through loud speakers (bleed 1500-4000 RMS), killing
     // the playback every turn. Instead, track a rolling bleed floor from
     // the mic level while audio flows and raise the trigger adaptively:
-    //   trigger_playback = clamp(max(quiet*3, bleed*3), 1500, 3000)
-    // The bleed window is seeded during the grace window (playback onset is
-    // guaranteed non-speech there) and then fed only by blocks below the
-    // current trigger, so genuine speech never poisons it.
+    //   trigger_playback = clamp(max(quiet*3, bleed*4), 1500, 4000)
+    // The bleed window is seeded during the first ~2s of playback (the
+    // grace window + 60-block seed; speaker bleed sets in 50-300ms after
+    // playback starts, so a short seed leaves the floor empty and the
+    // late bleed trips the VAD). The seed phase is trip-free. Afterwards
+    // the window is fed only by blocks below the current trigger, so
+    // genuine speech never poisons it.
     let trigger=_bargeQuietFloor*_BARGE_MULT;
     if(playing){
-      if(_bargeGraceRemaining>0||_bargeBleed.length<10){
+      if(_bargeGraceRemaining>0||_bargeBleed.length<_BARGE_PLAYBACK_SEED_BLOCKS){
         _bargeBleed.push(rms);
       }else if(rms<trigger){
         if(_bargeBleed.length>=_BARGE_WINDOW_BLOCKS) _bargeBleed.shift();
         _bargeBleed.push(rms);
       }
       const bleed=_bargeBleed.length?_bargePercentile(_bargeBleed,90):0;
-      trigger=Math.max(trigger,Math.min(Math.max(bleed*_BARGE_MULT,_BARGE_PLAYBACK_MIN_TRIGGER),_BARGE_PLAYBACK_MAX_TRIGGER));
+      trigger=Math.max(trigger,Math.min(Math.max(bleed*_BARGE_BLEED_MULT,_BARGE_PLAYBACK_MIN_TRIGGER),_BARGE_TRIGGER_CEILING));
     }else{
       trigger=Math.max(trigger,_BARGE_SILENCE_RMS*2);
     }
