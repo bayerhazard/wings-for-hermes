@@ -1871,6 +1871,9 @@ window._wingsTtsSynth=function(id, text, opts){
   const _BARGE_SILENCE_RMS=200;     // agent SILENCE_RMS_THRESHOLD
   const _BARGE_MULT=3.0;            // agent DEFAULT_BARGE_MULTIPLIER
   const _BARGE_PLAYBACK_MIN_TRIGGER=1500; // agent PLAYBACK_MIN_TRIGGER
+  const _BARGE_PLAYBACK_MAX_TRIGGER=3000; // bleed can raise the trigger, but
+                                          // normal speech (3000-8000 RMS) must
+                                          // stay able to trip it
   const _BARGE_TRIGGER_CEILING=4000;
   const _BARGE_MIC_RETRIES=3;
   const _BARGE_MIC_RETRY_MS=400;
@@ -1885,6 +1888,7 @@ window._wingsTtsSynth=function(id, text, opts){
   let _bargeAmbient=[];
   let _bargeQuietFloor=0;
   let _bargeFloorLocked=false;
+  let _bargeBleed=[];               // rolling mic RMS while TTS plays (bleed)
   let _bargeRecentAbove=[];
   let _bargePlayingPrev=false;
   let _bargePlaybackSeen=false;
@@ -1920,6 +1924,7 @@ window._wingsTtsSynth=function(id, text, opts){
     _bargeAmbient=[];
     _bargeQuietFloor=0;
     _bargeFloorLocked=false;
+    _bargeBleed=[];
     _bargeRecentAbove=[];
     _bargePlayingPrev=false;
     _bargePlaybackSeen=false;
@@ -2005,10 +2010,29 @@ window._wingsTtsSynth=function(id, text, opts){
     _bargePlayingPrev=playing;
     _bargeBlocksSincePlayback=playing?0:_bargeBlocksSincePlayback+1;
 
-    // Trigger: quiet baseline x mult, phase-clamped.
+    // Trigger: quiet baseline x mult, phase-clamped. During playback the
+    // trigger must also clear the SPEAKER BLEED the mic picks up from the
+    // TTS itself — a fixed 1500 clamp false-trips as soon as the audio
+    // actually plays through loud speakers (bleed 1500-4000 RMS), killing
+    // the playback every turn. Instead, track a rolling bleed floor from
+    // the mic level while audio flows and raise the trigger adaptively:
+    //   trigger_playback = clamp(max(quiet*3, bleed*3), 1500, 3000)
+    // The bleed window is seeded during the grace window (playback onset is
+    // guaranteed non-speech there) and then fed only by blocks below the
+    // current trigger, so genuine speech never poisons it.
     let trigger=_bargeQuietFloor*_BARGE_MULT;
-    if(playing){ trigger=Math.max(trigger,_BARGE_PLAYBACK_MIN_TRIGGER); }
-    else{ trigger=Math.max(trigger,_BARGE_SILENCE_RMS*2); }
+    if(playing){
+      if(_bargeGraceRemaining>0||_bargeBleed.length<10){
+        _bargeBleed.push(rms);
+      }else if(rms<trigger){
+        if(_bargeBleed.length>=_BARGE_WINDOW_BLOCKS) _bargeBleed.shift();
+        _bargeBleed.push(rms);
+      }
+      const bleed=_bargeBleed.length?_bargePercentile(_bargeBleed,90):0;
+      trigger=Math.max(trigger,Math.min(Math.max(bleed*_BARGE_MULT,_BARGE_PLAYBACK_MIN_TRIGGER),_BARGE_PLAYBACK_MAX_TRIGGER));
+    }else{
+      trigger=Math.max(trigger,_BARGE_SILENCE_RMS*2);
+    }
     trigger=Math.min(trigger,_BARGE_TRIGGER_CEILING);
 
     // Ambient drift: only while nothing plays and the block isn't speech —
@@ -2027,6 +2051,7 @@ window._wingsTtsSynth=function(id, text, opts){
     if(_bargeRecentAbove.length>_BARGE_TRIP_BLOCKS){ _bargeRecentAbove.shift(); }
     const aboveCount=_bargeRecentAbove.reduce((n,b)=>n+(b?1:0),0);
     if(_bargeRecentAbove.length>=_BARGE_TRIP_BLOCKS&&above&&aboveCount>=_BARGE_TRIP_NEEDED){
+      console.debug('[wings-barge] TRIPPED rms='+Math.round(rms)+' trigger='+Math.round(trigger)+' phase='+(playing?'playback':'generation'));
       _bargeTripped();
     }
   }
