@@ -1904,12 +1904,15 @@ window._wingsTtsSynth=function(id, text, opts){
   }catch(_){}
   const _BARGE_CAPTURE_PEAK_MIN=1500;     // captured audio must contain real
                                           // speech energy (else: no send)
-  const _BARGE_TRIP_EARLY_MS=3000;        // a trip within 3s of arming the
-                                          // monitor is ambient dynamics, NOT
-                                          // an interruption (the reply needs
-                                          // 10-60s to even start) — ignore it
-                                          // instead of starting a capture that
-                                          // would re-send and loop forever
+  // A trip within this window of arming is ambient dynamics, NOT an
+  // interruption (the reply needs 10-60s to even start) — ignore it instead
+  // of starting a capture that would re-send and loop forever. Tunable:
+  // localStorage 'wings-barge-early-ms' (0 disables).
+  let _BARGE_TRIP_EARLY_MS=3000;
+  try{
+    const _e=parseFloat(localStorage.getItem('wings-barge-early-ms'));
+    if(Number.isFinite(_e)&&_e>=0&&_e<=10000) _BARGE_TRIP_EARLY_MS=_e;
+  }catch(_){}
   let _bargeArmedAt=0;
   let _bargeActive=false;
   let _bargeInterrupted=false;
