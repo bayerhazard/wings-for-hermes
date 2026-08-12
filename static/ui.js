@@ -8450,6 +8450,7 @@ function _playOpenaiTts(text, btn, onDone){
     const decoder=new TextDecoder();
     let buffer='';
     let done=false;
+    let doneSeen=false;
     const _pump=function(){
       if(!_ttsSpeaking){ reader.cancel().catch(function(){}); return Promise.resolve(); }
       return reader.read().then(function(res){
@@ -8472,6 +8473,8 @@ function _playOpenaiTts(text, btn, onDone){
               _queue.push(new Blob([bytes],{type:'audio/mpeg'}));
               if(!_playing) _playNext();
             }catch(_){}
+          }else if(payload.done){
+            doneSeen=true;
           }else if(payload.error){
             _finish(payload.error);
             return;
@@ -8480,6 +8483,13 @@ function _playOpenaiTts(text, btn, onDone){
         return _pump();
       }).catch(function(e){
         if(e&&e.name==='AbortError') return;
+        // The server may close the connection right after the final event
+        // (HTTP/1.0 without a chunked terminator). That abrupt close is a
+        // normal end-of-stream, NOT a failure: let the queue drain and
+        // finish cleanly instead of surfacing "Failed to fetch" and killing
+        // the still-playing audio (a read error before any done event is a
+        // genuine failure though).
+        if(doneSeen){ done=true; return; }
         _finish('OpenAI TTS failed: '+(e&&e.message||e));
       });
     };

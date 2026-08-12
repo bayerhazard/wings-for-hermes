@@ -46,6 +46,18 @@ class _ChunkedSSEWriter:
     def flush(self):
         self._raw.flush()
 
+    def terminate(self):
+        """Write the terminating ``0\\r\\n\\r\\n`` chunk.
+
+        Without it the server closes the connection right after the final
+        event and chunked-readers (browsers, undici) treat the stream as
+        abruptly terminated — the fetch reader rejects with
+        ``TypeError: Failed to fetch`` instead of ``{done: true}``. SSE
+        handlers must call this after emitting their final event.
+        """
+        self._raw.write(b"0\r\n\r\n")
+        self._raw.flush()
+
     def __getattr__(self, name):
         return getattr(self._raw, name)
 

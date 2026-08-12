@@ -11,7 +11,7 @@ import errno
 import io
 import gzip
 import json
-from api.sse_chunked import end_sse_headers
+from api.sse_chunked import chunked_sse_enabled, end_sse_headers
 import logging
 import os
 import queue
@@ -18721,6 +18721,16 @@ def _handle_tts_stream(handler, parsed):
                 continue
             _emit({"b64": _b64.b64encode(audio_data).decode("ascii"), "idx": idx})
         _emit({"done": True})
+        # Properly terminate the chunked stream — without the 0\r\n\r\n
+        # terminator the client fetch reader treats the close as an abrupt
+        # failure ("Failed to fetch"), which the TTS client previously
+        # surfaced as an error toast AND killed the still-playing audio
+        # queue (its _finish() clears _ttsSpeaking).
+        if chunked_sse_enabled():
+            try:
+                handler.wfile.terminate()
+            except Exception:
+                pass
     except (BrokenPipeError, ConnectionResetError):
         return True
     except Exception:
