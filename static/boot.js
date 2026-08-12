@@ -3265,6 +3265,10 @@ const _COMPOSER_CONTROL_TOGGLE_DEFS=[
   {key:'hide_composer_attach',label:'Attach',labelKey:'composer_control_attach',selectors:['#btnAttach'],orderSelector:'#btnAttach',orderGroup:'left'},
   {key:'hide_composer_saved_prompts',label:'Saved prompts',labelKey:'composer_control_saved_prompts',selectors:['#btnSavedPrompts'],orderSelector:'#btnSavedPrompts',orderGroup:'left'},
   {key:'hide_composer_mic',label:'Mic',labelKey:'composer_control_mic',selectors:['#btnMic'],orderSelector:'#btnMic',orderGroup:'left'},
+  // Voice-mode button lives in the composer-right group (between mic and
+  // send) and is available in BOTH UI modes — keep it directly after Mic in
+  // the default order so the sort stays at "mic, voice, send".
+  {key:'hide_composer_voice_mode',label:'Voice mode',labelKey:'composer_control_voice_mode',selectors:['#btnVoiceMode'],orderSelector:'#btnVoiceMode',orderGroup:'right'},
   {key:'hide_composer_profile',label:'Profile',labelKey:'composer_control_profile',selectors:['#profileChipWrap'],orderSelector:'#profileChipWrap',orderGroup:'left'},
   {key:'hide_composer_workspace',label:'Workspace',labelKey:'composer_control_workspace',selectors:['.composer-ws-wrap','#composerMobileWorkspaceAction'],orderSelector:'.composer-ws-wrap',orderGroup:'left'},
   {key:'hide_composer_model',label:'Model',labelKey:'composer_control_model',selectors:['.composer-model-wrap','#composerMobileModelAction'],orderSelector:'.composer-model-wrap',orderGroup:'left'},
@@ -3274,7 +3278,6 @@ const _COMPOSER_CONTROL_TOGGLE_DEFS=[
 window._COMPOSER_CONTROL_TOGGLE_DEFS=_COMPOSER_CONTROL_TOGGLE_DEFS;
 
 const _COMPOSER_SITUATIONAL_CONTROL_TOGGLE_DEFS=[
-  {key:'hide_composer_voice_mode',label:'Voice mode',labelKey:'composer_control_voice_mode',selectors:['#btnVoiceMode'],orderSelector:'#btnVoiceMode',orderGroup:'left'},
   {key:'hide_composer_yolo',label:'YOLO',labelKey:'composer_control_yolo',selectors:['#yoloPill'],orderSelector:'#yoloPill',orderGroup:'left'},
   {key:'hide_composer_bg_badge',label:'Background badge',labelKey:'composer_control_bg_badge',selectors:['#bgBadge'],orderSelector:'#bgBadge',orderGroup:'right'},
   {key:'hide_composer_mobile_config',label:'Mobile config',labelKey:'composer_control_mobile_config',selectors:['#composerMobileConfigBtn'],orderSelector:'#composerMobileConfigBtn',orderGroup:'left'},
@@ -3388,7 +3391,7 @@ function _applyComposerFooterVisibilitySettings(){
   // Stops a lone vertical separator from appearing when attach/saved-prompts/mic/voice are all hidden.
   const _divider=document.querySelector('.composer-divider');
   if(_divider){
-    const _leftBtnSelectors=['#btnAttach','#btnSavedPrompts','#btnMic','#btnVoiceMode'];
+    const _leftBtnSelectors=['#btnAttach','#btnSavedPrompts','#btnMic'];
     const _allLeftHidden=_leftBtnSelectors.every(sel=>{
       const el=document.querySelector(sel);
       return !el||el.classList.contains('composer-control-hidden')||el.style.display==='none';

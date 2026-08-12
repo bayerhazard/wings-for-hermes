@@ -1636,6 +1636,9 @@
 
 /* ── Turn-based voice mode (#1333) ── */
   .voice-mode-btn{transition:color .15s,background .15s;}
+  /* Sits in composer-right between mic and send; round like the mic button
+     so the two audio icons read as one harmonized pair (34x34, 16px glyph). */
+  .composer-right .voice-mode-btn{border-radius:50%;}
   .voice-mode-btn.active{color:var(--accent);background:rgba(var(--accent-rgb,99,102,241),.15);}
   .voice-mode-btn.active svg{filter:drop-shadow(0 0 3px rgba(var(--accent-rgb,99,102,241),.5));}
   .voice-mode-bar{font-size:11px;padding:4px 12px;display:flex;align-items:center;gap:8px;border-bottom:1px solid rgba(255,255,255,.05);}
