@@ -1851,21 +1851,29 @@ window._wingsTtsSynth=function(id, text, opts){
   }
 
   // ── Barge-in (Unterbrechungserkennung) ────────────────────────────────
-  // Port of the Hermes agent's listen_for_speech VAD (rolling noise-floor
-  // calibration, 8x trigger, 300ms sustained) to the Web Audio API. Armed at
-  // turn start (_voiceModeSend) so the user can cut in by voice during
-  // generation AND playback — the classic half-duplex gap (mic only open
-  // while idle/listening) is closed. Best-effort: if the mic can't be opened
-  // or Web Audio is unavailable, barge-in silently degrades to normal voice
-  // mode.
+  // Port of the Hermes agent's full_duplex_listen VAD (voice_mode.py):
+  // calibrate against the QUIET room at turn start (before any TTS exists),
+  // hold that baseline through playback (never absorb speaker bleed),
+  // phase-clamp the trigger (>= PLAYBACK_MIN_TRIGGER while audio flows, so
+  // bleed alone can't trip), and trip on a windowed majority of blocks so
+  // intra-word energy dips don't reset progress. The earlier 8x-multiplier
+  // variant computed a 3200 trigger over a 400 floor — unreachable for
+  // normal speech (2000-4000 RMS), and speech below trigger fed the floor
+  // until the trigger pinned at the 4000 ceiling, making barge-in
+  // impossible. Best-effort: mic failures retry briefly, then silently
+  // degrade to normal voice mode.
   const _BARGE_BLOCK_MS=30;
-  const _BARGE_CALIB_BLOCKS=13;     // ~400ms quiet-room calibration
-  const _BARGE_TRIP_BLOCKS=10;      // ~300ms sustained above trigger
-  const _BARGE_WINDOW_BLOCKS=100;   // ~3s rolling floor window
-  const _BARGE_SILENCE_RMS=200;
-  const _BARGE_MIN_FLOOR=_BARGE_SILENCE_RMS*2;   // floor never below 400
-  const _BARGE_TRIGGER_MULT=8;      // TTS speaker-bleed headroom
-  const _BARGE_TRIGGER_CAP=4000;    // never let trigger exceed this
+  const _BARGE_CALIB_BLOCKS=15;     // ~450ms quiet-room calibration
+  const _BARGE_TRIP_BLOCKS=10;      // ~300ms detection window
+  const _BARGE_TRIP_NEEDED=8;       // >=80% of window above trigger
+  const _BARGE_GRACE_BLOCKS=16;     // ~500ms grace after playback onset
+  const _BARGE_WINDOW_BLOCKS=100;   // ~3s ambient drift window
+  const _BARGE_SILENCE_RMS=200;     // agent SILENCE_RMS_THRESHOLD
+  const _BARGE_MULT=3.0;            // agent DEFAULT_BARGE_MULTIPLIER
+  const _BARGE_PLAYBACK_MIN_TRIGGER=1500; // agent PLAYBACK_MIN_TRIGGER
+  const _BARGE_TRIGGER_CEILING=4000;
+  const _BARGE_MIC_RETRIES=3;
+  const _BARGE_MIC_RETRY_MS=400;
   let _bargeActive=false;
   let _bargeInterrupted=false;
   let _bargeCtx=null;
@@ -1873,15 +1881,27 @@ window._wingsTtsSynth=function(id, text, opts){
   let _bargeAnalyser=null;
   let _bargeBuf=null;
   let _bargeTimer=null;
-  let _bargeFloor=[];
-  let _bargeMinFloor=0;
-  let _bargeConsecutive=0;
+  let _bargeMicAttempts=0;
+  let _bargeAmbient=[];
+  let _bargeQuietFloor=0;
+  let _bargeFloorLocked=false;
+  let _bargeRecentAbove=[];
+  let _bargePlayingPrev=false;
+  let _bargePlaybackSeen=false;
+  let _bargeGraceRemaining=0;
+  let _bargeBlocksSincePlayback=10000;
 
   function _bargePercentile(values,p){
     if(!values.length) return 0;
     const sorted=values.slice().sort((a,b)=>a-b);
     const idx=Math.min(sorted.length-1,Math.floor((p/100)*(sorted.length-1)));
     return sorted[idx];
+  }
+
+  // True while TTS audio is actually flowing (the streaming player holds
+  // _playingEdgeAudio for the duration of the current sentence).
+  function _bargeIsPlaying(){
+    return !!_playingEdgeAudio;
   }
 
   function _bargeStop(){
@@ -1897,9 +1917,14 @@ window._wingsTtsSynth=function(id, text, opts){
     }
     _bargeAnalyser=null;
     _bargeBuf=null;
-    _bargeFloor=[];
-    _bargeMinFloor=0;
-    _bargeConsecutive=0;
+    _bargeAmbient=[];
+    _bargeQuietFloor=0;
+    _bargeFloorLocked=false;
+    _bargeRecentAbove=[];
+    _bargePlayingPrev=false;
+    _bargePlaybackSeen=false;
+    _bargeGraceRemaining=0;
+    _bargeBlocksSincePlayback=10000;
   }
 
   function _bargeStart(){
@@ -1908,9 +1933,13 @@ window._wingsTtsSynth=function(id, text, opts){
     const C=window.AudioContext||window.webkitAudioContext;
     if(!C||!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia) return;
     _bargeActive=true;
-    _bargeFloor=[];
-    _bargeMinFloor=0;
-    _bargeConsecutive=0;
+    _bargeMicAttempts=0;
+    _bargeOpenMic();
+  }
+
+  function _bargeOpenMic(){
+    if(!_bargeActive) return;
+    const C=window.AudioContext||window.webkitAudioContext;
     navigator.mediaDevices.getUserMedia({audio:true}).then(stream=>{
       if(!_bargeActive){
         try{ stream.getTracks().forEach(t=>t.stop()); }catch(_){}
@@ -1919,6 +1948,9 @@ window._wingsTtsSynth=function(id, text, opts){
       _bargeStream=stream;
       try{
         _bargeCtx=new C();
+        if(_bargeCtx.state==='suspended'){
+          try{ _bargeCtx.resume().catch(()=>{}); }catch(_){}
+        }
         const src=_bargeCtx.createMediaStreamSource(stream);
         _bargeAnalyser=_bargeCtx.createAnalyser();
         _bargeAnalyser.fftSize=2048;
@@ -1926,8 +1958,19 @@ window._wingsTtsSynth=function(id, text, opts){
         src.connect(_bargeAnalyser);
         _bargeBuf=new Float32Array(_bargeAnalyser.fftSize);
         _bargeTimer=setInterval(_bargeTick,_BARGE_BLOCK_MS);
+        console.debug('[wings-barge] monitor armed');
       }catch(_){ _bargeStop(); }
-    }).catch(()=>{ _bargeActive=false; });
+    }).catch(err=>{
+      // The mic may still be held by the just-aborted SpeechRecognition;
+      // retry briefly before giving up for this turn.
+      if(_bargeActive&&_bargeMicAttempts<_BARGE_MIC_RETRIES){
+        _bargeMicAttempts++;
+        setTimeout(_bargeOpenMic,_BARGE_MIC_RETRY_MS);
+      }else{
+        console.debug('[wings-barge] mic unavailable:',err&&err.name);
+        _bargeActive=false;
+      }
+    });
   }
 
   function _bargeTick(){
@@ -1936,23 +1979,54 @@ window._wingsTtsSynth=function(id, text, opts){
     let sum=0;
     for(let i=0;i<_bargeBuf.length;i++){ const v=_bargeBuf[i]; sum+=v*v; }
     const rms=Math.sqrt(sum/_bargeBuf.length)*32768;   // int16-scale RMS
-    if(_bargeFloor.length<_BARGE_CALIB_BLOCKS){
-      _bargeFloor.push(rms);
-      return;
+    const playing=_bargeIsPlaying();
+
+    // Pre-playback calibration: sample the quiet room, never speaker bleed.
+    if(!_bargeFloorLocked){
+      if(!playing){ _bargeAmbient.push(rms); }
+      if(_bargeAmbient.length>=_BARGE_CALIB_BLOCKS||playing){
+        const pct90=_bargePercentile(_bargeAmbient,90);
+        _bargeQuietFloor=Math.max(pct90,_BARGE_SILENCE_RMS);
+        _bargeFloorLocked=true;
+        console.debug('[wings-barge] calibrated floor='+Math.round(_bargeQuietFloor));
+      }
+      if(!_bargeFloorLocked) return;
     }
-    if(_bargeMinFloor===0){
-      _bargeMinFloor=Math.max(_bargePercentile(_bargeFloor,90),_BARGE_MIN_FLOOR);
+
+    // Playback onset -> grace window (suppress the onset transient). Grace
+    // only when playback starts after a real gap (>=1s), so inter-sentence
+    // flapping can't chain grace windows together.
+    if(playing&&!_bargePlayingPrev){
+      if(!_bargePlaybackSeen||_bargeBlocksSincePlayback>33){
+        _bargeGraceRemaining=_BARGE_GRACE_BLOCKS;
+      }
+      _bargePlaybackSeen=true;
     }
-    const floor=Math.max(_bargePercentile(_bargeFloor,90),_bargeMinFloor);
-    let trigger=Math.max(_BARGE_MIN_FLOOR,floor*_BARGE_TRIGGER_MULT);
-    trigger=Math.min(trigger,_BARGE_TRIGGER_CAP);
-    if(rms<trigger){
-      if(_bargeFloor.length>=_BARGE_WINDOW_BLOCKS) _bargeFloor.shift();
-      _bargeFloor.push(rms);
+    _bargePlayingPrev=playing;
+    _bargeBlocksSincePlayback=playing?0:_bargeBlocksSincePlayback+1;
+
+    // Trigger: quiet baseline x mult, phase-clamped.
+    let trigger=_bargeQuietFloor*_BARGE_MULT;
+    if(playing){ trigger=Math.max(trigger,_BARGE_PLAYBACK_MIN_TRIGGER); }
+    else{ trigger=Math.max(trigger,_BARGE_SILENCE_RMS*2); }
+    trigger=Math.min(trigger,_BARGE_TRIGGER_CEILING);
+
+    // Ambient drift: only while nothing plays and the block isn't speech —
+    // never absorb speaker bleed or user speech into the floor.
+    if(!playing&&rms<trigger){
+      if(_bargeAmbient.length>=_BARGE_WINDOW_BLOCKS) _bargeAmbient.shift();
+      _bargeAmbient.push(rms);
+      _bargeQuietFloor=Math.max(_bargePercentile(_bargeAmbient,90),_BARGE_SILENCE_RMS);
     }
-    _bargeConsecutive = (rms>=trigger) ? _bargeConsecutive+1 : 0;
-    if(_bargeConsecutive>=_BARGE_TRIP_BLOCKS){
-      _bargeConsecutive=0;
+
+    let above=rms>=trigger;
+    if(above&&_bargeGraceRemaining>0){ above=false; }
+    if(_bargeGraceRemaining>0){ _bargeGraceRemaining--; }
+
+    _bargeRecentAbove.push(above);
+    if(_bargeRecentAbove.length>_BARGE_TRIP_BLOCKS){ _bargeRecentAbove.shift(); }
+    const aboveCount=_bargeRecentAbove.reduce((n,b)=>n+(b?1:0),0);
+    if(_bargeRecentAbove.length>=_BARGE_TRIP_BLOCKS&&above&&aboveCount>=_BARGE_TRIP_NEEDED){
       _bargeTripped();
     }
   }
@@ -1961,9 +2035,11 @@ window._wingsTtsSynth=function(id, text, opts){
     _bargeInterrupted=true;
     _bargeStop();
     // Cut any playing TTS immediately, then listen for the interruption.
+    // Small delay lets the mic tracks release before SpeechRecognition
+    // re-opens the device (avoids an 'audio-capture' race).
     if(typeof stopTTS==='function') stopTTS();
     if(_voiceModeActive&&_voiceModeState!=='listening'){
-      _startListening();
+      setTimeout(()=>{ if(_voiceModeActive) _startListening(); },150);
     }
   }
 
