@@ -1899,8 +1899,13 @@ window._wingsTtsSynth=function(id, text, opts){
                                             // browser froze
   const _BARGE_CAPTURE_PEAK_MIN=1500;     // captured audio must contain real
                                           // speech energy (else: no send)
-  const _BARGE_CAPTURE_SEND_COOLDOWN_MS=6000; // at most one capture-send per 6s
-  let _bargeLastCaptureSendAt=0;
+  const _BARGE_TRIP_EARLY_MS=3000;        // a trip within 3s of arming the
+                                          // monitor is ambient dynamics, NOT
+                                          // an interruption (the reply needs
+                                          // 10-60s to even start) — ignore it
+                                          // instead of starting a capture that
+                                          // would re-send and loop forever
+  let _bargeArmedAt=0;
   let _bargeActive=false;
   let _bargeInterrupted=false;
   let _bargeCtx=null;
@@ -1969,6 +1974,7 @@ window._wingsTtsSynth=function(id, text, opts){
     if(_micOriginNeedsSecureContext()) return;
     const C=window.AudioContext||window.webkitAudioContext;
     if(!C||!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia) return;
+    _bargeArmedAt=Date.now();
     _bargeActive=true;
     _bargeMicAttempts=0;
     _bargeOpenMic();
@@ -2122,6 +2128,19 @@ window._wingsTtsSynth=function(id, text, opts){
   }
 
   function _bargeTripped(){
+    // A trip within _BARGE_TRIP_EARLY_MS of arming is ambient dynamics, not
+    // an interruption (the reply needs 10-60s to even start). Ignoring it
+    // breaks the capture→send→trip→capture loop that previously froze the
+    // browser: every trip used to start an 8s capture + transcribe + send,
+    // and the new turn's monitor immediately tripped again.
+    if(Date.now()-_bargeArmedAt<_BARGE_TRIP_EARLY_MS){
+      console.debug('[wings-barge] trip too soon after arming — ignoring');
+      _bargeStop();
+      if(_voiceModeActive&&_voiceModeState!=='listening'){
+        setTimeout(()=>{ if(_voiceModeActive) _startListening(); },150);
+      }
+      return;
+    }
     _bargeInterrupted=true;
     // Cut any playing TTS immediately.
     if(typeof stopTTS==='function') stopTTS();
@@ -2190,20 +2209,12 @@ window._wingsTtsSynth=function(id, text, opts){
       try{ if(ctx&&ctx.state!=='closed') ctx.close(); }catch(_){}
       try{ stream.getTracks().forEach(t=>t.stop()); }catch(_){}
       console.debug('[wings-barge] capture finished ok=' + ok + ' frames=' + frames.length + ' totalMs=' + Math.round(totalBlocks*BLOCK_MS) + ' peak=' + Math.round(peakRms));
-      // Loop guards: no speech energy in the capture (ambient trip) or a
-      // capture-send within the cooldown window (capture→send→trip→capture
-      // loop) must NOT start another turn — fall back to plain listening.
+      // Loop guards: no speech energy in the capture (ambient trip) must NOT
+      // start another turn — fall back to plain listening.
       if(!ok||!frames.length||!_voiceModeActive||peakRms<_BARGE_CAPTURE_PEAK_MIN){
         _startListening();
         return;
       }
-      const now=Date.now();
-      if(now-_bargeLastCaptureSendAt<_BARGE_CAPTURE_SEND_COOLDOWN_MS){
-        console.debug('[wings-barge] capture-send cooldown active — no send');
-        _startListening();
-        return;
-      }
-      _bargeLastCaptureSendAt=now;
       const wav=_bargeEncodeWav(frames, ctx?ctx.sampleRate:48000);
       const fd=new FormData();
       fd.append('file',new File([wav],'barge.wav',{type:'audio/wav'}));
