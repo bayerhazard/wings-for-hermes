@@ -2036,15 +2036,26 @@ window._wingsTtsSynth=function(id, text, opts){
     // the window is fed only by blocks below the current trigger, so
     // genuine speech never poisons it.
     let trigger=_bargeQuietFloor*_BARGE_MULT;
-    if(playing){
-      if(_bargeGraceRemaining>0||_bargeBleed.length<_BARGE_PLAYBACK_SEED_BLOCKS){
-        _bargeBleed.push(rms);
-      }else if(rms<trigger){
-        if(_bargeBleed.length>=_BARGE_WINDOW_BLOCKS) _bargeBleed.shift();
-        _bargeBleed.push(rms);
+    // The whole speaking phase (including the wait for the first audio
+    // chunk, when nothing plays yet) must use the playback trigger floor —
+    // a room-noise trip during that wait would kill the TTS before the
+    // first sentence is even heard. _voiceModeState lives in this IIFE.
+    const _inSpeaking=_voiceModeState==='speaking';
+    if(playing||_inSpeaking){
+      if(playing){
+        if(_bargeGraceRemaining>0||_bargeBleed.length<_BARGE_PLAYBACK_SEED_BLOCKS){
+          _bargeBleed.push(rms);
+        }else if(rms<trigger){
+          if(_bargeBleed.length>=_BARGE_WINDOW_BLOCKS) _bargeBleed.shift();
+          _bargeBleed.push(rms);
+        }
+        const bleed=_bargeBleed.length?_bargePercentile(_bargeBleed,90):0;
+        trigger=Math.max(trigger,Math.min(Math.max(bleed*_BARGE_BLEED_MULT,_BARGE_PLAYBACK_MIN_TRIGGER),_BARGE_TRIGGER_CEILING));
+      }else{
+        // Speaking but no audio flowing yet (waiting on the first chunk):
+        // hold at the playback minimum — ambient noise must not trip here.
+        trigger=Math.max(trigger,_BARGE_PLAYBACK_MIN_TRIGGER);
       }
-      const bleed=_bargeBleed.length?_bargePercentile(_bargeBleed,90):0;
-      trigger=Math.max(trigger,Math.min(Math.max(bleed*_BARGE_BLEED_MULT,_BARGE_PLAYBACK_MIN_TRIGGER),_BARGE_TRIGGER_CEILING));
     }else{
       trigger=Math.max(trigger,_BARGE_SILENCE_RMS*2);
     }

@@ -8405,11 +8405,15 @@ function _playOpenaiTts(text, btn, onDone){
   _ttsStreamAbort=_abort;
   const _queue=[];
   let _playing=false;
+  let _playedCount=0;
+  let _playErrors=0;
+  console.debug('[wings-tts] stream start, text=' + text.slice(0,80));
   const _playNext=function(){
     if(!_ttsSpeaking){ _playing=false; return; }
     if(!_queue.length){ _playing=false; return; }
     _playing=true;
     const blob=_queue.shift();
+    _playedCount++;
     const url=URL.createObjectURL(blob);
     const audio=new Audio(url);
     _playingEdgeAudio=audio;
@@ -8421,11 +8425,23 @@ function _playOpenaiTts(text, btn, onDone){
     audio.onerror=function(){
       URL.revokeObjectURL(url);
       _playingEdgeAudio=null;
+      _playErrors++;
+      console.debug('[wings-tts] audio element error #' + _playErrors + ' (blob ' + blob.size + ' bytes)');
       _playNext();
     };
-    audio.play().catch(function(){
+    audio.play().catch(function(e){
       URL.revokeObjectURL(url);
       _playingEdgeAudio=null;
+      _playErrors++;
+      // Autoplay blocking is the classic silent-kill: the queue drains in
+      // milliseconds and the user hears nothing while the state flashes
+      // "Sprechen". Surface it.
+      if(e&&e.name==='NotAllowedError'){
+        console.debug('[wings-tts] AUTOPLAY BLOCKED — audio.play() NotAllowedError');
+        if(typeof showToast==='function') showToast('Audio-Wiedergabe blockiert — bitte einmal in die Seite klicken',4000,'error');
+      }else{
+        console.debug('[wings-tts] play() rejected: ' + ((e&&e.name)||e));
+      }
       _playNext();
     });
   };
@@ -8471,10 +8487,12 @@ function _playOpenaiTts(text, btn, onDone){
               const bytes=new Uint8Array(bin.length);
               for(let i=0;i<bin.length;i++) bytes[i]=bin.charCodeAt(i);
               _queue.push(new Blob([bytes],{type:'audio/mpeg'}));
+              console.debug('[wings-tts] chunk idx=' + payload.idx + ' (' + bytes.length + ' bytes)');
               if(!_playing) _playNext();
             }catch(_){}
           }else if(payload.done){
             doneSeen=true;
+            console.debug('[wings-tts] done event, queue=' + _queue.length + ' played=' + _playedCount);
           }else if(payload.error){
             _finish(payload.error);
             return;
