@@ -2324,17 +2324,25 @@ window._wingsTtsSynth=function(id, text, opts){
 
   // Most reliable hook: use the existing autoReadLastAssistant call site.
   // We override autoReadLastAssistant so that if voice mode is active, we use our
-  // own speak-and-resume flow instead of the default auto-read.
+  // own speak-and-resume flow instead of the default auto-read. The patch is a
+  // SUPERSET of the original (it delegates to _origAutoRead whenever voice mode
+  // is inactive), so it must stay installed permanently. _deactivate previously
+  // restored the original — and _activate never re-installed it — so toggling
+  // voice mode off and on once silently disabled the voice-mode auto-read: the
+  // reply finished, the state stayed on "thinking" and no TTS ever played.
   const _origAutoRead=(typeof autoReadLastAssistant==='function')?autoReadLastAssistant:null;
-  window.autoReadLastAssistant=function(){
-    if(_voiceModeActive&&_voiceModeState==='thinking'){
-      _speakResponse();
-      return;
-    }
-    // The user cut in mid-reply (barge-in) — never auto-read over them.
-    if(_voiceModeActive&&_bargeInterrupted) return;
-    if(_origAutoRead) _origAutoRead.apply(this,arguments);
-  };
+  function _installVoiceAutoReadPatch(){
+    window.autoReadLastAssistant=function(){
+      if(_voiceModeActive&&_voiceModeState==='thinking'){
+        _speakResponse();
+        return;
+      }
+      // The user cut in mid-reply (barge-in) — never auto-read over them.
+      if(_voiceModeActive&&_bargeInterrupted) return;
+      if(_origAutoRead) _origAutoRead.apply(this,arguments);
+    };
+  }
+  _installVoiceAutoReadPatch();
 
   function _activate(){
     if(_micOriginNeedsSecureContext()){
@@ -2342,6 +2350,10 @@ window._wingsTtsSynth=function(id, text, opts){
       return;
     }
     _voiceModeActive=true;
+    // (Re-)install the auto-read patch: a prior _deactivate (or any other
+    // override) must never leave the original autoReadLastAssistant in place,
+    // or the reply completion would skip _speakResponse entirely.
+    _installVoiceAutoReadPatch();
     modeBtn.classList.add('active');
     _setButtonTooltip(modeBtn, t('voice_mode_toggle_active'));
     showToast(t('voice_mode_active'),1500);
@@ -2370,8 +2382,10 @@ window._wingsTtsSynth=function(id, text, opts){
     try{ if(_recognition) _recognition.abort(); }catch(_){}
     _recognition=null;
     if(typeof stopTTS==='function') stopTTS();
-    // Restore original autoReadLastAssistant
-    if(_origAutoRead) window.autoReadLastAssistant=_origAutoRead;
+    // NOTE: autoReadLastAssistant is intentionally NOT restored here — the
+    // voice-mode patch is a superset that delegates to the original when
+    // voice mode is inactive, and removing it on deactivate (without
+    // re-installing on activate) silently broke voice-mode TTS.
     // Clear textarea if it was only voice input
     ta.value='';
     autoResize();
