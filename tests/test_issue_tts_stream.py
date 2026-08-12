@@ -191,6 +191,19 @@ def test_tts_stream_emits_one_event_per_sentence(monkeypatch):
         assert base64.b64decode(event["b64"]) == _make_audio(calls[idx])
 
 
+def test_tts_stream_uses_chunked_sse_framing(monkeypatch):
+    # Regression: without Transfer-Encoding: chunked, buffering reverse
+    # proxies (Olares gateway / envoy) hold every SSE event until the
+    # connection dies — the browser then receives only the final "done" and
+    # voice mode hangs on "Sprechen" with no audio.
+    _setup_openai_config(monkeypatch)
+    _stub_open(monkeypatch)
+    monkeypatch.setenv("HERMES_WEBUI_SSE_CHUNKED", "1")
+    h = _post({"text": "Das ist der erste ausreichend lange Satz. Und hier der zweite ausreichend lange Satz."})
+    routes._handle_tts_stream(h, None)
+    assert h.sent_headers.get("Transfer-Encoding") == "chunked"
+
+
 def test_tts_stream_unsplittable_text_speaks_whole(monkeypatch):
     _setup_openai_config(monkeypatch)
     calls = _stub_open(monkeypatch)

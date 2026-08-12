@@ -18696,7 +18696,13 @@ def _handle_tts_stream(handler, parsed):
     handler.send_header("Content-Type", "text/event-stream; charset=utf-8")
     handler.send_header("Cache-Control", "no-store")
     handler.send_header("X-Accel-Buffering", "no")
-    handler.end_headers()
+    # Chunked SSE framing (HERMES_WEBUI_SSE_CHUNKED): without Transfer-Encoding
+    # the reverse proxies in front (Olares gateway / envoy) read the body with
+    # read-until-close semantics and BUFFER every event until the connection
+    # dies (~31s) — the browser then receives only the final "done" and the
+    # voice state hangs on "Sprechen" with no audio. Framed chunks flush
+    # through every hop immediately (same pattern as /api/chat/stream).
+    end_sse_headers(handler)
 
     import base64 as _b64
 
