@@ -1890,8 +1890,17 @@ window._wingsTtsSynth=function(id, text, opts){
   const _BARGE_MIC_RETRIES=3;
   const _BARGE_MIC_RETRY_MS=400;
   const _BARGE_PREROLL_CHUNKS=18;         // ~1.5s pre-roll ring buffer (4096/48k)
-  const _BARGE_CAPTURE_MAX_MS=10000;      // interruption capture cap
+  const _BARGE_CAPTURE_MAX_MS=8000;       // interruption capture cap
   const _BARGE_CAPTURE_ENDPOINT_MS=1200;  // silence endpointing
+  const _BARGE_GENERATION_MIN_TRIGGER=1200; // ambient-dynamics floor while the
+                                            // LLM runs — the old 600 tripped on
+                                            // keyboards/fans and looped
+                                            // capture→send→capture until the
+                                            // browser froze
+  const _BARGE_CAPTURE_PEAK_MIN=1500;     // captured audio must contain real
+                                          // speech energy (else: no send)
+  const _BARGE_CAPTURE_SEND_COOLDOWN_MS=6000; // at most one capture-send per 6s
+  let _bargeLastCaptureSendAt=0;
   let _bargeActive=false;
   let _bargeInterrupted=false;
   let _bargeCtx=null;
@@ -2087,7 +2096,7 @@ window._wingsTtsSynth=function(id, text, opts){
         trigger=Math.max(trigger,_BARGE_PLAYBACK_MIN_TRIGGER);
       }
     }else{
-      trigger=Math.max(trigger,_BARGE_SILENCE_RMS*2);
+      trigger=Math.max(trigger,_BARGE_GENERATION_MIN_TRIGGER);
     }
     trigger=Math.min(trigger,_BARGE_TRIGGER_CEILING);
 
@@ -2169,6 +2178,7 @@ window._wingsTtsSynth=function(id, text, opts){
     const frames=preRoll.slice();
     let quietBlocks=0;
     let totalBlocks=0;
+    let peakRms=0;
     const BLOCK_MS=4096/48; // 4096 samples @48kHz ≈ 85ms
     const endpointBlocks=Math.max(1,_BARGE_CAPTURE_ENDPOINT_MS/BLOCK_MS);
     const maxBlocks=Math.max(1,_BARGE_CAPTURE_MAX_MS/BLOCK_MS);
@@ -2179,8 +2189,21 @@ window._wingsTtsSynth=function(id, text, opts){
       try{ if(src) src.disconnect(); }catch(_){}
       try{ if(ctx&&ctx.state!=='closed') ctx.close(); }catch(_){}
       try{ stream.getTracks().forEach(t=>t.stop()); }catch(_){}
-      console.debug('[wings-barge] capture finished ok=' + ok + ' frames=' + frames.length + ' totalMs=' + Math.round(totalBlocks*BLOCK_MS));
-      if(!ok||!frames.length||!_voiceModeActive){ _startListening(); return; }
+      console.debug('[wings-barge] capture finished ok=' + ok + ' frames=' + frames.length + ' totalMs=' + Math.round(totalBlocks*BLOCK_MS) + ' peak=' + Math.round(peakRms));
+      // Loop guards: no speech energy in the capture (ambient trip) or a
+      // capture-send within the cooldown window (capture→send→trip→capture
+      // loop) must NOT start another turn — fall back to plain listening.
+      if(!ok||!frames.length||!_voiceModeActive||peakRms<_BARGE_CAPTURE_PEAK_MIN){
+        _startListening();
+        return;
+      }
+      const now=Date.now();
+      if(now-_bargeLastCaptureSendAt<_BARGE_CAPTURE_SEND_COOLDOWN_MS){
+        console.debug('[wings-barge] capture-send cooldown active — no send');
+        _startListening();
+        return;
+      }
+      _bargeLastCaptureSendAt=now;
       const wav=_bargeEncodeWav(frames, ctx?ctx.sampleRate:48000);
       const fd=new FormData();
       fd.append('file',new File([wav],'barge.wav',{type:'audio/wav'}));
@@ -2215,6 +2238,7 @@ window._wingsTtsSynth=function(id, text, opts){
         let sum=0;
         for(let i=0;i<d.length;i++) sum+=d[i]*d[i];
         const rms=Math.sqrt(sum/d.length)*32768;
+        if(rms>peakRms) peakRms=rms;
         if(rms<_BARGE_SILENCE_RMS*2) quietBlocks++;
         else quietBlocks=0;
         if(quietBlocks>=endpointBlocks||totalBlocks>=maxBlocks){
