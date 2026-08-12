@@ -2342,6 +2342,19 @@ window._wingsTtsSynth=function(id, text, opts){
   // voice mode off and on once silently disabled the voice-mode auto-read: the
   // reply finished, the state stayed on "thinking" and no TTS ever played.
   const _origAutoRead=(typeof autoReadLastAssistant==='function')?autoReadLastAssistant:null;
+
+  // Minimal near-silent WAV (8 kHz mono, 0 samples) — plays within the user
+  // gesture to unlock autoplay without audible feedback.
+  const _UNLOCK_WAV='data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=';
+  function _unlockAudioPlayback(){
+    try{
+      const a=new Audio(_UNLOCK_WAV);
+      a.volume=0.0001;
+      const p=a.play();
+      if(p&&typeof p.catch==='function') p.catch(function(){});
+    }catch(_){}
+  }
+
   function _installVoiceAutoReadPatch(){
     window.autoReadLastAssistant=function(){
       if(_voiceModeActive&&_voiceModeState==='thinking'){
@@ -2361,6 +2374,13 @@ window._wingsTtsSynth=function(id, text, opts){
       return;
     }
     _voiceModeActive=true;
+    // Unlock autoplay: Chrome's autoplay policy can reject audio.play() for
+    // media started long after the last user gesture (the assistant reply
+    // lands 10-60s after the button click). Playing a (nearly silent) audio
+    // element synchronously INSIDE this click handler grants the domain
+    // autoplay permission for the rest of the session — every subsequent
+    // TTS chunk then plays without NotAllowedError.
+    _unlockAudioPlayback();
     // (Re-)install the auto-read patch: a prior _deactivate (or any other
     // override) must never leave the original autoReadLastAssistant in place,
     // or the reply completion would skip _speakResponse entirely.
