@@ -1892,11 +1892,16 @@ window._wingsTtsSynth=function(id, text, opts){
   const _BARGE_PREROLL_CHUNKS=18;         // ~1.5s pre-roll ring buffer (4096/48k)
   const _BARGE_CAPTURE_MAX_MS=8000;       // interruption capture cap
   const _BARGE_CAPTURE_ENDPOINT_MS=1200;  // silence endpointing
-  const _BARGE_GENERATION_MIN_TRIGGER=1200; // ambient-dynamics floor while the
-                                            // LLM runs — the old 600 tripped on
-                                            // keyboards/fans and looped
-                                            // capture→send→capture until the
-                                            // browser froze
+  // While the LLM runs (no TTS), a trip must clear REAL speech energy:
+  // ambient dynamics (keyboard ~1000-2000, clicks, fans) stay below ~2500
+  // RMS, real speech is 3000-8000. The old 600/1200 triggers tripped on
+  // ambient noise and looped capture→send→capture until the browser froze.
+  // Tunable: localStorage 'wings-barge-gen-trigger'.
+  let _BARGE_GENERATION_MIN_TRIGGER=2500;
+  try{
+    const _t=parseFloat(localStorage.getItem('wings-barge-gen-trigger'));
+    if(Number.isFinite(_t)&&_t>=800&&_t<=4000) _BARGE_GENERATION_MIN_TRIGGER=_t;
+  }catch(_){}
   const _BARGE_CAPTURE_PEAK_MIN=1500;     // captured audio must contain real
                                           // speech energy (else: no send)
   const _BARGE_TRIP_EARLY_MS=3000;        // a trip within 3s of arming the
