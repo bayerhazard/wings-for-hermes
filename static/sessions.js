@@ -8833,7 +8833,7 @@ async function deleteSession(sid, beforeDelete=null){
 
 // ── Project helpers ─────────────────────────────────────────────────────
 
-const PROJECT_COLORS=['#7cb9ff','#f5c542','#e94560','#50c878','#c084fc','#fb923c','#67e8f9','#f472b6'];
+ const PROJECT_COLORS=['#caa960','#60b0ff','#55c483','#6683a2','#ed914c','#294766','#f6857a','#0a2238'];
 
 function _showProjectPicker(session, anchorEl){
   // Close any existing picker
@@ -9104,7 +9104,7 @@ function _showProjectContextMenu(e, proj, chip){
   menu.appendChild(sep);
   const delItem=document.createElement('div');
   delItem.textContent='Delete';
-  delItem.style.cssText='padding:7px 14px;cursor:pointer;font-size:13px;color:var(--error,#e94560);';
+  delItem.style.cssText='padding:7px 14px;cursor:pointer;font-size:13px;color:var(--error);';
   delItem.onmouseenter=()=>delItem.style.background='var(--hover-bg)';
   delItem.onmouseleave=()=>delItem.style.background='';
   delItem.onclick=()=>{menu.remove();_confirmDeleteProject(proj);};

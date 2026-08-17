@@ -4142,7 +4142,7 @@ function openKanbanCreateBoard(){
   document.getElementById('kanbanBoardModalSlugRow').style.display = '';
   document.getElementById('kanbanBoardModalDesc').value = '';
   document.getElementById('kanbanBoardModalIcon').value = '';
-  document.getElementById('kanbanBoardModalColor').value = '#7aa2ff';
+  document.getElementById('kanbanBoardModalColor').value = '#294766';
   document.getElementById('kanbanBoardModalError').textContent = '';
   modal.hidden = false;
   if (_kanbanBoardModalFocusCleanup) {
@@ -4186,7 +4186,7 @@ function openKanbanRenameBoard(){
   document.getElementById('kanbanBoardModalSlugRow').style.display = 'none';
   document.getElementById('kanbanBoardModalDesc').value = meta.description || '';
   document.getElementById('kanbanBoardModalIcon').value = meta.icon || '';
-  document.getElementById('kanbanBoardModalColor').value = meta.color || '#7aa2ff';
+  document.getElementById('kanbanBoardModalColor').value = meta.color || '#294766';
   document.getElementById('kanbanBoardModalError').textContent = '';
   modal.hidden = false;
   if (_kanbanBoardModalFocusCleanup) {
@@ -11785,7 +11785,7 @@ function _updateAuthWarningBadge(authStatus){
     if(!el) return;
     if(!authDisabled){ el.style.display='none'; return; }
     el.style.display='block';
-    el.style.background=acknowledged?'#e8a030':'#e05';
+    el.style.background=acknowledged?'var(--warning)':'var(--error)';
   });
 }
 
@@ -12941,7 +12941,7 @@ function loadMcpServers(){
         <div class="mcp-server-meta"><span class="mcp-tool-count">${esc(t('mcp_tool_count',toolCount))}</span>${toggleBtn}</div>
       </div>`;
     }).join('');
-  }).catch(()=>{list.innerHTML=`<div class="mcp-error-state" style="color:#ef4444;font-size:12px;padding:6px 0">${esc(t('mcp_load_failed'))}</div>`});
+  }).catch(()=>{list.innerHTML=`<div class="mcp-error-state" style="color:var(--error);font-size:12px;padding:6px 0">${esc(t('mcp_load_failed'))}</div>`});
 }
 let _mcpToolsCache=[];
 let _mcpToolsMeta={};
@@ -13065,7 +13065,7 @@ function loadMcpTools(){
     _mcpToolsMeta=r||{};
     _mcpToolsPage=1;
     filterMcpTools();
-  }).catch(()=>{list.innerHTML=`<div class="mcp-tool-error-state" style="color:#ef4444;font-size:12px;padding:6px 0">${esc(t('mcp_tools_load_failed'))}</div>`});
+  }).catch(()=>{list.innerHTML=`<div class="mcp-tool-error-state" style="color:var(--error);font-size:12px;padding:6px 0">${esc(t('mcp_tools_load_failed'))}</div>`});
 }
 let _gatewayActionInFlight=false;
 function _gatewayActionButton(action){
@@ -13080,7 +13080,7 @@ function _renderGatewayStatus(r){
   const card=$('gatewayStatusCard');
   if(!card||!r) return;
   if(!r.configured){
-    card.innerHTML=`<div style="color:var(--muted);font-size:12px;display:flex;align-items:center;gap:6px"><span style="width:8px;height:8px;border-radius:50%;background:#f59e0b;display:inline-block"></span>${esc(t('gateway_not_configured'))}</div>${_gatewayActionControls(r)}`;
+    card.innerHTML=`<div style="color:var(--muted);font-size:12px;display:flex;align-items:center;gap:6px"><span style="width:8px;height:8px;border-radius:50%;background:var(--warning);display:inline-block"></span>${esc(t('gateway_not_configured'))}</div>${_gatewayActionControls(r)}`;
     return;
   }
   if(!r.running){
@@ -13090,7 +13090,7 @@ function _renderGatewayStatus(r){
       : reason === 'remote_gateway_unreachable'
         ? t('gateway_endpoint_unreachable')
         : t('gateway_not_running');
-    card.innerHTML=`<div style="color:var(--muted);font-size:12px;display:flex;align-items:center;gap:6px"><span style="width:8px;height:8px;border-radius:50%;background:#ef4444;display:inline-block"></span>${esc(statusLabel)}</div>${_gatewayActionControls(r)}`;
+    card.innerHTML=`<div style="color:var(--muted);font-size:12px;display:flex;align-items:center;gap:6px"><span style="width:8px;height:8px;border-radius:50%;background:var(--error);display:inline-block"></span>${esc(statusLabel)}</div>${_gatewayActionControls(r)}`;
     return;
   }
   const platformIcons={telegram:'💬',discord:'🎮',slack:'📝',web:'🌐',api:'🔌'};
@@ -13103,12 +13103,12 @@ function _renderGatewayStatus(r){
   }
   const lastActive=r.last_active?`<span style="font-size:11px;color:var(--muted)">${esc(t('gateway_last_active'))}: ${esc(new Date(r.last_active).toLocaleString())}</span>`:'';
   const sessionInfo=r.session_count?`<span style="font-size:11px;color:var(--muted)">${r.session_count} ${esc(r.session_count!==1?t('gateway_sessions'):t('gateway_session'))}</span>`:'';
-  card.innerHTML=`<div style="display:flex;align-items:center;gap:6px;margin-bottom:8px"><span style="width:8px;height:8px;border-radius:50%;background:#22c55e;display:inline-block"></span><span style="font-size:13px;font-weight:500;color:#22c55e">${esc(t('gateway_running'))}</span></div>${badges?`<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px">${badges}</div>`:''}<div style="display:flex;gap:12px">${sessionInfo}${lastActive}</div>${_gatewayActionControls(r)}`;
+  card.innerHTML=`<div style="display:flex;align-items:center;gap:6px;margin-bottom:8px"><span style="width:8px;height:8px;border-radius:50%;background:var(--success);display:inline-block"></span><span style="font-size:13px;font-weight:500;color:var(--success)">${esc(t('gateway_running'))}</span></div>${badges?`<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px">${badges}</div>`:''}<div style="display:flex;gap:12px">${sessionInfo}${lastActive}</div>${_gatewayActionControls(r)}`;
 }
 function loadGatewayStatus(){
   const card=$('gatewayStatusCard');
   if(!card) return;
-  return api('/api/gateway/status').then(r=>_renderGatewayStatus(r)).catch(()=>{card.innerHTML=`<div style="color:#ef4444;font-size:12px">${esc(t('gateway_status_load_failed'))}</div>`});
+  return api('/api/gateway/status').then(r=>_renderGatewayStatus(r)).catch(()=>{card.innerHTML=`<div style="color:var(--error);font-size:12px">${esc(t('gateway_status_load_failed'))}</div>`});
 }
 async function _gatewayAction(action){
   if(_gatewayActionInFlight) return;
@@ -13174,7 +13174,7 @@ async function _loadCheckpoints(workspace){
     }
     container.innerHTML=html;
   }catch(e){
-    container.innerHTML=`<div style="color:var(--error,#f87171);font-size:12px;padding:8px 0">${esc(t('checkpoint_error'))}: ${esc(e.message)}</div>`;
+    container.innerHTML=`<div style="color:var(--error);font-size:12px;padding:8px 0">${esc(t('checkpoint_error'))}: ${esc(e.message)}</div>`;
   }
 }
 
@@ -13212,7 +13212,7 @@ async function _viewCheckpointDiff(workspace,checkpoint){
       html+='<div style="margin-bottom:8px">';
       for(const f of data.files_changed){
         const icon=f.status==='deleted'?'−':'~';
-        const color=f.status==='deleted'?'var(--error,#f87171)':'var(--accent,#60a5fa)';
+        const color=f.status==='deleted'?'var(--error)':'var(--accent)';
         html+=`<div style="font-size:12px;padding:2px 0"><span style="color:${color};font-weight:bold;margin-right:6px">${icon}</span><code style="font-size:11px">${esc(f.file)}</code></div>`;
       }
       html+='</div>';
@@ -13222,7 +13222,7 @@ async function _viewCheckpointDiff(workspace,checkpoint){
     }
     body.innerHTML=html;
   }catch(e){
-    $('checkpointDiffModalBody').innerHTML=`<div style="color:var(--error,#f87171);font-size:12px">${esc(e.message)}</div>`;
+    $('checkpointDiffModalBody').innerHTML=`<div style="color:var(--error);font-size:12px">${esc(e.message)}</div>`;
   }
 }
 

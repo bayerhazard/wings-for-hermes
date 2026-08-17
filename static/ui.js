@@ -6169,7 +6169,7 @@ function _syncMobileCtxDisplay(state){
       var circumference = 87.96;
       arc.setAttribute('stroke-dashoffset', circumference);
       num.textContent = '0';
-      arc.setAttribute('stroke', '#22c55e');
+      arc.setAttribute('stroke', '#55c483');
     }
     return;
   }
@@ -6181,7 +6181,7 @@ function _syncMobileCtxDisplay(state){
     arc.setAttribute('stroke-dashoffset', offset);
     num.textContent = Math.round(pct);
     arc.setAttribute('stroke',
-      pct <= 50 ? '#22c55e' : pct <= 85 ? '#f97316' : '#ef4444'
+      pct <= 50 ? '#55c483' : pct <= 85 ? '#ed914c' : '#f6857a'
     );
   })(state.pct);
   if(mobileConfigBtn){
@@ -18467,7 +18467,7 @@ function renderMermaidBlocks(container){
         if(typeof mermaid!=='undefined'){
           mermaid.initialize({startOnLoad:false,theme:document.documentElement.classList.contains('dark')?'dark':'default',themeVariables:{
             fontFamily:'inherit',fontSize:'14px',
-            primaryColor:'#4a6fa5',primaryTextColor:'#e2e8f0',lineColor:'#718096',
+            primaryColor:'#294766',primaryTextColor:'#ebeff3',lineColor:'#8ca1b7',
             secondaryColor:'#2d3748',tertiaryColor:'#1a202c',primaryBorderColor:'#4a5568',
           }});
           _mermaidReady=true;
@@ -19041,7 +19041,7 @@ else bindWorkspaceHeadingActions();
 function _workspaceContextMenuItem(label, onClick, opts={}){
   const item=document.createElement('div');
   item.textContent=label;
-  item.style.cssText='padding:7px 14px;cursor:pointer;font-size:13px;color:'+(opts.danger?'var(--error,#e94560)':'var(--text)')+';';
+  item.style.cssText='padding:7px 14px;cursor:pointer;font-size:13px;color:'+(opts.danger?'var(--error)':'var(--text)')+';';
   item.onmouseenter=()=>item.style.background='var(--hover-bg)';
   item.onmouseleave=()=>item.style.background='';
   item.onclick=onClick;
@@ -19713,7 +19713,7 @@ function _showFileContextMenu(e, item){
     menu.appendChild(sep);
     const delItem=document.createElement('div');
     delItem.textContent=t('delete_title');
-    delItem.style.cssText='padding:7px 14px;cursor:pointer;font-size:13px;color:var(--error,#e94560);';
+    delItem.style.cssText='padding:7px 14px;cursor:pointer;font-size:13px;color:var(--error);';
     delItem.onmouseenter=()=>delItem.style.background='var(--hover-bg)';
     delItem.onmouseleave=()=>delItem.style.background='';
     delItem.onclick=()=>{menu.remove();if(isDirLike)deleteWorkspaceDir(item.path,item.name);else deleteWorkspaceFile(item.path,item.name);};
