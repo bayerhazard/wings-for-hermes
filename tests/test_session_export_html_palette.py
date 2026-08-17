@@ -97,7 +97,7 @@ def test_palette_to_css_drops_fetchable_url_values() -> None:
 def test_render_without_palette_uses_builtin_fallback() -> None:
     html = render_session_html(_fake_session(), theme="dark")
     # Built-in dark palette is present; no extra `:root{...}` override was appended.
-    assert "--bg:#0D0D1A" in html  # dark fallback
+    assert "--bg:#051729" in html  # dark fallback
     # The inlined CSS contains exactly one bare `:root{` (the light defaults) and
     # one `:root.dark{` (the dark overrides). No `palette_css` override block.
     assert html.count(":root{") == 1
@@ -106,16 +106,16 @@ def test_render_without_palette_uses_builtin_fallback() -> None:
 
 
 def test_render_with_palette_appends_override_after_builtin() -> None:
-    palette = {"bg": "#FAF7F0", "text": "#1A1610", "accent": "#B8860B"}
+    palette = {"bg": "#FAF7F0", "text": "#1A1610", "accent": "#8c6c1f"}
     html = render_session_html(_fake_session(), theme="light", palette=palette)
-    builtin_pos = html.find(":root{--bg:#FEFCF7")          # light fallback marker
+    builtin_pos = html.find(":root{--bg:#FFFFFF")          # light fallback marker
     override_pos = html.rfind(":root,:root.dark{--bg:#FAF7F0")  # our override
     assert builtin_pos > 0, "light fallback should still be inlined"
     assert override_pos > builtin_pos, (
         "palette override must come AFTER the built-in CSS so it actually wins; "
         f"builtin@{builtin_pos} override@{override_pos}"
     )
-    assert "--accent:#B8860B;" in html
+    assert "--accent:#8c6c1f;" in html
     # No <html class="dark"> when theme=light.
     assert 'class="dark"' not in html
 
@@ -149,7 +149,7 @@ def test_render_dark_mode_palette_overrides_builtin_dark() -> None:
     assert "--text:#EEDDCC;" in html
     assert "--accent:#FF5500;" in html
     # The override comes AFTER the built-in :root.dark block so source-order wins.
-    builtin_dark_pos = html.find(":root.dark{--bg:#0D0D1A")
+    builtin_dark_pos = html.find(":root.dark{--bg:#051729")
     override_pos = html.find(":root,:root.dark{--bg:#112233")
     assert builtin_dark_pos > 0
     assert override_pos > builtin_dark_pos, (

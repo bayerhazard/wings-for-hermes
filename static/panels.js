@@ -8534,7 +8534,7 @@ function _appearancePayloadFromUi(){
     worklog_details_expanded_default: worklogDetailsExpanded,
     activity_feed_expanded_default: worklogDetailsExpanded,
     user_avatar_initial: ($('settingsUserAvatarInitial')||{}).value||'',
-    user_avatar_color: ($('settingsUserAvatarColor')||{}).value||'#C9A45C',
+    user_avatar_color: ($('settingsUserAvatarColor')||{}).value||'#caa960',
     ..._composerControlVisibilityPayload(),
     composer_control_order: _getComposerControlOrder(),
     hidden_tabs: _getHiddenTabs(),

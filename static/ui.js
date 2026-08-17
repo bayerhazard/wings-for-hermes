@@ -17197,7 +17197,7 @@ function _getAssistantAvatarHtml(){
 
 function _getAvatarColor(){
   const stored=localStorage.getItem('wings_user_avatar_color');
-  return stored||'#C9A45C';
+  return stored||'#caa960';
 }
 
 function buildToolCard(tc){

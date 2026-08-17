@@ -771,14 +771,14 @@ class TestToolCardDesignTokens:
     def test_base_dark_palette_restores_upstream_gold_tokens(self):
         css_min = re.sub(r"\s+", "", CSS)
         expected_tokens = (
-            "--bg:#0D0D1A",
-            "--sidebar:#141425",
-            "--border:#2A2A45",
-            "--text:#FFF8DC",
-            "--muted:#C0C0C0",
-            "--accent:#FFD700",
-            "--surface:#1A1A2E",
-            "--topbar-bg:rgba(20,20,37,.98)",
+            "--bg:#051729",
+            "--sidebar:#051729",
+            "--border:transparent",
+            "--text:#EBEFF3",
+            "--muted:#8CA1B7",
+            "--accent:#caa960",
+            "--surface:#0A2238",
+            "--gold:#caa960",
         )
         for token in expected_tokens:
             assert token in css_min, f"Base dark palette token missing: {token}"
@@ -786,21 +786,20 @@ class TestToolCardDesignTokens:
     def test_base_light_palette_restores_upstream_gold_tokens(self):
         css_min = re.sub(r"\s+", "", CSS)
         expected_tokens = (
-            "--bg:#FEFCF7",
-            "--sidebar:#FAF7F0",
-            "--border:#E0D8C8",
-            "--text:#1A1610",
-            "--muted:#5C5344",
-            "--accent:#B8860B",
-            "--surface:#F3EEE3",
+            "--bg:#F5F5F7",
+            "--text:#2D3748",
+            "--muted:#6B7280",
+            "--accent:#002f56",
+            "--gold:#caa960",
+            "--gold-text:#8c6c1f",
         )
         for token in expected_tokens:
             assert token in css_min, f"Base light palette token missing: {token}"
 
     def test_default_skin_preview_stays_upstream(self):
         boot_min = re.sub(r"\s+", "", BOOT_JS)
-        assert "{name:'Default',colors:['#FFD700','#FFBF00','#CD7F32']}" in boot_min, (
-            "The Default skin swatch should stay aligned with the upstream gold base."
+        assert "{name:'Hell',value:'light',colors:['#F5F5F7','#FFFFFF','#002f56']}" in boot_min, (
+            "The Hell theme swatch should use Hanseatenblau action + Guide gold."
         )
 
     def test_tool_card_css_uses_design_tokens_for_chrome(self):

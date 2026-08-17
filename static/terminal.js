@@ -82,20 +82,20 @@ function _terminalCssVar(name,fallback){
 
 function _terminalTheme(){
   const isDark=document.documentElement.classList.contains('dark');
-  const background=_terminalCssVar('--code-bg',isDark?'#1A1A2E':'#F5F0E5');
+  const background=_terminalCssVar('--code-bg',isDark?'#142e47':'#F5F0E5');
   const foreground=_terminalCssVar('--pre-text',_terminalCssVar('--text',isDark?'#E2E8F0':'#1A1610'));
   const muted=_terminalCssVar('--muted',isDark?'#C0C0C0':'#5C5344');
-  const accent=_terminalCssVar('--accent-text',_terminalCssVar('--accent',isDark?'#FFD700':'#8B6508'));
-  const error=_terminalCssVar('--error',isDark?'#EF5350':'#C62828');
-  const success=_terminalCssVar('--success',isDark?'#4CAF50':'#3D8B40');
-  const warning=_terminalCssVar('--warning',isDark?'#FFA726':'#E68A00');
-  const info=_terminalCssVar('--info',isDark?'#4DD0E1':'#0288A8');
+  const accent=_terminalCssVar('--accent-text',_terminalCssVar('--accent',isDark?'#caa960':'#8c6c1f'));
+  const error=_terminalCssVar('--error',isDark?'#f6857a':'#ad3f38');
+  const success=_terminalCssVar('--success',isDark?'#55c483':'#007e46');
+  const warning=_terminalCssVar('--warning',isDark?'#ed914c':'#9f5100');
+  const info=_terminalCssVar('--info',isDark?'#60b0ff':'#066bb8');
   return {
     background,
     foreground,
     cursor:accent,
-    selectionBackground:_terminalCssVar('--accent-bg-strong',isDark?'rgba(255,215,0,.18)':'rgba(184,134,11,.18)'),
-    black:isDark?'#0D0D1A':'#1A1610',
+    selectionBackground:_terminalCssVar('--accent-bg-strong',isDark?'rgba(202,169,96,.18)':'rgba(140,108,31,.18)'),
+    black:isDark?'#051729':'#1A1610',
     red:error,
     green:success,
     yellow:warning,

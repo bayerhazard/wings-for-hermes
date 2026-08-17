@@ -3293,10 +3293,10 @@ if(window.visualViewport){
 
 // ── Appearance helpers (theme = light/dark/system, skin = palette/accent) ────
 const _THEMES=[
-  {name:'Hell',    value:'light',  colors:['#FEFCF7','#FAF7F0','#B8860B']},
-  {name:'Dunkel',  value:'dark',   colors:['#0D0D1A','#141425','#C9A45C']},
-  {name:'AImighty', value:'aimighty', colors:['#051729','#0A2238','#C9A45C']},
-  {name:'System',  value:'system', colors:['#FEFCF7','#0D0D1A','#B8860B']},
+  {name:'Hell',    value:'light',  colors:['#F5F5F7','#FFFFFF','#002f56']},
+  {name:'Dunkel',  value:'dark',   colors:['#051729','#0A2238','#caa960']},
+  {name:'AImighty', value:'aimighty', colors:['#051729','#0A2238','#caa960']},
+  {name:'System',  value:'system', colors:['#F5F5F7','#051729','#caa960']},
 ];
 const _VALID_THEMES=new Set((_THEMES||[]).map(t=>t.value));
 const _LEGACY_THEME_MAP={

@@ -139,4 +139,4 @@ class TestStyleCssBgVarPresent:
 
     def test_root_dark_defines_bg(self):
         src = STYLE.read_text(encoding="utf-8")
-        assert "--bg:#161616" in src or "--bg: #161616" in src
+        assert "--bg:#051729" in src or "--bg: #051729" in src

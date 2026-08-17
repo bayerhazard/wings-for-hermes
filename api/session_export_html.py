@@ -120,21 +120,21 @@ _ROLE_LABELS = {
 # when <html class="dark">. Palettes are copied from the WebUI's style.css gold
 # theme so the export follows whatever appearance the user has active.
 _CSS = """
-:root{--bg:#FEFCF7;--panel:#F3EEE3;--panel2:#FAF7F0;--border:#E0D8C8;
---text:#1A1610;--muted:#5C5344;--accent:#B8860B;--user:#0288A8;--assistant:#3D8B40;
---code-bg:#F5F0E5;--code-border:#E0D8C8;--code-text:#8b4513;
---badge-user-bg:rgba(2,136,168,.12);--badge-user-text:#0288A8;
---badge-assistant-bg:rgba(61,139,64,.12);--badge-assistant-text:#3D8B40;
---badge-system-bg:rgba(92,83,68,.14);--badge-system-text:#5C5344;
---badge-tool-bg:rgba(184,134,11,.14);--badge-tool-text:#8B6508;
+:root{--bg:#FFFFFF;--panel:#F5F5F7;--panel2:#FAFAFC;--border:#DFE3EB;
+--text:#2D3748;--muted:#6B7280;--accent:#002f56;--user:#066bb8;--assistant:#007e46;
+--code-bg:#F0F4F8;--code-border:#DCE3EB;--code-text:#2D3748;
+--badge-user-bg:rgba(6,107,184,.12);--badge-user-text:#066bb8;
+--badge-assistant-bg:rgba(0,126,70,.12);--badge-assistant-text:#007e46;
+--badge-system-bg:rgba(107,114,128,.14);--badge-system-text:#6B7280;
+--badge-tool-bg:rgba(140,108,31,.14);--badge-tool-text:#8c6c1f;
 --row-stripe:rgba(0,0,0,.02);--subtle:rgba(0,0,0,.02);}
-:root.dark{--bg:#0D0D1A;--panel:#1A1A2E;--panel2:#141425;--border:#2A2A45;
---text:#FFF8DC;--muted:#C0C0C0;--accent:#FFD700;--user:#4DD0E1;--assistant:#4CAF50;
---code-bg:#1A1A2E;--code-border:#2A2A45;--code-text:#f0c27f;
---badge-user-bg:rgba(77,208,225,.16);--badge-user-text:#4DD0E1;
---badge-assistant-bg:rgba(76,175,80,.16);--badge-assistant-text:#56d364;
---badge-system-bg:rgba(192,192,192,.16);--badge-system-text:#C0C0C0;
---badge-tool-bg:rgba(255,191,0,.16);--badge-tool-text:#FFBF00;
+:root.dark{--bg:#051729;--panel:#0A2238;--panel2:#142e47;--border:#294766;
+--text:#EBEFF3;--muted:#8CA1B7;--accent:#caa960;--user:#60b0ff;--assistant:#55c483;
+--code-bg:#142e47;--code-border:#294766;--code-text:#d3dae1;
+--badge-user-bg:rgba(96,176,255,.16);--badge-user-text:#60b0ff;
+--badge-assistant-bg:rgba(85,196,131,.16);--badge-assistant-text:#55c483;
+--badge-system-bg:rgba(140,161,183,.16);--badge-system-text:#8CA1B7;
+--badge-tool-bg:rgba(202,169,96,.16);--badge-tool-text:#caa960;
 --row-stripe:rgba(255,255,255,.025);--subtle:rgba(255,255,255,.02);}
 *{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
