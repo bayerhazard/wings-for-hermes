@@ -108,22 +108,25 @@ def test_persist_inflight_saves_run_journal_seq():
 
 # ── FIX 3: every registered skin must have CSS (general guard) ──
 
-def test_neon_skin_css_restored():
-    assert ':root[data-skin="neon"]' in CSS, "Neon skin CSS block must be present"
-    assert ':root.dark[data-skin="neon"]' in CSS, "Neon dark variant CSS must be present"
+def test_skin_system_removed_register_is_noop():
+    """The skin system was removed (themes unified) — registerWingsSkin must be a
+    no-op stub and no legacy data-skin CSS blocks should remain selectable."""
+    assert "function registerWingsSkin(_descriptor){ return false; }" in BOOT_JS, (
+        "registerWingsSkin must be a no-op stub after the skin system removal"
+    )
+    assert ':root[data-skin=' not in CSS, (
+        "no legacy data-skin CSS blocks should remain after the skin system removal"
+    )
 
 
 def test_every_registered_skin_has_css():
-    """Any skin offered in the picker (_SKINS in boot.js) must have a CSS block, so a
-    refactor cannot silently drop a shipped skin's styling while leaving it selectable."""
-    # Extract skin values registered in boot.js _SKINS = [ {name:'X', value:'y'}, ... ]
+    """Guard for any remaining data-skin registration: a selector still offered by the
+    picker must not be silently dropped. With skins unified into themes there are no
+    data-skin blocks, so this simply asserts the picker no longer registers skins."""
     skins_block = re.search(r"_SKINS\s*=\s*\[(.*?)\]", BOOT_JS, re.DOTALL)
-    assert skins_block, "_SKINS registration not found in boot.js"
-    values = set(re.findall(r"value\s*:\s*'([a-z0-9-]+)'", skins_block.group(1)))
-    # 'default'/'system' style entries have no data-skin CSS; only check non-default skins.
+    assert not skins_block, "the removed _SKINS registration must not be reintroduced"
     css_skins = set(re.findall(r'data-skin="([a-z0-9-]+)"', CSS))
-    missing = sorted(s for s in values if s and s not in css_skins and s not in {"default", "system", ""})
-    assert not missing, f"registered skins with no CSS block (silent breakage): {missing}"
+    assert not css_skins, f"no data-skin CSS blocks should remain, found: {sorted(css_skins)}"
 
 
 # ── FIX 4: settled tool-worklog rebuild must run while busy too (switch-back) ──

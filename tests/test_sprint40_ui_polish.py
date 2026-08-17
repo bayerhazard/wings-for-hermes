@@ -39,7 +39,7 @@ class TestActiveSessionTitleThemeColor(unittest.TestCase):
 
     def test_active_session_title_uses_theme_variable(self):
         """
-        .session-item.active .session-title must use var(--gold) not a hardcoded hex.
+        .session-item.active .session-title must use a theme variable (--gold/--accent-text/--text/--muted) not a hardcoded hex.
         The light-mode override line (:not(.dark)) is allowed to keep its own
         hardcoded color; we only check the base/dark rule. Skin-specific
         overrides (e.g. `:root[data-skin="..."]`) are also allowed to use
@@ -64,8 +64,9 @@ class TestActiveSessionTitleThemeColor(unittest.TestCase):
 
         for line in base_rule_lines:
             self.assertTrue(
-                "var(--gold)" in line or "var(--accent-text)" in line,
-                f"Expected var(--gold) or var(--accent-text) in active session title rule, got: {line.strip()}"
+                "var(--gold)" in line or "var(--accent-text)" in line
+                or "var(--text)" in line or "var(--muted)" in line,
+                f"Expected a theme variable in active session title rule, got: {line.strip()}"
             )
             self.assertNotIn(
                 "#e8a030",

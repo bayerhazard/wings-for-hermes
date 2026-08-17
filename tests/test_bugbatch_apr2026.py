@@ -109,8 +109,8 @@ def test_576_panel_restore_gated_on_workspace():
         "Workspace panel localStorage restore must be gated on S.session.workspace "
         "to prevent snap-open-then-closed on sessions without a workspace (#576)"
     )
-    assert "'hermes-webui-workspace-panel-pref'" in BOOT_JS, (
-        "Panel restore must check the preference key so toolbar close does not clear it"
+    assert "'wings-workspace-panel'" in BOOT_JS or "'hermes-webui-workspace-panel-pref'" in BOOT_JS, (
+        "Panel restore must check the persistence key so toolbar close does not clear it"
     )
 
 

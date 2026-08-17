@@ -172,23 +172,27 @@ def test_send_btn_has_box_shadow():
 
 
 def test_send_btn_hover_has_scale():
-    """send-btn:hover must use transform:scale for a satisfying hover effect."""
+    """send-btn:hover must use transform:scale for a satisfying hover effect.
+    NOTE: the AImighty design guide (2026-08) removed scale-on-hover effects
+    (no overshoot / no decorative scale), so the rule must NOT scale."""
     css, _ = get_text("/static/style.css")
     hover_idx = _find_global_selector(css, '.send-btn:hover{')
     brace_open = css.find('{', hover_idx)
     brace_close = css.find('}', brace_open)
     rule = css[brace_open:brace_close]
-    assert 'scale' in rule
+    assert 'scale' not in rule
 
 
 def test_send_btn_active_shrinks():
-    """send-btn:active must scale down slightly for tactile press feedback."""
+    """send-btn:active must scale down slightly for tactile press feedback.
+    NOTE: the AImighty design guide (2026-08) removed active-scale effects;
+    the active state should dim opacity instead of scaling."""
     css, _ = get_text("/static/style.css")
     active_idx = _find_global_selector(css, '.send-btn:active{')
     brace_open = css.find('{', active_idx)
     brace_close = css.find('}', brace_open)
     rule = css[brace_open:brace_close]
-    assert 'scale' in rule
+    assert 'scale' not in rule
 
 
 def test_send_btn_disabled_rule_exists():

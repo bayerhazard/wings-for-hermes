@@ -1,5 +1,7 @@
 .vite/
 .venv/
+__pycache__/
+*.py[cod]
 # Gepackte Helm-Charts im Chart-Ordner — würden sonst beim `helm package`
 # in das Chart eingebettet und den Olares-chartrepo-Parser stören
 wings/*.tgz

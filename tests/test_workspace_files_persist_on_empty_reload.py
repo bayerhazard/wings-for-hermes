@@ -72,7 +72,7 @@ def test_ephemeral_guard_still_restores_panel_pref():
     guard_idx = BOOT_JS.find("(S.session.message_count||0) === 0")
     block_end = BOOT_JS.find("return;", guard_idx)
     block = BOOT_JS[guard_idx:block_end]
-    assert "hermes-webui-workspace-panel-pref" in block, (
-        "Empty-session guard must still read 'hermes-webui-workspace-panel-pref' "
+    assert "wings-workspace-panel-pref" in block or "wings-workspace-panel" in block, (
+        "Empty-session guard must still read the workspace-panel pref "
         "from localStorage to keep the panel open across refreshes (#1187)"
     )

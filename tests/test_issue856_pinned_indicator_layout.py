@@ -11,7 +11,8 @@ def test_pinned_indicator_renders_inside_title_row():
     title_row_idx = SESSIONS_JS.find("titleRow.className='session-title-row';")
     assert title_row_idx != -1, "session title row construction not found"
 
-    assert ("body.appendChild(_renderOneSession(s, Boolean(g.isPinned)))" in SESSIONS_JS
+    assert ("appendChild(_renderOneSession(s, s.pinned||false))" in SESSIONS_JS
+            or "appendChild(_renderOneSession(s, Boolean(g.isPinned)))" in SESSIONS_JS
             or "body.appendChild(parentEl)" in SESSIONS_JS)
     assert "function _renderOneSession(s, isPinnedGroup=false)" in SESSIONS_JS
     assert "if(s.pinned&&!isPinnedGroup){" in SESSIONS_JS
@@ -144,15 +145,15 @@ def test_sidebar_uses_local_inflight_state_for_immediate_spinner():
     assert "if(typeof renderSessionListFromCache==='function') renderSessionListFromCache();" in messages_js
 
 
-def test_date_group_caret_expanded_down_collapsed_right():
-    assert "caret.textContent='\\u25BE';" in SESSIONS_JS
-    assert ".session-date-caret{" in STYLE_CSS
-    caret_block = STYLE_CSS[
-        STYLE_CSS.find(".session-date-caret{"):
-        STYLE_CSS.find(".session-date-caret.collapsed")
-    ]
-    assert "transform:rotate(0deg);" in caret_block
-    assert ".session-date-caret.collapsed{transform:rotate(-90deg);}" in STYLE_CSS
+def test_folder_grouping_emits_one_header_per_project_and_dblclick_toggles():
+    """Folder grouping buckets sessions per project so each project folder appears
+    exactly once, expands/collapses on double-click, and renders a header element."""
+    assert "const _renderFolderHeader=(key)=>{" in SESSIONS_JS
+    assert "const _groupedBuckets" in SESSIONS_JS
+    assert "for(const group of _groupedBuckets){" in SESSIONS_JS
+    assert "header.ondblclick" in SESSIONS_JS
+    assert "session-folder-header" in STYLE_CSS
+    assert ".session-folder-caret{" not in STYLE_CSS
 
 
 def test_apperror_path_calls_render_session_list():

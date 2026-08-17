@@ -78,7 +78,7 @@ class TestSyncStateNoSession:
 
 
 class TestBootPathsRestorePanelPref:
-    PREF_PATTERN = "hermes-webui-workspace-panel-pref"
+    PREF_PATTERN = "wings-workspace-panel-pref"
 
     def test_ephemeral_path_restores_panel_pref(self):
         """The empty-session guard (#1182) must read panelPref before

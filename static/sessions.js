@@ -7769,8 +7769,43 @@ function renderSessionListFromCache(){
   // breaking the virtual-scroll row accounting.
   const folderGrouping=!_activeProject&&!q&&allSessions.length<=SESSION_VIRTUAL_THRESHOLD_ROWS&&_allProjects.length>0;
   const _folderCollapsed=_folderCollapsedStates;
+  // Default collapsed state (no persistence): every project folder is collapsed
+  // except Unassigned, which sits open on top. Re-seed on each grouped render so
+  // a fresh load always starts from the standard.
+  if(folderGrouping){
+    for(const p of _allProjects){ if(p&&p.project_id) _folderCollapsed.add(p.project_id); }
+    _folderCollapsed.delete(NO_PROJECT_FILTER);
+    list.classList.add('folder-grouping');
+  } else {
+    list.classList.remove('folder-grouping');
+  }
+  // Bucket sessions by project so each folder appears exactly once with all of
+  // its sessions contiguous. Unassigned sorts first (open by default), then
+  // projects in _allProjects order; within a bucket keep pinned-first + the
+  // existing manual/timestamp ordering.
+  const _folderOrderOf=(key)=>{
+    if(key===NO_PROJECT_FILTER) return -1;
+    const idx=_allProjects.findIndex(p=>p&&p.project_id===key);
+    return idx<0?Number.MAX_SAFE_INTEGER:idx;
+  };
+  const _groupedBuckets=(()=>{
+    const buckets=new Map();
+    for(const s of allSessions){
+      const key=(s&&s.project_id)||NO_PROJECT_FILTER;
+      if(!buckets.has(key)) buckets.set(key,[]);
+      buckets.get(key).push(s);
+    }
+    return Array.from(buckets.entries())
+      .sort((a,b)=>_folderOrderOf(a[0])-_folderOrderOf(b[0]))
+      .map(([key,list])=>({key, sessions:list}));
+  })();
+  // Session-only row sequence (grouping order) — drives virtualization, active
+  // anchoring and D&D scope, independent of the folder headers.
+  const groupedSessionSeq=folderGrouping
+    ? _groupedBuckets.flatMap(g=>g.sessions)
+    : allSessions;
   const flatSessionRows=[];
-  for(const s of allSessions){ flatSessionRows.push({group:null, session:s}); }
+  for(const s of groupedSessionSeq){ flatSessionRows.push({group:null, session:s}); }
   _sessionVisibleSidebarIds=flatSessionRows.map(row=>row.session&&row.session.session_id).filter(Boolean);
   for(const row of flatSessionRows){
     const s=row.session;
@@ -7825,38 +7860,37 @@ function renderSessionListFromCache(){
   // Render flat session list (no date group headers); when folder grouping is
   // active, emit a project folder header before each project's sessions.
   let globalSessionRowIndex=0;
-  let _lastFolderKey=null;
   const _renderFolderHeader=(key)=>{
     const proj=(_allProjects||[]).find(p=>p.project_id===key);
     const label=proj?proj.name:'Unassigned';
     const header=document.createElement('div');
-    header.className='session-folder-header'+(proj&&proj.color?' has-color':'');
-    if(proj&&proj.color) header.style.setProperty('--folder-color',proj.color);
-    const collapsed=_folderCollapsed.has(key);
-    const caret=document.createElement('span');
-    caret.className='session-folder-caret';
-    caret.textContent=collapsed?'▸':'▾';
+    header.className='session-folder-header';
     const name=document.createElement('span');
     name.className='session-folder-name';
     name.textContent=label;
-    header.appendChild(caret);header.appendChild(name);
-    header.onclick=()=>{
+    header.appendChild(name);
+    header.ondblclick=()=>{
       if(_folderCollapsed.has(key)) _folderCollapsed.delete(key); else _folderCollapsed.add(key);
       renderSessionListFromCache();
     };
     list.appendChild(header);
   };
-  for(const s of allSessions){
-    let folderKey=null;
-    if(folderGrouping){ folderKey=(s&&s.project_id)||NO_PROJECT_FILTER; }
-    if(folderKey!==null&&folderKey!==_lastFolderKey){
-      _renderFolderHeader(folderKey);
-      _lastFolderKey=folderKey;
+  if(folderGrouping){
+    for(const group of _groupedBuckets){
+      _renderFolderHeader(group.key);
+      if(_folderCollapsed.has(group.key)) continue;
+      for(const s of group.sessions){
+        const rowIndex=globalSessionRowIndex++;
+        const inWindow=!virtualWindow.virtualized||(rowIndex>=virtualWindow.start&&rowIndex<virtualWindow.end);
+        if(inWindow){ list.appendChild(_renderOneSession(s, s.pinned||false)); }
+      }
     }
-    if(folderKey!==null&&_folderCollapsed.has(folderKey)) continue;
-    const rowIndex=globalSessionRowIndex++;
-    const inWindow=!virtualWindow.virtualized||(rowIndex>=virtualWindow.start&&rowIndex<virtualWindow.end);
-    if(inWindow){ list.appendChild(_renderOneSession(s, s.pinned||false)); }
+  } else {
+    for(const s of groupedSessionSeq){
+      const rowIndex=globalSessionRowIndex++;
+      const inWindow=!virtualWindow.virtualized||(rowIndex>=virtualWindow.start&&rowIndex<virtualWindow.end);
+      if(inWindow){ list.appendChild(_renderOneSession(s, s.pinned||false)); }
+    }
   }
   if(virtualAnchorScrollTop!==null){
     list.scrollTop=virtualAnchorScrollTop;

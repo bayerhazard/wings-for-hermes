@@ -510,10 +510,10 @@
   .session-item.drag-source{opacity:.45;}
   .session-item.drag-insert-before{box-shadow:0 -2px 0 0 var(--accent) inset;}
   .session-item.drag-insert-after{box-shadow:0 2px 0 0 var(--accent) inset;}
-  .session-folder-header{display:flex;align-items:center;gap:6px;padding:6px 8px;margin:6px 0 2px;border-radius:8px;font-size:11px;font-weight:700;letter-spacing:.04em;color:var(--muted);cursor:pointer;user-select:none;-webkit-user-select:none;text-transform:uppercase;}
-  .session-folder-header:hover{color:var(--text);background:var(--hover-bg);}
-  .session-folder-header .session-folder-caret{width:10px;flex-shrink:0;color:var(--accent);font-size:9px;transition:transform .18s var(--ease);}
-  .session-folder-header.has-color .session-folder-name::before{content:'';display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--folder-color);margin-right:6px;vertical-align:middle;}
+  .session-folder-header{display:flex;align-items:center;gap:6px;padding:6px 8px;margin:6px 0 2px;border-radius:8px;font-size:11px;font-weight:700;letter-spacing:.04em;color:var(--text);cursor:default;user-select:none;-webkit-user-select:none;text-transform:uppercase;}
+  .session-folder-header:hover{background:var(--hover-bg);}
+  .session-folder-header .session-folder-name{color:var(--text);}
+  .folder-grouping .session-item{margin-left:calc(var(--am-raum-16,16px));}
   .session-item.loading{background:var(--hover-bg);color:var(--text);}
   .session-item.long-pressing{
     background:var(--hover-bg);
@@ -566,7 +566,7 @@
   .session-item.streaming .session-title-row{color:var(--text);}
   .session-text{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;overflow:hidden;}
   .session-title-row{display:flex;align-items:center;gap:6px;min-width:0;}
-  .session-title{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text);user-select:none;}
+  .session-title{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted);user-select:none;}
   .session-search-hit{border-radius:4px;background:var(--accent-bg);color:var(--accent-text);box-decoration-break:clone;-webkit-box-decoration-break:clone;padding:0 .08em;}
   .session-search-preview{font-size:11px;line-height:1.35;color:var(--muted);overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow-wrap:anywhere;opacity:.9;}
   .session-search-hit-preview{background:var(--accent-bg);color:var(--accent-text);}
@@ -1638,10 +1638,10 @@
   .mic-btn.recording{color:#fff;background:var(--error);animation:rec-pulse 1.5s cubic-bezier(.4,0,.2,1) infinite;}
   @keyframes rec-pulse{0%,100%{box-shadow:none;}55%{box-shadow:0 0 0 9px rgba(239,83,80,0);}}
   @media (prefers-reduced-motion: reduce){.mic-btn.recording{animation:none;}}
-  .mic-status{font-size:12px;font-weight:500;color:var(--error);padding:6px 14px 2px;display:flex;align-items:center;gap:8px;}
+  .mic-status{font-size:12px;font-weight:500;color:var(--accent);padding:6px 14px 2px;display:flex;align-items:center;gap:8px;}
   /* EQ bars: five staggered bars signal an active recording at a glance */
   .mic-eq{display:inline-flex;align-items:flex-end;gap:2.5px;height:14px;flex-shrink:0;}
-  .mic-eq i{width:3px;height:14px;border-radius:2px;background:var(--error);animation:mic-eq-bounce .9s ease-in-out infinite;transform-origin:bottom;}
+  .mic-eq i{width:3px;height:14px;border-radius:2px;background:var(--accent);animation:mic-eq-bounce .9s ease-in-out infinite;transform-origin:bottom;}
   .mic-eq i:nth-child(1){animation-delay:0s;}
   .mic-eq i:nth-child(2){animation-delay:.12s;}
   .mic-eq i:nth-child(3){animation-delay:.24s;}
@@ -1665,17 +1665,17 @@
   .voice-mode-btn.active svg{filter:drop-shadow(0 0 3px rgba(var(--accent-rgb,99,102,241),.5));}
   .voice-mode-bar{font-size:11px;padding:4px 12px;display:flex;align-items:center;gap:8px;border-bottom:1px solid rgba(255,255,255,.05);}
   .voice-mode-indicator{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
-  .voice-mode-indicator.listening{background:var(--error);animation:voice-mode-pulse 1s ease-in-out infinite;}
+  .voice-mode-indicator.listening{background:var(--accent);animation:voice-mode-pulse 1s ease-in-out infinite;}
   .voice-mode-indicator.speaking{background:var(--accent);animation:voice-mode-pulse 1.5s ease-in-out infinite;}
-  .voice-mode-indicator.thinking{width:34px;height:14px;border-radius:0;background:transparent;background-repeat:no-repeat;
+  .voice-mode-indicator.thinking{width:17px;height:7px;border-radius:0;background:transparent;background-repeat:no-repeat;transform:rotate(180deg);
     background-image:linear-gradient(var(--accent),var(--accent)),linear-gradient(var(--accent),var(--accent)),linear-gradient(var(--accent),var(--accent)),linear-gradient(var(--accent),var(--accent)),linear-gradient(var(--accent),var(--accent)),linear-gradient(var(--accent),var(--accent));
-    background-position:0 0,6px 0,12px 0,18px 0,24px 0,30px 0;
-    background-size:4px 40%,4px 70%,4px 100%,4px 70%,4px 40%,4px 20%;
+    background-position:0 0,3px 0,6px 0,9px 0,12px 0,15px 0;
+    background-size:2px 40%,2px 70%,2px 100%,2px 70%,2px 40%,2px 20%;
     animation:voice-mode-synthwave 1.1s cubic-bezier(.2,0,0,1) infinite;}
   .voice-mode-label{color:var(--muted);font-size:11px;}
   @keyframes voice-mode-pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.5;transform:scale(.85);}}
-  @keyframes voice-mode-synthwave{0%,100%{background-size:4px 40%,4px 70%,4px 100%,4px 70%,4px 40%,4px 20%;}50%{background-size:4px 20%,4px 40%,4px 70%,4px 100%,4px 70%,4px 40%;}}
-  @media (prefers-reduced-motion: reduce){.voice-mode-indicator.thinking{animation:none;background-size:4px 40%,4px 70%,4px 100%,4px 70%,4px 40%,4px 20%;}}
+  @keyframes voice-mode-synthwave{0%,100%{background-size:2px 40%,2px 70%,2px 100%,2px 70%,2px 40%,2px 20%;}50%{background-size:2px 20%,2px 40%,2px 70%,2px 100%,2px 70%,2px 40%;}}
+  @media (prefers-reduced-motion: reduce){.voice-mode-indicator.thinking{animation:none;background-size:2px 40%,2px 70%,2px 100%,2px 70%,2px 40%,2px 20%;}}
   .status-text{font-size:11px;color:var(--muted);padding-left:4px;}
   .send-btn{width:40px;height:40px;border-radius:50%;background:var(--accent);border:none;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background var(--dur) var(--ease),box-shadow var(--dur) var(--ease),opacity var(--dur) var(--ease);box-shadow:none;}
   .send-btn.stop,.send-btn.interrupt{background:var(--error);box-shadow:none;}
