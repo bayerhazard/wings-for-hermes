@@ -8,16 +8,16 @@
      MUST appear before manifest/favicon links so browsers resolve relative URLs against the
      correct base when the page is served from /session/<id> routes. See #2226. -->
 <script>(function(){var path=location.pathname,marker='/session/',i=path.indexOf(marker),p;i>=0?p=(path.slice(0,i+1)||'/'):p=(path.endsWith('/')?path:(path.replace(/\/[^\/]*$/,'/')||'/'));document.write('<base href="'+location.origin+p+'">');})()</script>
-<link rel="icon" type="image/svg+xml" href="static/favicon.svg?v=wings3">
-<link rel="icon" type="image/png" sizes="32x32" href="static/favicon-32.png?v=wings3">
-<link rel="shortcut icon" href="static/favicon.ico?v=wings3">
+<link rel="icon" type="image/svg+xml" href="static/favicon-v5.svg?v=wings5">
+<link rel="icon" type="image/png" sizes="32x32" href="static/favicon-v5-32.png?v=wings5">
+<link rel="shortcut icon" href="static/favicon-v5.ico?v=wings5">
 <link rel="manifest" href="manifest.json" crossorigin="use-credentials">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Wings">
-<link rel="apple-touch-icon" sizes="512x512" href="static/apple-touch-icon.png?v=wings3">
-<script>(function(){try{var themes={light:1,dark:1,aimighty:1,system:1},legacy={midnight:'dark',neon:'aimighty',light:'light',dark:'dark',slate:'dark',solarized:'dark',monokai:'aimighty',nord:'dark',oled:'dark',codex:'dark',terracotta:'dark',graphite:'dark',github:'light','wings-light':'light','wings-dark':'dark'},t=(localStorage.getItem('wings-theme')||localStorage.getItem('hermes-theme')||'dark').toLowerCase(),m=legacy[t],theme=((m||themes[t])?t:'dark');localStorage.setItem('wings-theme',theme);localStorage.setItem('hermes-theme',theme);localStorage.removeItem('wings-skin');if(theme==='system')theme=window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';if(theme==='dark')document.documentElement.classList.add('dark');if(theme==='aimighty')document.documentElement.dataset.theme='aimighty';}catch(e){document.documentElement.classList.add('dark');}})()</script>
+<link rel="apple-touch-icon" sizes="512x512" href="static/apple-touch-v5.png?v=wings5">
+<script>(function(){try{var themes={light:1,dark:1,system:1},legacy={midnight:'dark',neon:'dark',light:'light',dark:'dark',slate:'dark',solarized:'dark',monokai:'dark',nord:'dark',oled:'dark',codex:'dark',terracotta:'dark',graphite:'dark',github:'light','wings-light':'light','wings-dark':'dark'},t=(localStorage.getItem('wings-theme')||localStorage.getItem('hermes-theme')||'dark').toLowerCase(),m=legacy[t],theme=((m||themes[t])?t:'dark');localStorage.setItem('wings-theme',theme);localStorage.setItem('hermes-theme',theme);localStorage.removeItem('wings-skin');if(theme==='system')theme=window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';if(theme==='dark')document.documentElement.classList.add('dark');}catch(e){document.documentElement.classList.add('dark');}})()</script>
 <script>(function(){try{var fs=localStorage.getItem('wings-font-size');if(fs&&fs!=='default')document.documentElement.dataset.fontSize=fs;}catch(e){}})()</script>
 <script>(function(){try{var m=(localStorage.getItem('wings-mode')==='advanced')?'advanced':'basic';if(!window.matchMedia('(min-width:641px)').matches)m='basic';document.documentElement.dataset.mode=m;}catch(e){document.documentElement.dataset.mode='basic';}})()</script>
 <!-- theme-color: surfaces the active app chrome color to native status bars (Safari status bar, PWA, native WKWebView wrappers). Updated dynamically by boot.js when theme/skin changes. The light/dark default values match style.css :root --sidebar / :root.dark --sidebar. -->
@@ -573,7 +573,7 @@
         aria-controls="outlinePanelWrapper"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="3" x2="9" y2="21"/></svg></button>
     <div class="messages" id="messages">
       <div class="empty-state no-suggestions" id="emptyState">
-        <div class="empty-logo"><img src="static/aimighty-logo.png" alt="AImighty" width="200" /></div>
+        <div class="empty-logo"><img class="empty-logo-light" src="static/ai_mighty_blue_white_bg.svg" alt="AImighty" width="200" /><img class="empty-logo-dark" src="static/ai_mighty_gold_shield_dark_bg.svg" alt="AImighty" width="200" /></div>
         <h2 data-i18n="empty_title">Wings for Hermes</h2>
         <p data-i18n="empty_subtitle" style="display:none"></p>
         <div class="suggestion-grid">
@@ -1049,7 +1049,7 @@
             </div>
             <div class="settings-field">
               <label data-i18n="settings_label_theme">Theme</label>
-              <div id="themePickerGrid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:4px">
+              <div id="themePickerGrid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:4px">
                 <button type="button" data-theme-val="light" onclick="_pickTheme('light')" class="theme-pick-btn" style="border:1px solid var(--border2);border-radius:10px;padding:10px 8px;text-align:center;cursor:pointer;background:none;transition:all var(--dur-fast) var(--ease)">
                   <div style="width:100%;height:40px;border-radius:6px;background:#FEFCF7;border:1px solid rgba(0,0,0,.12);margin-bottom:6px;display:flex;align-items:center;justify-content:center">
                     <svg width="16" height="16" fill="none" stroke="#002f56" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
@@ -1061,14 +1061,8 @@
                     <svg width="16" height="16" fill="none" stroke="#caa960" stroke-width="2" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1111.21 3a7 7 0 009.79 9.79z"/></svg>
                   </div>
                   <span style="font-size:12px;font-weight:500;color:var(--text)">Dunkel</span>
-                </button>
-                <button type="button" data-theme-val="aimighty" onclick="_pickTheme('aimighty')" class="theme-pick-btn" style="border:1px solid var(--border2);border-radius:10px;padding:10px 8px;text-align:center;cursor:pointer;background:none;transition:all var(--dur-fast) var(--ease)">
-                  <div style="width:100%;height:40px;border-radius:6px;background:#051729;border:1px solid rgba(202,169,96,.4);margin-bottom:6px;display:flex;align-items:center;justify-content:center">
-                    <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="7.2" fill="#caa960"/></svg>
-                  </div>
-                  <span style="font-size:12px;font-weight:500;color:var(--text)">AImighty</span>
-                </button>
-                <button type="button" data-theme-val="system" onclick="_pickTheme('system')" class="theme-pick-btn" style="border:1px solid var(--border2);border-radius:10px;padding:10px 8px;text-align:center;cursor:pointer;background:none;transition:all var(--dur-fast) var(--ease)">
+                 </button>
+                 <button type="button" data-theme-val="system" onclick="_pickTheme('system')" class="theme-pick-btn" style="border:1px solid var(--border2);border-radius:10px;padding:10px 8px;text-align:center;cursor:pointer;background:none;transition:all var(--dur-fast) var(--ease)">
                   <div style="width:100%;height:40px;border-radius:6px;background:#FEFCF7;border:1px solid rgba(0,0,0,.12);margin-bottom:6px;display:flex;align-items:center;justify-content:center">
                     <svg width="16" height="16" fill="none" stroke="#888" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
                   </div>

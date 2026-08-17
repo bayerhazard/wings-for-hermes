@@ -3789,6 +3789,20 @@ let _sessionSourceFilter = 'webui';  // 'webui' keeps WebUI chats separate from 
 const MANUAL_ORDER_STORAGE_KEY = 'wings-manual-session-order';
 let _manualSessionOrder = new Map();
 let _folderCollapsedStates = new Set();  // project_ids collapsed in the "All" folder view
+let _folderDefaultSeeded = false;         // true after the one-time default-collapse seed
+let _folderOrder = _loadFolderOrder();    // persisted manual project order (Unassigned excluded, kept on top)
+const FOLDER_ORDER_STORAGE_KEY='wings-folder-order';
+function _loadFolderOrder(){
+  try{
+    const raw=localStorage.getItem(FOLDER_ORDER_STORAGE_KEY);
+    if(!raw) return [];
+    const arr=JSON.parse(raw);
+    return Array.isArray(arr)?arr.filter(x=>typeof x==='string'):[];
+  }catch(_e){ return []; }
+}
+function _saveFolderOrder(){
+  try{ localStorage.setItem(FOLDER_ORDER_STORAGE_KEY, JSON.stringify(_folderOrder)); }catch(_e){}
+}
 
 function _manualOrderScopeForSession(s){
   return (s&&s.project_id)||'all';
@@ -7305,6 +7319,67 @@ function _onSessionRowDragEnd(e){
   _clearDragInsertMarks();
 }
 
+// ── Manual folder reorder via drag & drop (All view) ──────────────────
+let _dragFolderKey=null;
+let _dragFolderInsertKey=null;
+
+function _onFolderDragStart(e){
+  if(_sessionSelectMode) return;
+  const header=e.target&&e.target.closest?e.target.closest('.session-folder-header[data-folder-key]'):null;
+  if(!header||!header.dataset||!header.dataset.folderKey) return;
+  const key=header.dataset.folderKey;
+  if(key===NO_PROJECT_FILTER) return;                 // Unassigned stays fixed on top
+  _dragFolderKey=key;
+  _dragFolderInsertKey=null;
+  e.dataTransfer.setData('text/plain', key);
+  e.dataTransfer.effectAllowed='move';
+  try{ e.dataTransfer.setDragImage(header, 20, 20); }catch(_e){}
+  header.classList.add('drag-source');
+}
+
+function _clearFolderDragMarks(){
+  const list=_sessionVirtualScrollList;
+  if(!list) return;
+  list.querySelectorAll('.drag-insert-before,.drag-insert-after,.drag-source').forEach(n=>{
+    n.classList.remove('drag-insert-before','drag-insert-after','drag-source');
+  });
+}
+
+function _onFolderDragOver(e){
+  if(!_dragFolderKey) return;
+  e.preventDefault();
+  e.dataTransfer.dropEffect='move';
+  const header=e.target&&e.target.closest?e.target.closest('.session-folder-header[data-folder-key]'):null;
+  if(!header||!header.dataset||!header.dataset.folderKey) return;
+  const key=header.dataset.folderKey;
+  const rect=header.getBoundingClientRect();
+  const before=(e.clientY-rect.top)<rect.height/2;
+  _dragFolderInsertKey=key;
+  _clearFolderDragMarks();
+  header.classList.add('drag-insert-'+(before?'before':'after'));
+}
+
+function _onFolderDrop(e){
+  if(!_dragFolderKey) return;
+  e.preventDefault();
+  e.stopPropagation();
+  const sourceKey=_dragFolderKey;
+  const targetKey=_dragFolderInsertKey;
+  if(!targetKey||sourceKey===targetKey) return;
+  const order=_folderOrder.filter(k=>k!==sourceKey&&_allProjects.some(p=>p&&p.project_id===k));
+  const insertIdx=order.indexOf(targetKey);
+  const insertAt=insertIdx<0?order.length:(order.indexOf(sourceKey)<insertIdx?insertIdx:insertIdx);
+  order.splice(insertAt,0,sourceKey);
+  _folderOrder=order;
+  _saveFolderOrder();
+  renderSessionListFromCache();
+}
+
+function _onFolderDragEnd(e){
+  _dragFolderKey=null;_dragFolderInsertKey=null;
+  _clearFolderDragMarks();
+}
+
 function _markSessionListPointerDown(){
   _sessionListPointerActive=true;
   _sessionListLastScrollAt=Date.now();
@@ -7770,11 +7845,14 @@ function renderSessionListFromCache(){
   const folderGrouping=!_activeProject&&!q&&allSessions.length<=SESSION_VIRTUAL_THRESHOLD_ROWS&&_allProjects.length>0;
   const _folderCollapsed=_folderCollapsedStates;
   // Default collapsed state (no persistence): every project folder is collapsed
-  // except Unassigned, which sits open on top. Re-seed on each grouped render so
-  // a fresh load always starts from the standard.
+  // except Unassigned, which sits open on top. Seed ONCE (first grouped render)
+  // so later user dblclick toggles are not undone by re-seeding on every render.
   if(folderGrouping){
-    for(const p of _allProjects){ if(p&&p.project_id) _folderCollapsed.add(p.project_id); }
-    _folderCollapsed.delete(NO_PROJECT_FILTER);
+    if(!_folderDefaultSeeded){
+      _folderDefaultSeeded=true;
+      for(const p of _allProjects){ if(p&&p.project_id) _folderCollapsed.add(p.project_id); }
+      _folderCollapsed.delete(NO_PROJECT_FILTER);
+    }
     list.classList.add('folder-grouping');
   } else {
     list.classList.remove('folder-grouping');
@@ -7784,9 +7862,11 @@ function renderSessionListFromCache(){
   // projects in _allProjects order; within a bucket keep pinned-first + the
   // existing manual/timestamp ordering.
   const _folderOrderOf=(key)=>{
-    if(key===NO_PROJECT_FILTER) return -1;
+    if(key===NO_PROJECT_FILTER) return -1;                 // Unassigned fixed on top
+    const manual=_folderOrder.indexOf(key);
+    if(manual>=0) return manual+1;                          // user-ordered projects
     const idx=_allProjects.findIndex(p=>p&&p.project_id===key);
-    return idx<0?Number.MAX_SAFE_INTEGER:idx;
+    return _folderOrder.length+1+(idx<0?Number.MAX_SAFE_INTEGER:idx);
   };
   const _groupedBuckets=(()=>{
     const buckets=new Map();
@@ -7865,6 +7945,7 @@ function renderSessionListFromCache(){
     const label=proj?proj.name:'Unassigned';
     const header=document.createElement('div');
     header.className='session-folder-header';
+    header.dataset.folderKey=key;
     const name=document.createElement('span');
     name.className='session-folder-name';
     name.textContent=label;
@@ -7873,6 +7954,14 @@ function renderSessionListFromCache(){
       if(_folderCollapsed.has(key)) _folderCollapsed.delete(key); else _folderCollapsed.add(key);
       renderSessionListFromCache();
     };
+    if(key!==NO_PROJECT_FILTER&&!_sessionSelectMode){
+      header.draggable=true;
+      header.title=(header.title?header.title+' · ':'')+'Drag to reorder folders';
+      header.addEventListener('dragstart', _onFolderDragStart, {passive:false});
+      header.addEventListener('dragover', _onFolderDragOver, {passive:false});
+      header.addEventListener('drop', _onFolderDrop, {passive:false});
+      header.addEventListener('dragend', _onFolderDragEnd, {passive:false});
+    }
     list.appendChild(header);
   };
   if(folderGrouping){

@@ -3295,18 +3295,18 @@ if(window.visualViewport){
 const _THEMES=[
   {name:'Hell',    value:'light',  colors:['#F5F5F7','#FFFFFF','#002f56']},
   {name:'Dunkel',  value:'dark',   colors:['#051729','#0A2238','#caa960']},
-  {name:'AImighty', value:'aimighty', colors:['#051729','#0A2238','#caa960']},
   {name:'System',  value:'system', colors:['#F5F5F7','#051729','#caa960']},
 ];
 const _VALID_THEMES=new Set((_THEMES||[]).map(t=>t.value));
 const _LEGACY_THEME_MAP={
   midnight:{theme:'dark'},
-  neon:{theme:'aimighty'},
+  neon:{theme:'dark'},
+  aimighty:{theme:'dark'},
   light:{theme:'light'},
   dark:{theme:'dark'},
   slate:{theme:'dark'},
   solarized:{theme:'dark'},
-  monokai:{theme:'aimighty'},
+  monokai:{theme:'dark'},
   nord:{theme:'dark'},
   oled:{theme:'dark'},
   codex:{theme:'dark'},
@@ -3389,13 +3389,7 @@ function _applyTheme(name){
     return;
   }
   document.documentElement.dataset.theme=normalized.theme;
-  if(normalized.theme==='aimighty'){
-    document.documentElement.classList.remove('dark');
-    _resolvedThemeBaseDark=false;
-    _syncThemeColorMeta();
-  }else{
-    _setResolvedTheme(normalized.theme==='dark');
-  }
+  _setResolvedTheme(normalized.theme==='dark');
 }
 
 function _pickTheme(name){

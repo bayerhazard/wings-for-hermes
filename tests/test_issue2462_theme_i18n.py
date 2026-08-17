@@ -28,7 +28,7 @@ def _literal_value(block: str, key: str) -> str:
 def test_theme_command_help_mentions_current_theme_and_skin_values():
     """Every /theme help string should describe the current Theme × Skin contract."""
     required_fragments = (
-        "system/dark/light/aimighty",
+        "system/dark/light",
         "default/midnight",
     )
     for locale in ("en", "de"):
@@ -43,9 +43,8 @@ def test_theme_command_help_mentions_current_theme_and_skin_values():
         )
 
 
-def test_french_theme_usage_uses_actual_slash_command_with_space():
+def test_german_theme_usage_uses_actual_slash_command_with_space():
     """The German cmd_theme help must reference the actual theme contract."""
     de_theme_usage = _literal_value(_locale_block("de"), "cmd_theme")
     assert "Theme:" in de_theme_usage
-    assert "aimighty" in de_theme_usage
     assert "/thème" not in de_theme_usage

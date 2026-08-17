@@ -107,21 +107,19 @@ class TestBootJsThemeColorSync:
         ) in src
 
     def test_apply_skin_calls_sync(self):
-        """The skin system was removed. Switching the AImighty theme (data-theme
-        branch that bypasses _setResolvedTheme) must still update the meta tag so
-        native chrome flips with the page.
+        """The skin system and the separate AImighty data-theme branch are gone.
+        Every dark/light theme now routes through _setResolvedTheme, which must
+        still sync the theme-color meta so native chrome flips with the page.
         """
         src = BOOT.read_text(encoding="utf-8")
         # Skin picker no longer exists.
         assert "function _applySkin(" not in src
-        # The AImighty branch in _applyTheme must sync the theme-color meta.
-        assert (
-            "if(normalized.theme==='aimighty'){\n"
-            "    document.documentElement.classList.remove('dark');\n"
-            "    _resolvedThemeBaseDark=false;\n"
-            "    _syncThemeColorMeta();\n"
-            "  }"
-        ) in src
+        # The old AImighty bypass branch is gone — no data-theme=aimighty styling.
+        assert "data-theme=\"aimighty\"" not in src
+        assert "if(normalized.theme==='aimighty'){" not in src
+        # _setResolvedTheme (the single dark/light path) must sync the meta tag.
+        assert "function _setResolvedTheme(isDark){" in src
+        assert "_syncThemeColorMeta();" in src
         assert "if(!link){ _syncThemeColorMeta(); return; }" in src
 
 

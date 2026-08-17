@@ -139,42 +139,25 @@
   :root[data-font-size="large"] { font-size: 16px; }
   :root[data-font-size="xlarge"] { font-size: 18px; }
  /* ── Dark mode (Dunkel) — AImighty navy scale + butterfly gold accent ── */
+  /* AImighty-Theme: Hanseatenblau trägt die Fläche, Gold trägt das Signal.
+     (Designguide 17.08.) — einziger Dunkel-Modus; vormals geteiltes
+     [data-theme=aimighty] ist darin aufgegangen (Muted, Hover, Akzent, Chat-Fläche). */
   :root.dark {
     --bg:#051729;--surface:#0A2238;--sidebar:#051729;--border:#142e47;--border2:#294766;
-    --text:#ebeff3;--muted:#6683a2;--accent:#caa960;--blue:#60b0ff;--gold:#caa960;--gold-text:#caa960;--code-bg:#142e47;
+    --text:#ebeff3;--muted:#8ca1b7;--accent:#caa960;--blue:#60b0ff;--gold:#caa960;--gold-text:#caa960;--code-bg:#142e47;
     --topbar-bg:rgba(5,23,41,.98);--main-bg:rgba(5,23,41,0.5);
     --focus-ring:rgba(202,169,96,.35);--focus-glow:rgba(202,169,96,.1);
-    --input-bg:rgba(255,255,255,.04);--hover-bg:rgba(255,255,255,.06);
+    --input-bg:rgba(255,255,255,.04);--hover-bg:rgba(202,169,96,.08);
     --strong:#ffffff;--em:#8ca1b7;--code-text:#d3dae1;--code-inline-bg:rgba(255,255,255,.08);--pre-text:#d3dae1;
-    --accent-hover:#d8bd7d;--accent-bg:color-mix(in oklab, var(--gold) 12%, transparent);--accent-bg-strong:color-mix(in oklab, var(--gold) 44%, transparent);--accent-text:#caa960;
+    --accent-hover:#d8bd7d;--accent-bg:rgba(202,169,96,0.1);--accent-bg-strong:rgba(202,169,96,0.18);--accent-text:#caa960;
     --error:#f6857a;--success:#55c483;--warning:#ed914c;--info:#60b0ff;
     --surface-subtle:rgba(255,255,255,.025);--surface-subtle-hover:rgba(255,255,255,.045);
     --border-subtle:rgba(212,218,232,.08);--border-muted:rgba(212,218,232,.14);
     /* ── Premium redesign tokens (dark) ── */
-    --chat-bg:#0a1c30;
-  }
-  /* ── AImighty theme — Hanseatenblau (navy) trägt die Fläche, Gold trägt das Signal ── */
-  :root[data-theme="aimighty"] {
-    --bg:#051729;--surface:#0A2238;--sidebar:#051729;--border:transparent;--border2:transparent;
-    --text:#EBEFF3;--muted:#8CA1B7;--accent:#caa960;--blue:#60b0ff;--gold:#caa960;--gold-text:#caa960;--code-bg:#142e47;
-    --topbar-bg:rgba(5,23,41,.98);--main-bg:rgba(5,23,41,0.5);
-    --focus-ring:rgba(202,169,96,.35);--focus-glow:rgba(202,169,96,.1);
-    --input-bg:rgba(255,255,255,.04);--hover-bg:rgba(202,169,96,.08);
-    --strong:#FFFFFF;--em:#8CA1B7;--code-text:#D3DAE1;--code-inline-bg:rgba(255,255,255,.08);--pre-text:#D3DAE1;
-    --accent-hover:#d8bd7d;--accent-bg:rgba(202,169,96,0.1);--accent-bg-strong:rgba(202,169,96,0.18);--accent-text:#caa960;
-    --error:#f6857a;--success:#55c483;--warning:#ed914c;--info:#60b0ff;
-    --surface-subtle:rgba(255,255,255,.025);--surface-subtle-hover:rgba(255,255,255,.045);
-    --border-subtle:transparent;--border-muted:transparent;
-    /* ── Premium redesign tokens (aimighty) ── */
     --chat-bg:#0A2238;
   }
-  /* Gold als dezente Markierung — Fokus und aktive Zustände, kein Neon-Glow */
-  :root[data-theme="aimighty"] .composer-box:focus-within{box-shadow:0 0 0 3px var(--accent-bg-strong);}
-  :root[data-theme="aimighty"] .send-btn:hover:not(:disabled){box-shadow:none;}
-  :root[data-theme="aimighty"] .session-item.active{box-shadow:none;}
-  :root[data-theme="aimighty"] .titlebar-status-pill:hover{box-shadow:none;}
-  :root[data-theme="aimighty"] .new-chat-btn:hover{box-shadow:none;}
-  :root[data-theme="aimighty"] .btn.primary:hover{box-shadow:none;}
+  /* Gold als dezente Markierung — Fokus, kein Neon-Glow */
+  :root.dark .composer-box:focus-within{box-shadow:0 0 0 3px var(--accent-bg-strong);}
 
   /* ── Hide titlebar, disable focus/active highlights, hide basic-mode stats ── */
   .app-titlebar{display:none!important;}
@@ -198,19 +181,16 @@
   :root.dark .panel-head{border-bottom:none;}
 
 
-  /* Dark mode: dialog bg must match the navy page background (#051729 / #000815).
-     Applies to .dark AND the AImighty theme, which removes the .dark class (boot.js). */
-  :root.dark .app-dialog,
-  :root[data-theme="aimighty"] .app-dialog{background:#0a1c30!important;border-color:var(--border2)!important;box-shadow:none;}
-  :root.dark .app-dialog-overlay,
-  :root[data-theme="aimighty"] .app-dialog-overlay{background:rgba(0,0,0,.7)!important;backdrop-filter:blur(8px)!important;}
-  :root[data-theme="aimighty"] .app-dialog-input,
-  :root[data-theme="aimighty"] .app-dialog-input:focus{background:rgba(255,255,255,.04)!important;border-color:var(--border2)!important;color:var(--text);}
-  :root[data-theme="aimighty"] .app-dialog-close,
-  :root[data-theme="aimighty"] .app-dialog-close:hover{background:rgba(255,255,255,.04)!important;color:var(--muted);}
-  :root[data-theme="aimighty"] .app-dialog-btn:not(.confirm){background:rgba(255,255,255,.04)!important;}
-  :root[data-theme="aimighty"] .app-dialog-btn:not(.confirm):hover{background:rgba(255,255,255,.09)!important;}
-  :root[data-theme="aimighty"] .app-dialog-btn.confirm{border-color:var(--accent)!important;background:var(--accent-bg-strong)!important;color:var(--accent-text)!important;}
+  /* Dark mode: dialog bg must match the navy page background (#051729 / #000815). */
+  :root.dark .app-dialog{background:#0a1c30!important;border-color:var(--border2)!important;box-shadow:none;}
+  :root.dark .app-dialog-overlay{background:rgba(0,0,0,.7)!important;backdrop-filter:blur(8px)!important;}
+  :root.dark .app-dialog-input,
+  :root.dark .app-dialog-input:focus{background:rgba(255,255,255,.04)!important;border-color:var(--border2)!important;color:var(--text);}
+  :root.dark .app-dialog-close,
+  :root.dark .app-dialog-close:hover{background:rgba(255,255,255,.04)!important;color:var(--muted);}
+  :root.dark .app-dialog-btn:not(.confirm){background:rgba(255,255,255,.04)!important;}
+  :root.dark .app-dialog-btn:not(.confirm):hover{background:rgba(255,255,255,.09)!important;}
+  :root.dark .app-dialog-btn.confirm{border-color:var(--accent)!important;background:var(--accent-bg-strong)!important;color:var(--accent-text)!important;}
   /* #594: app-dialog light mode overrides — base styles use hardcoded dark gradients */
   :root:not(.dark) .app-dialog{
     background:#f0ede8;
@@ -512,8 +492,13 @@
   .session-item.drag-insert-after{box-shadow:0 2px 0 0 var(--accent) inset;}
   .session-folder-header{display:flex;align-items:center;gap:6px;padding:6px 8px;margin:6px 0 2px;border-radius:8px;font-size:11px;font-weight:700;letter-spacing:.04em;color:var(--text);cursor:default;user-select:none;-webkit-user-select:none;text-transform:uppercase;}
   .session-folder-header:hover{background:var(--hover-bg);}
+  .session-folder-header[draggable="true"]{cursor:grab;}
+  .session-folder-header[draggable="true"]:active{cursor:grabbing;}
+  .session-folder-header.drag-insert-before{box-shadow:0 -2px 0 0 var(--accent) inset;}
+  .session-folder-header.drag-insert-after{box-shadow:0 2px 0 0 var(--accent) inset;}
+  .session-folder-header.drag-source{opacity:.4;}
   .session-folder-header .session-folder-name{color:var(--text);}
-  .folder-grouping .session-item{margin-left:calc(var(--am-raum-16,16px));}
+  .folder-grouping .session-item{margin-left:4px;}
   .session-item.loading{background:var(--hover-bg);color:var(--text);}
   .session-item.long-pressing{
     background:var(--hover-bg);
@@ -1429,23 +1414,17 @@
   @keyframes pulse{0%,80%,100%{opacity:.2;transform:scale(.8)}40%{opacity:.8;transform:scale(1)}}
   .empty-state{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:40px;color:var(--muted);}
   .empty-state.no-suggestions .suggestion-grid{display:none}
-  /* Empty-state brand mark: a free-breathing winged caduceus with a soft
-     "spirit" bloom behind it — no app-icon tile. Glow + mark gradient are
-     tuned separately for dark vs light themes (see --logo-glow / .hm-g* below). */
+  /* Empty-state brand mark: the AImighty wordmark (Wappen Gold mit ausgestanztem
+     "AI" + "mighty"). Fassung wird je Grund getauscht — dunkler Grund nimmt die
+     Gold-Fassung, heller Grund die Hanseatenblau-Fassung. Eingebunden, nicht
+     eingefärbt (Designguide). Kein Glow, kein Schatten. */
   .empty-logo{position:relative;display:flex;align-items:center;justify-content:center;margin-bottom:10px;background:none;border:none;border-radius:0;box-shadow:none;}
-  .empty-logo::before{content:"";position:absolute;left:50%;top:50%;width:190px;height:190px;transform:translate(-50%,-50%);border-radius:50%;background:var(--logo-glow);z-index:0;pointer-events:none;}
-  .empty-logo svg{position:relative;z-index:1;width:88px;height:88px;display:block;}
-  /* Light themes (default :root): deeper, richer gradient holds contrast on
-     a pale background; cooler, restrained bloom. */
-  :root .empty-logo .hm-g0{stop-color:color-mix(in srgb,var(--accent) 80%,#0AA6CC);}
-  :root .empty-logo .hm-g1{stop-color:var(--accent);}
-  :root{--logo-glow:transparent;}
-  /* Dark themes: accent-based luminous bloom. */
-  :root.dark .empty-logo .hm-g0{stop-color:color-mix(in srgb,var(--accent) 80%,#08EBF1);}
-  :root.dark .empty-logo .hm-g1{stop-color:var(--accent);}
-  :root.dark{--logo-glow:transparent;}
+  .empty-logo img{display:block;max-width:240px;width:100%;height:auto;}
+  .empty-logo .empty-logo-dark{display:none;}
+  :root.dark .empty-logo .empty-logo-light{display:none;}
+  :root.dark .empty-logo .empty-logo-dark{display:block;}
   @media (prefers-reduced-motion: no-preference){
-    .empty-logo svg{animation:emptyLogoRise .5s ease-out both;}
+    .empty-logo img{animation:emptyLogoRise .5s ease-out both;}
     @keyframes emptyLogoRise{from{opacity:0;transform:translateY(6px) scale(.96);}to{opacity:1;transform:none;}}
   }
   .empty-state h2{font-size:20px;color:var(--text);font-weight:700;letter-spacing:-.02em;}
@@ -1638,7 +1617,7 @@
   .mic-btn.recording{color:#fff;background:var(--error);animation:rec-pulse 1.5s cubic-bezier(.4,0,.2,1) infinite;}
   @keyframes rec-pulse{0%,100%{box-shadow:none;}55%{box-shadow:0 0 0 9px rgba(239,83,80,0);}}
   @media (prefers-reduced-motion: reduce){.mic-btn.recording{animation:none;}}
-  .mic-status{font-size:12px;font-weight:500;color:var(--accent);padding:6px 14px 2px;display:flex;align-items:center;gap:8px;}
+  .mic-status{font-size:12px;font-weight:500;color:var(--accent);padding:6px 12px 2px;display:flex;align-items:center;gap:8px;}
   /* EQ bars: five staggered bars signal an active recording at a glance */
   .mic-eq{display:inline-flex;align-items:flex-end;gap:2.5px;height:14px;flex-shrink:0;}
   .mic-eq i{width:3px;height:14px;border-radius:2px;background:var(--accent);animation:mic-eq-bounce .9s ease-in-out infinite;transform-origin:bottom;}

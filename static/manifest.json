@@ -7,8 +7,8 @@
   "scope": "./",
   "display": "standalone",
   "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
-  "background_color": "#010f20",
-  "theme_color": "#010f20",
+  "background_color": "#051729",
+  "theme_color": "#051729",
   "orientation": "portrait-primary",
   "categories": ["productivity", "utilities"],
   "shortcuts": [
@@ -19,7 +19,7 @@
       "url": "./?source=pwa&action=new-chat",
       "icons": [
         {
-          "src": "static/favicon-192.png",
+          "src": "static/favicon-v5-192.png",
           "sizes": "192x192",
           "type": "image/png"
         }
@@ -28,23 +28,23 @@
   ],
   "icons": [
     {
-      "src": "static/favicon.svg",
+      "src": "static/favicon-v5.svg",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any maskable"
     },
     {
-      "src": "static/favicon-32.png",
+      "src": "static/favicon-v5-32.png",
       "sizes": "32x32",
       "type": "image/png"
     },
     {
-      "src": "static/favicon-192.png",
+      "src": "static/favicon-v5-192.png",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "static/favicon-512.png",
+      "src": "static/favicon-v5-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
