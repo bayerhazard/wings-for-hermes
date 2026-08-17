@@ -3782,6 +3782,57 @@ let _serverWebuiSessionCount = null;  // explicit server count for WebUI session
 let _serverCliSessionCount = null;    // explicit server count for CLI sessions
 let _sessionSourceFilter = 'webui';  // 'webui' keeps WebUI chats separate from read-only CLI sessions
 
+// ── Manual session ordering (drag & drop) ─────────────────────────────
+// Persisted per project scope (project_id | 'all' | NO_PROJECT_FILTER) so a
+// reorder survives reloads without touching the atomic-save session files.
+// `_manualSessionOrder` is a Map: scopeKey -> array of session_id (first = top).
+const MANUAL_ORDER_STORAGE_KEY = 'wings-manual-session-order';
+let _manualSessionOrder = new Map();
+let _folderCollapsedStates = new Set();  // project_ids collapsed in the "All" folder view
+
+function _manualOrderScopeForSession(s){
+  return (s&&s.project_id)||'all';
+}
+
+function _loadManualSessionOrder(){
+  _manualSessionOrder = new Map();
+  try{
+    const raw=localStorage.getItem(MANUAL_ORDER_STORAGE_KEY);
+    if(!raw) return;
+    const data=JSON.parse(raw);
+    if(!data||typeof data!=='object') return;
+    for(const key of Object.keys(data)){
+      if(Array.isArray(data[key])) _manualSessionOrder.set(key, data[key].filter(v=>typeof v==='string'));
+    }
+  }catch(_e){ _manualSessionOrder = new Map(); }
+}
+
+function _saveManualSessionOrder(){
+  const out={};
+  for(const [k,v] of _manualSessionOrder) if(Array.isArray(v)&&v.length) out[k]=v;
+  try{ localStorage.setItem(MANUAL_ORDER_STORAGE_KEY, JSON.stringify(out)); }
+  catch(_e){ /* storage full / private mode — best effort */ }
+}
+
+function _manualOrderRank(session){
+  if(!session||!session.session_id) return -1;
+  const scope=_manualOrderScopeForSession(session);
+  const order=_manualSessionOrder.get(scope);
+  if(!order) return -1;
+  const idx=order.indexOf(session.session_id);
+  return idx>=0?idx:-1;
+}
+
+// Rebuild the manual order for a scope from a reordered flat list of sessions.
+function _applyManualOrder(scope, orderedSessions){
+  const ids=orderedSessions.map(s=>s&&s.session_id).filter(Boolean);
+  _manualSessionOrder.set(scope, ids);
+  _saveManualOrderSession();
+}
+
+function _loadManualSessionOrderIfNeeded(){ if(_manualSessionOrderLoaded) return; _manualSessionOrderLoaded=true; _loadManualSessionOrder(); }
+let _manualSessionOrderLoaded = false;
+
 function _restoreShowAllProfiles(){
   try{
     const raw=localStorage.getItem(SHOW_ALL_PROFILES_STORAGE_KEY);
@@ -3796,6 +3847,7 @@ function _setShowAllProfiles(enabled){
 
 _restoreShowAllProfiles();
 _restoreSessionSourceFilter();
+_loadManualSessionOrderIfNeeded();
 let _sessionActionMenu = null;
 let _sessionActionAnchor = null;
 let _sessionActionSessionId = null;
@@ -4700,6 +4752,16 @@ function _openSessionActionMenu(session, anchorEl){
     return;
   }
   _appendSessionShareActions(menu, session);
+  menu.appendChild(_buildSessionAction(
+    t('session_select_mode'),
+    t('session_select_mode_desc'),
+    '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="2.5" width="11" height="11" rx="2"/><polyline points="6,8 7.5,9.5 10,6.5"/></svg>',
+    async()=>{
+      closeSessionActionMenu();
+      toggleSessionSelectMode();
+      toggleSessionSelect(session.session_id);
+    }
+  ));
   menu.appendChild(_buildSessionAction(
     t('session_move_project'),
     session.project_id?t('session_move_project_desc_has'):t('session_move_project_desc_none'),
@@ -6338,6 +6400,12 @@ function _sessionRunningSortRank(session) {
 function _sessionSidebarSortCompare(a, b) {
   const activeDelta = _sessionRunningSortRank(b) - _sessionRunningSortRank(a);
   if(activeDelta) return activeDelta;
+  // Manual drag&drop order wins within the same scope; otherwise timestamp.
+  const aScope=_manualOrderScopeForSession(a), bScope=_manualOrderScopeForSession(b);
+  if(aScope===bScope){
+    const ra=_manualOrderRank(a), rb=_manualOrderRank(b);
+    if(ra>=0&&rb>=0&&ra!==rb) return ra-rb;
+  }
   return _sessionSortTimestampMs(b) - _sessionSortTimestampMs(a);
 }
 
@@ -7158,6 +7226,83 @@ function _ensureSessionVirtualScrollHandler(list){
   list.addEventListener('pointerup', _markSessionListPointerUp, {passive:true});
   list.addEventListener('pointercancel', _markSessionListPointerUp, {passive:true});
   list.addEventListener('pointerleave', _markSessionListPointerUp, {passive:true});
+  list.addEventListener('dragstart', _onSessionRowDragStart, {passive:false});
+  list.addEventListener('dragover', _onSessionRowDragOver, {passive:false});
+  list.addEventListener('drop', _onSessionRowDrop, {passive:false});
+  list.addEventListener('dragend', _onSessionRowDragEnd, {passive:false});
+}
+
+// ── Manual reorder via drag & drop ────────────────────────────────────
+let _dragSessionSid = null;
+let _dragInsertBeforeSid = null;
+
+function _onSessionRowDragStart(e){
+  if(_sessionSelectMode) return;
+  const row=e.target&&e.target.closest?e.target.closest('.session-item:not(.read-only-session):not(.archived)'):null;
+  if(!row||!row.dataset||!row.dataset.sid) return;
+  const readOnly=(typeof _isReadOnlySession==='function')&&row.dataset.sid&&(()=>{
+    const s=(_allSessions||[]).find(x=>x&&x.session_id===row.dataset.sid);
+    return _isReadOnlySession(s);
+  })();
+  if(readOnly) return;
+  _dragSessionSid=row.dataset.sid;
+  _dragInsertBeforeSid=null;
+  e.dataTransfer.setData('text/plain', row.dataset.sid);
+  e.dataTransfer.effectAllowed='move';
+  try{ e.dataTransfer.setDragImage(row, 20, 20); }catch(_e){}
+  row.classList.add('drag-source');
+}
+
+function _onSessionRowDragOver(e){
+  if(!_dragSessionSid) return;
+  e.preventDefault();
+  e.dataTransfer.dropEffect='move';
+  const row=e.target&&e.target.closest?e.target.closest('.session-item:not(.read-only-session):not(.archived)'):null;
+  if(!row||!row.dataset||!row.dataset.sid) return;
+  // Decide insertion point by pointer's vertical half inside the row.
+  const rect=row.getBoundingClientRect();
+  const before=(e.clientY-rect.top)<rect.height/2;
+  _dragInsertBeforeSid=row.dataset.sid;
+  _clearDragInsertMarks();
+  row.classList.add('drag-insert-'+(before?'before':'after'));
+}
+
+function _clearDragInsertMarks(){
+  const list=_sessionVirtualScrollList;
+  if(!list) return;
+  list.querySelectorAll('.drag-insert-before,.drag-insert-after,.drag-source').forEach(n=>{
+    n.classList.remove('drag-insert-before','drag-insert-after','drag-source');
+  });
+}
+
+function _onSessionRowDrop(e){
+  if(!_dragSessionSid) return;
+  e.preventDefault();
+  e.stopPropagation();
+  const sourceSid=_dragSessionSid;
+  const source=(_allSessions||[]).find(x=>x&&x.session_id===sourceSid)||{};
+  const scope=_manualOrderScopeForSession(source);
+  const order=_manualSessionOrder.get(scope)||(_allSessions||[])
+    .filter(s=>s&&_manualOrderScopeForSession(s)===scope&&!s.archived)
+    .sort(_sessionSidebarSortCompare)
+    .map(s=>s.session_id);
+  let list=[...order];
+  const from=list.indexOf(sourceSid);
+  if(from>=0) list.splice(from,1);
+  const insertBefore=(_dragInsertBeforeSid&&_dragInsertBeforeSid!==sourceSid)?_dragInsertBeforeSid:null;
+  let to=insertBefore?list.indexOf(insertBefore):-1;
+  if(to<0) to=list.length;
+  list.splice(to,0,sourceSid);
+  _manualSessionOrder.set(scope, list);
+  _saveManualSessionOrder();
+  _dragSessionSid=null;_dragInsertBeforeSid=null;
+  _clearDragInsertMarks();
+  renderSessionListFromCache();
+}
+
+function _onSessionRowDragEnd(e){
+  _dragSessionSid=null;_dragInsertBeforeSid=null;
+  _clearDragInsertMarks();
 }
 
 function _markSessionListPointerDown(){
@@ -7615,6 +7760,15 @@ function renderSessionListFromCache(){
   const pinned=orderedSessions.filter(s=>s.pinned);
   const unpinned=orderedSessions.filter(s=>!s.pinned);
   const allSessions=[...pinned, ...unpinned];
+
+  // ── Folder grouping (Project "All" view) ─────────────────────────────
+  // When showing every project and the list stays below the virtualization
+  // threshold, render project folder headers above their sessions so the
+  // sidebar reads as a folder hierarchy instead of a flat list. Above the
+  // threshold (or while filtering/searching) the flat list is kept to avoid
+  // breaking the virtual-scroll row accounting.
+  const folderGrouping=!_activeProject&&!q&&allSessions.length<=SESSION_VIRTUAL_THRESHOLD_ROWS&&_allProjects.length>0;
+  const _folderCollapsed=_folderCollapsedStates;
   const flatSessionRows=[];
   for(const s of allSessions){ flatSessionRows.push({group:null, session:s}); }
   _sessionVisibleSidebarIds=flatSessionRows.map(row=>row.session&&row.session.session_id).filter(Boolean);
@@ -7668,9 +7822,38 @@ function renderSessionListFromCache(){
   list.dataset.sessionVirtualFilter=q;
   list.dataset.sessionVirtualStart=String(virtualWindow.start);
   list.dataset.sessionVirtualEnd=String(virtualWindow.end);
-  // Render flat session list (no date group headers)
+  // Render flat session list (no date group headers); when folder grouping is
+  // active, emit a project folder header before each project's sessions.
   let globalSessionRowIndex=0;
+  let _lastFolderKey=null;
+  const _renderFolderHeader=(key)=>{
+    const proj=(_allProjects||[]).find(p=>p.project_id===key);
+    const label=proj?proj.name:'Unassigned';
+    const header=document.createElement('div');
+    header.className='session-folder-header'+(proj&&proj.color?' has-color':'');
+    if(proj&&proj.color) header.style.setProperty('--folder-color',proj.color);
+    const collapsed=_folderCollapsed.has(key);
+    const caret=document.createElement('span');
+    caret.className='session-folder-caret';
+    caret.textContent=collapsed?'▸':'▾';
+    const name=document.createElement('span');
+    name.className='session-folder-name';
+    name.textContent=label;
+    header.appendChild(caret);header.appendChild(name);
+    header.onclick=()=>{
+      if(_folderCollapsed.has(key)) _folderCollapsed.delete(key); else _folderCollapsed.add(key);
+      renderSessionListFromCache();
+    };
+    list.appendChild(header);
+  };
   for(const s of allSessions){
+    let folderKey=null;
+    if(folderGrouping){ folderKey=(s&&s.project_id)||NO_PROJECT_FILTER; }
+    if(folderKey!==null&&folderKey!==_lastFolderKey){
+      _renderFolderHeader(folderKey);
+      _lastFolderKey=folderKey;
+    }
+    if(folderKey!==null&&_folderCollapsed.has(folderKey)) continue;
     const rowIndex=globalSessionRowIndex++;
     const inWindow=!virtualWindow.virtualized||(rowIndex>=virtualWindow.start&&rowIndex<virtualWindow.end);
     if(inWindow){ list.appendChild(_renderOneSession(s, s.pinned||false)); }
@@ -7708,13 +7891,6 @@ function renderSessionListFromCache(){
       list.appendChild(more);
     }
   }
-  // Select mode toggle button (only when NOT in select mode)
-  if(!_sessionSelectMode){
-    const toggleBtn=document.createElement('div');toggleBtn.className='session-select-toggle';
-    toggleBtn.textContent=t('session_select_mode');
-    toggleBtn.onclick=(e)=>{e.stopPropagation();toggleSessionSelectMode();};
-    list.appendChild(toggleBtn);
-  }
   // Refresh FLIP and queued archive/delete reflow both drive
   // --session-reflow-offset. Refresh wins so one render has one transform writer.
   const reflowBefore=animateRefresh?flipBefore:_pendingSessionReflowPositions;
@@ -7734,6 +7910,7 @@ function renderSessionListFromCache(){
     const attentionClass=attention?(attention.kind==='approval'?' attention-approval':(attention.kind==='clarify'?' attention-clarify':' attention-attention')):'';
     const readOnly=_isReadOnlySession(s);
     el.className='session-item'+(isActive?' active':'')+(isActive&&S.session&&S.session._flash?' new-flash':'')+(s.archived?' archived':'')+(isStreaming?' streaming':'')+(hasUnread?' unread':'')+(attention?' needs-attention':'')+attentionClass;
+    if(!_sessionSelectMode&&!readOnly&&!s.archived){ el.draggable=true; el.title=(el.title?el.title+' · ':'')+'Drag to reorder'; }
     const swipeReturnOffset=_sessionSwipeReturnOffsets.get(s.session_id);
     if(swipeReturnOffset!==undefined){
       _sessionSwipeReturnOffsets.delete(s.session_id);
