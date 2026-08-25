@@ -136,29 +136,57 @@ Jede neue upstream-Änderung in eine von vier Klassen:
 
 ## 4. Stand: Ist Wings mit dem aktuellen Upstream "sauber"?
 
-**Bewertung 2026-08-02 (nach Runde 2 / v1.9.8):**
+**Bewertung 2026-08-25 (nach Runde 3 / v26.08.11):**
 
-- ✅ **Runde 2 abgeschlossen:** Die ~115 Commits seit dem 22.07.2026 wurden
-  gesichtet. 5 relevante Fixes portiert (#6642, #6488, #6529, #6419, #6307),
-  jeweils mit Tests (Gesamt: 587 passed, 45 skipped, 1 pre-existing #5260-Fail).
-  #6481/#5844-Verfeinerungen/#6389 bewusst nicht übernommen (Begründungen in §2).
+- ✅ **Runde 3 abgeschlossen:** Die 369 Commits seit dem #6307-Anker (29.07.)
+  bis upstream-master `3b9c632a` (24.08., exp-v0.52.263) wurden gesichtet.
+  Portiert (13 Fixes + Agent-Bump):
 
-- ⚠️ **Upstream bewegt sich weiter.** Nach dem #6307-Stand (29.07.) sind weitere
-  Commits dazugekommen (Stand master `320789ae`, 31.07.2026; neuester exp-Tag
-  `exp-v0.52.158`). Noch **nicht gesichtete** Bereiche für die nächste Runde:
+  | Fix | Inhalt |
+  |-----|--------|
+  | #7093 🔒 | Approval-Gateway-Copy per request_id gematcht (+ Test-Fidelity) |
+  | — 🔒 | File-Serving: kein Double-Respond nach end_headers; Client-Disconnects debug-geloggt |
+  | #7142 🔒 | OS-Drop-Einträge vor Traversal gesnapshottet (+ Test) |
+  | #6935 | `persist_user_timestamp` — User-Timestamps bleiben erhalten (löst Wings-Issue #4); kwarg-sicher via `_supports_kwarg` an allen 3 run_conversation-Sites |
+  | #6886 | SSE Last-Event-ID-Resumption auf /api/chat/stream (clean apply, 264 Zeilen + Tests) |
+  | #6502 | Cross-Session Render-Leak: 3 `_isActiveSession()`-Guards in attachLiveStream |
+  | #6572 | Phantom-Compression-Barrier: done-Handler + Session-Switch-Cleanup |
+  | #6808 | Boot-Script fabriziert keine Theme-Wahl mehr bei frischem Browser (`_hadAppearance`) |
+  | #6666/#6856 | Settings-Autosave: update_channel dedizierter Write-Pfad + FIFO-Queue; Auto-Follow globaler localStorage-Spiegel (Wings-Issue #1-Kandidaten) |
+  | #7018 | `[SILENT]`-Control-Turns an Ingress unterdrückt (+ Test) |
+  | #6892/#6964 | Titel-Sync zu state.db mit Kollisions-Dedup (`sync_session_title`) |
+  | #6257 | Scroll-Bounce: Fade-Nodes bleiben stabil statt replaceWith |
+  | #6473 | Live-Worklog bleibt bis zum Settlement stehen (`clearLiveToolCards({preserveDom:true})`) |
 
-  | Issue | Inhalt | Relevanz für Wings |
-  |-------|--------|--------------------|
-  | #6481 | Verification-Evidence-Contamination | siehe §2 — blockiert durch fehlendes #6283 |
-  | #6283 | Async-Delegation-Delivery (Grundlage für #6481) | hoch, aber 2082-Zeilen-Refactor |
-  | #6148 | Alias-Präfix-Model-Routing | mittel |
-  | #6408/#6349 | Anchor-Prose/Composer-Fixes | mittel (UI) |
-  | #6457 | Reconnect-Transcript-Ordering | mittel (SSE) |
-  | #6507 | Hard-Refresh-Session-Restore | mittel |
+  **Agent-Bump:** `beclab/harveyff-hermes-agent` v2026.8.3 → **v2026.8.19**
+  (= hermes-agent **0.20.5**). Verifiziert: Container installiert
+  `hermes-agent==0.20.5`.
 
-  **Fazit:** Wings ist bezüglich der in Runde 2 identifizierten Backlog-Fixes
-  sauber und deployed. Der verbleibende upstream-Rückstand ist der
-  Normalzustand; die nächste Runde startet beim #6307-Anker (`41321f6f`).
+  **Bewusst NICHT portiert (Runde 3):**
+
+  | Issue | Inhalt | Grund |
+  |-------|--------|-------|
+  | #7006 | OOM bei Tab-Fokus | baut auf #6999-Cache-Signatur-Maschinerie auf, hohe Drift zum Fork-Cache |
+  | #7128 | Fuzzy-Matching begrenzen | tiefer Merge-Key-Refactor in models.py; quadratischer Fallback bei Wings-Sessiongrößen akzeptabel |
+  | #7212 | Transcript-Reopen-Cache | 1797 Zeilen |
+  | #7231 | Sidebar-Batch-Lookup | 299-Zeilen-Reconciliation-Refactor |
+  | #7133/#7230 | `_row_id` Replay-Merge / Native-Image-Mirrors | setzen die Row-Identity-Maschinerie aus #6283 voraus (bewusst nicht im Fork) |
+  | ded12e48/dadffe0e | Recovery-Verfeinerungen | Refactors des bereits funktionierenden #6642-Ports (gleiche Begründung wie #5844 in Runde 2) |
+  | #6621 | First-response Jump-Scroll | ~150 Zeilen Jump-Owner-Machinery, hoher Konflikt mit dem Fork-eigenen Scroll-Settlement (#6390-Port) |
+  | #6677 | Regeneration-Atomicity | 2339+ Zeilen in streaming.py — auf ausdrücklichen Wunsch zurückgestellt |
+
+  **Deploy-Historie Runde 3:** v26.08.9 (Sync) → v26.08.10/v26.08.11
+  (Versionssprünge wegen Market-Backend-Hash-Deadlock §6.4 + YAML-Quote-Fix
+  in der upgradeDescription). Lektion: Nach jedem Edit an
+  OlaresManifest-upgradeDescription `yaml.safe_load()` über beide Manifeste
+  laufen lassen VOR helm package.
+
+  **Backlog-Abgleich:** Wings-Issue #4 (Timestamps) → durch #6935 gelöst;
+  #1 (Settings-Persistenz) → #6666+#6856 portiert, am Repro verifizieren;
+  #2 (Model-Pill) → bereits gefixt, geschlossen; #3 (Session-Resume) →
+  #6886/#7018 adressieren Teilursachen, nach Deploy beobachten.
+  docs/ISSUES.md #1256 (Playwright/CDP) → von Agent 0.20.5 gelöst
+  (CDP-Override-Skip verifiziert).
 
 ---
 
