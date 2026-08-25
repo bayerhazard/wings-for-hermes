@@ -203,8 +203,11 @@ def test_stream_fade_uses_incremental_renderer_without_changing_default_path():
     )
     assert_contains_all(
         cleanup_block,
-        ["animationend", "span.replaceWith(document.createTextNode"],
+        # #6257: cleanup keeps the animated node stable (scroll anchor) instead
+        # of replacing it with a fresh text node.
+        ["animationend", "span.classList.remove('is-new')"],
     )
+    assert "span.replaceWith" not in cleanup_block
     assert "_wrapStreamingFadeWords" not in MESSAGES_JS
     assert "animationDelay" not in renderer_block
     assert "_STREAM_FADE_STAGGER_MS" not in MESSAGES_JS

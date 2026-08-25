@@ -1552,6 +1552,26 @@ const _DEFAULT_MESSAGE_MODES=['queue','interrupt','steer'];
 // Legacy localStorage key (pre-#5145 rename); read it as a fallback so an
 // existing user's persisted busy-input-mode preference survives the rename.
 const _LEGACY_DEFAULT_MESSAGE_MODE_KEY='wings-busy-input-mode';
+// ── Auto-follow eager mirror (#6819/#6856) ─────────────────────────────────
+// Client-side mirror of the Auto-follow new content setting
+// (`auto_scroll_follow`). ONE global localStorage value ('1'/'0') — the backend
+// authority is global settings.json. Written ONLY when a settings response
+// actually resolves the setting; the boot-failure fallback reads it directly.
+const _AUTO_SCROLL_FOLLOW_KEY='hermes-auto-scroll-follow';
+function _persistAutoScrollFollow(enabled){
+  try{localStorage.setItem(_AUTO_SCROLL_FOLLOW_KEY,enabled?'1':'0');}catch(_){}
+  return enabled;
+}
+function _readPersistedAutoScrollFollow(){
+  try{
+    const raw=localStorage.getItem(_AUTO_SCROLL_FOLLOW_KEY);
+    if(raw==='1') return true;
+    if(raw==='0') return false;
+  }catch(_){}
+  return true;  // default: follow ON (matches config.py default)
+}
+window._persistAutoScrollFollow=_persistAutoScrollFollow;
+window._readPersistedAutoScrollFollow=_readPersistedAutoScrollFollow;
 const _DEFAULT_MESSAGE_MODE_KEY='wings-default-message-mode';
 function _normalizeDefaultMessageMode(mode){
   return _DEFAULT_MESSAGE_MODES.includes(mode)?mode:'steer';
@@ -3740,7 +3760,8 @@ window._mirrorSpeechSettingsFromServer=_mirrorSpeechSettingsFromServer;
     window._showBusyPlaceholderHint=!!s.show_busy_placeholder_hint;
     window._newChatOnWorkspaceSwitch=!!s.new_chat_on_workspace_switch;  // #5473 opt-in
     window._sessionEndlessScrollEnabled=!!s.session_endless_scroll;
-    window._autoScrollFollow=s.auto_scroll_follow!==false;
+    // #6819: persist the resolved auto-follow value into the global mirror.
+    window._autoScrollFollow=_persistAutoScrollFollow(s.auto_scroll_follow!==false);
     window._largeTextPasteAsAttachment=s.large_text_paste_as_attachment!==false;
     window._projectQuickCreate=!!s.project_quick_create_buttons;
     window._composerControlVisibility=_composerControlVisibilityFromSettings(s);
@@ -3865,7 +3886,9 @@ window._mirrorSpeechSettingsFromServer=_mirrorSpeechSettingsFromServer;
     window._defaultMessageMode=_readPersistedDefaultMessageMode();
     window._showBusyPlaceholderHint=false;
     window._sessionEndlessScrollEnabled=false;
-    window._autoScrollFollow=true;
+    // #6819/#6856: boot-failure path honors the persisted mirror instead of
+    // hardcoding ON (which silently clobbered an explicit OFF for the session).
+    window._autoScrollFollow=_readPersistedAutoScrollFollow();
     window._composerControlVisibility=_composerControlVisibilityFromSettings(null);
     window._composerControlOrder=[];
     _applyComposerControlOrder(window._composerControlOrder);

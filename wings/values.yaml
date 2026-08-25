@@ -1,10 +1,10 @@
 image:
   repository: ghcr.io/bayerhazard/wings-for-hermes
-  tag: "26.08.8"
+  tag: "26.08.9"
   pullPolicy: Always
 agentImage:
   repository: beclab/harveyff-hermes-agent
-  tag: "v2026.8.3-uid1000"
+  tag: "v2026.8.19-uid1000"
   pullPolicy: IfNotPresent
 workloads:
   wings:

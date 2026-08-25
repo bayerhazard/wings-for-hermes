@@ -170,7 +170,7 @@ class TestSystemTheme:
         assert "==='system'" in html or "=== 'system'" in html, (
             "Flicker-prevention head script must resolve 'system' before setting data-theme"
         )
-        assert "legacy={slate:['dark','slate']" in html, (
+        assert "legacy={midnight:'dark'" in html and "'wings-dark':'dark'" in html, (
             "Flicker-prevention head script must normalize legacy theme names on first paint"
         )
 
@@ -222,9 +222,9 @@ class TestSystemTheme:
     def test_i18n_cmd_theme_all_locales(self):
         src = read("static/i18n.js")
         count = src.count("system/dark/light")
-        assert count >= 5, (
-            f"cmd_theme description should mention 'system' in all 5 locales; "
-            f"found {count}"
+        assert count >= 2, (
+            f"cmd_theme description should mention 'system' in every locale "
+            f"that defines cmd_theme (Wings ships en+de); found {count}"
         )
 
     def test_theme_listener_cleanup_uses_stable_handler(self):
@@ -238,9 +238,9 @@ class TestSystemTheme:
 
     def test_boot_reconcile_treats_light_dark_as_explicit_theme_choices(self):
         src = read("static/boot.js")
-        assert "['system','light','dark'].includes(lsTheme)" in src, (
+        assert "['system','light','dark','neon','aimighty'].includes(lsTheme)" in src, (
             "boot appearance reconciliation must preserve explicit light/dark/system "
-            "localStorage selections when a prior autosave failed"
+            "localStorage selections (incl. legacy names) when a prior autosave failed"
         )
 
     def test_panels_hydrates_appearance_before_models_fetch(self):
