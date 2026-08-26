@@ -435,7 +435,12 @@ def handle_transcribe(handler):
             from tools.transcription_tools import transcribe_audio
         except ImportError:
             return j(handler, {'error': 'Speech-to-text is unavailable on this server'}, status=503)
-        result = transcribe_audio(temp_path)
+        # Explicit model override (highest priority in the agent's resolution
+        # chain: model param > stt.openai.model config > STT_OPENAI_MODEL env >
+        # default). Lets the deployment pin the OpenAI-compatible STT backend
+        # model (e.g. the LiteLLM gateway's "stt") without editing config.yaml.
+        stt_model = os.getenv("HERMES_WEBUI_STT_MODEL", "").strip() or None
+        result = transcribe_audio(temp_path, model=stt_model)
         if not result.get('success'):
             msg = str(result.get('error') or 'Transcription failed')
             status = 503 if 'unavailable' in msg.lower() or 'not configured' in msg.lower() else 400

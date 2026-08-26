@@ -1,6 +1,6 @@
 image:
   repository: ghcr.io/bayerhazard/wings-for-hermes
-  tag: "26.08.11"
+  tag: "26.08.12"
   pullPolicy: Always
 agentImage:
   repository: beclab/harveyff-hermes-agent
@@ -24,6 +24,8 @@ env:
   HERMES_WEBUI_AGENT_DIR: "/home/hermeswebui/.hermes/hermes-agent"
   HERMES_WEBUI_AUTO_INSTALL: "1"
   HERMES_WEBUI_TTS_TIMEOUT: "300"
+  HERMES_WEBUI_STT_MODEL: "stt"
+  STT_OPENAI_MODEL: "stt"
   WANTED_UID: "1000"
   WANTED_GID: "1000"
   TZ: Etc/UTC
