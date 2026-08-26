@@ -18567,6 +18567,12 @@ def _resolve_openai_tts_config():
             pass
     if not api_key and isinstance(oai_cfg, dict):
         api_key = (oai_cfg.get("api_key") or "").strip()
+    # Deployment override: pin the TTS voice (e.g. a named OmniVoice clone
+    # "clone:new") via env without editing the shared Hermes config.yaml.
+    # Highest priority — wins over tts.openai.voice and the "alloy" default.
+    env_voice = os.getenv("HERMES_WEBUI_TTS_VOICE", "").strip()
+    if env_voice:
+        voice = env_voice
     return base_url, model, voice, api_key
 
 
