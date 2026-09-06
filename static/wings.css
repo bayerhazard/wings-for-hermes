@@ -296,10 +296,11 @@
   --accent:var(--b-150);--accent-hover:var(--b-200);--accent-text:var(--b-150);
   --topbar-bg:rgba(255,255,255,.98);--main-bg:rgba(255,255,255,.5);
 }
-/* Dunkles Theme — Relay: sidebar b-100, list b-150, border b-300,
-   text b-800, secondary b-500, Accent Gold (handelt im Dunkelmodus) */
+/* Dunkles Theme — Umbau 26.9.3: links das hellere Blau (b-150, ehemaliges
+   Eingabefeld), rechts einheitlich das dunklere (b-100). --surface bleibt
+   b-150 für Dropdowns/Cards (Kontrast auf der dunklen rechten Seite). */
 :root.dark{
-  --bg:var(--b-100);--sidebar:var(--b-100);--surface:var(--b-150);--chat-bg:var(--b-150);
+  --bg:var(--b-100);--sidebar:var(--b-150);--surface:var(--b-150);--chat-bg:var(--b-100);
   --border:var(--b-300);--border2:var(--b-400);
   --text:var(--b-800);--muted:var(--b-500);
   --accent:var(--gold);--accent-hover:var(--gold-hell);--accent-text:var(--gold);
@@ -449,16 +450,18 @@
   font-size:11px;color:var(--muted);line-height:1;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;
 }
-/* New-Chat-Plus in der Aktionsgruppe: ghost wie icon-btn, vor dem Mic */
-[data-mode="basic"] .composer-right .ctx-gauge-new-chat{
-  width:34px;height:34px;padding:0;gap:0;border-radius:8px;
-  background:none;color:var(--muted);opacity:.75;
-  transition:background .15s ease-in-out,color .15s ease-in-out,opacity .15s ease-in-out;
+/* New-Chat-Plus: erstes Icon der Modul-Reihe unten links — identischer
+   Ghost-Stil wie die Nachbarn (Send bleibt die einzige Primäraktion) */
+[data-mode="basic"] .sidebar-footer .ctx-gauge-new-chat{
+  width:32px;height:32px;padding:0;gap:0;border-radius:var(--am-radius-m);
+  background:none;border:none;color:var(--muted);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:background .15s ease-in-out,color .15s ease-in-out;
 }
-[data-mode="basic"] .composer-right .ctx-gauge-new-chat:hover{
-  background:var(--active-wash);color:var(--text);opacity:1;
+[data-mode="basic"] .sidebar-footer .ctx-gauge-new-chat:hover{
+  background:var(--active-wash);color:var(--text);
 }
-[data-mode="basic"] .composer-right .ctx-gauge-new-chat svg{width:16px;height:16px;}
+[data-mode="basic"] .sidebar-footer .ctx-gauge-new-chat svg{width:16px;height:16px;stroke-width:1.5;}
 /* Dropdown vom Composer aus nach oben; Spezifität schlägt den Inline-Block */
 [data-mode="basic"] .composer-center .ctx-gauge-card .model-dropdown{
   top:auto;bottom:calc(100% + 8px);left:0;border-radius:14px;box-shadow:var(--shadow-lg);
@@ -471,3 +474,10 @@
   [data-mode="basic"] .composer-center .ctx-gauge-tokens{display:none;}
   [data-mode="basic"] .composer-center #composerModelLabel{max-width:14ch;}
 }
+
+/* ── Dark-Flächen (26.9.3): rechtes Feld = einheitlich b-100 ──
+   composer-box nutzt Basis --surface (b-150) -> auf b-100; Border b-400
+   hält die Feld-Lesbarkeit. Such-Pille war --surface -> b-100 (vertieftes
+   Einhorn auf der aufgehellen Sidebar b-150). */
+:root.dark .composer-box{background:var(--b-100);}
+:root.dark [data-mode="basic"] .sidebar-footer-search{background:var(--b-100);}

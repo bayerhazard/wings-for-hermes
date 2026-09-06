@@ -27,26 +27,25 @@ function isAdvancedPanel(name) { return ADVANCED_PANELS.has(name); }
 
 /* Gauge-Karte (#titlebarStatusPill) und New-Chat-Plus (#btnNewChatPill):
    Basic-Mode docks the whole gauge card into the composer center (ring +
-   model chip + tokens as one status cluster) and the plus into the composer
-   right, before the mic — the footer pill is dissolved. Advanced-Mode keeps
-   the card in the chat panel-head with the plus inside it. The card is moved
-   whole on purpose: ctx-mid/ctx-high color states live on the card and reach
-   the ring via descendant selectors, and _positionModelDropdown() anchors on
-   the card. Node moves preserve ids, inline handlers and delegated listeners. */
+   model chip + tokens as one status cluster) and the plus into the sidebar
+   footer module row as its leftmost icon — the footer pill is dissolved.
+   Advanced-Mode keeps the card in the chat panel-head with the plus inside
+   it. The card is moved whole on purpose: ctx-mid/ctx-high color states live
+   on the card and reach the ring via descendant selectors, and
+   _positionModelDropdown() anchors on the card. Node moves preserve ids,
+   inline handlers and delegated listeners. */
 function _relocateGaugePill() {
   const g = $('titlebarStatusPill');
   if (!g) return;
   const center = $('composerCenter');
-  const right = document.querySelector('.composer-right');
+  const row = $('wingsModuleRow');
   const plus = $('btnNewChatPill');
   const head = document.querySelector('#panelChat .panel-head');
-  if (!center || !right || !head) return;
+  if (!center || !row || !head) return;
   if (getUIMode() === 'basic') {
     if (g.parentElement !== center) center.appendChild(g);
-    if (plus && plus.parentElement !== right) {
-      const mic = $('btnMic');
-      right.insertBefore(plus, mic || right.firstChild);
-    }
+    // Plus as the FIRST icon of the footer module row (left of insights)
+    if (plus && plus.parentElement !== row) row.insertBefore(plus, row.firstChild);
   } else {
     if (g.parentElement !== head) head.insertBefore(g, head.firstChild);
     if (plus && plus.parentElement !== g) {
