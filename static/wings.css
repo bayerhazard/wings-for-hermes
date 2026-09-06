@@ -1,0 +1,270 @@
+/* ── Wings for Hermes — eigenes CSS (Wings-only, bewusst NICHT in style.css) ──
+   Hier lebt der gesamte Wings-exklusive Stylesheet-Anteil:
+     1. Interface-Mode (Basic/Advanced) inkl. Sidebar-Footer + Mode-Switch
+     2. Wings Activity Line
+     3. Wings Micro-Interactions
+     4. vereinzelt aus style.css extrahierte [data-mode]-Regeln
+   LÄDT NACH style.css (index.html). Upstream-Syncs dürfen diese Datei
+   nicht anfassen — sie existiert upstream nicht. */
+
+/* ── Interface mode (Basic / Advanced) ─────────────────────────────────────
+   Basic is chat-first: just the sessions sidebar, the composer and quiet
+   footer access to memory, insights and settings. Advanced reveals the full
+   workbench. Anything with the .mode-advanced class, plus the nav/settings
+   entries listed below, is hidden while <html data-mode="basic">. JS guards
+   in panels.js mirror this list so hidden surfaces can never be activated or
+   fetch data. */
+[data-mode="basic"] .mode-advanced,
+[data-mode="basic"] .rail,
+[data-mode="basic"] .sidebar-nav,
+[data-mode="basic"] [data-panel="tasks"],
+[data-mode="basic"] [data-panel="skills"],
+[data-mode="basic"] [data-panel="kanban"],
+[data-mode="basic"] [data-panel="workspaces"],
+[data-mode="basic"] [data-panel="profiles"],
+[data-mode="basic"] [data-panel="todos"],
+[data-mode="basic"] [data-panel="logs"],
+[data-mode="basic"] [data-dashboard-link],
+[data-mode="basic"] [data-settings-section="providers"],
+[data-mode="basic"] [data-settings-section="extensions"],
+[data-mode="basic"] [data-settings-section="system"] {
+  display: none !important;
+}
+
+/* Basic-mode sidebar footer: three quiet icons (memory, insights, settings)
+   that open the matching main views. Hidden in Advanced, where the rail
+   covers the same destinations. */
+.sidebar-footer{display:none;flex-shrink:0;align-items:center;gap:4px;padding:10px 12px;padding-bottom:max(10px,env(safe-area-inset-bottom,0));border-top:1px solid var(--border);}
+[data-mode="basic"] .sidebar-footer{display:flex;}
+.sidebar-footer-spacer{flex:1;}
+.sidebar-footer-btn{width:36px;height:36px;border-radius:8px;background:none;border:none;color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;-webkit-tap-highlight-color:transparent;transition:background-color var(--dur) var(--ease),color var(--dur) var(--ease);}
+.sidebar-footer-btn:hover{background:var(--hover-bg);color:var(--text);}
+.sidebar-footer-btn.active{background:var(--accent-bg);color:var(--accent-text);}
+.sidebar-footer-btn:focus-visible{outline:2px solid var(--focus-ring);outline-offset:1px;}
+
+/* Segmented control for the mode switch (Preferences → Interface mode).
+   Uses the shared accent tokens so every skin renders it consistently. */
+.mode-switch {
+  display: inline-flex;
+  gap: 2px;
+  padding: 2px;
+  background: var(--code-bg);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-md);
+}
+.mode-switch-btn {
+  padding: 6px 16px;
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  font-family: inherit;
+  color: var(--muted);
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: color .15s ease, background .15s ease;
+}
+.mode-switch-btn:hover { color: var(--text); }
+.mode-switch-btn.active {
+  color: var(--accent-text);
+  background: var(--accent-bg-strong);
+}
+.mode-switch-btn:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 1px;
+}
+.mode-switch-btn:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+}
+.mode-switch-btn:disabled:hover { color: var(--muted); }
+
+/* ── Wings Activity Line ───────────────────────────────────────────────────
+   One calm line per assistant turn replacing per-event rows (tool calls as
+   individual lines, thinking as blocks). Live it shows only the current
+   action, swapped in place; settled it collapses the whole trace behind a
+   quiet summary that expands on click. The underlying event rows are left
+   untouched — they are only hidden/shown via turn-level classes, so every
+   existing expand/copy/detail affordance keeps working when expanded. */
+.wings-aline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 8px var(--msg-rail);
+  max-width: var(--answer-max);
+  padding: 5px 10px 5px 0;
+  border-radius: 8px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--muted);
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  transition: background var(--dur) var(--ease);
+}
+.wings-aline:hover { background: var(--hover-bg); }
+.wings-aline:hover .wings-aline-verb,
+.wings-aline:hover .wings-aline-preview { color: var(--text); }
+.wings-aline:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 1px; }
+
+.wings-aline-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin: 0 2px;
+  background: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-bg);
+  animation: wings-aline-pulse 1.6s ease-in-out infinite;
+}
+@keyframes wings-aline-pulse {
+  0%, 100% { opacity: .5; }
+  50% { opacity: 1; }
+}
+/* Settled: no dot, quieter line */
+.assistant-turn:not(.wings-aline-live) .wings-aline-dot { display: none; }
+
+.wings-aline-verb {
+  flex-shrink: 0;
+  font-weight: 500;
+  color: var(--text);
+  transition: opacity .14s ease, transform .14s ease, color var(--dur) var(--ease);
+}
+.wings-aline-preview {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  color: var(--muted);
+  -webkit-mask-image: linear-gradient(90deg, #000 78%, transparent);
+  mask-image: linear-gradient(90deg, #000 78%, transparent);
+  transition: opacity .14s ease, transform .14s ease, color var(--dur) var(--ease);
+}
+.wings-aline-verb.wings-aline-swap,
+.wings-aline-preview.wings-aline-swap { opacity: 0; transform: translateY(2px); }
+
+/* Thinking: a quiet shimmer sweeping the verb — alive but never loud */
+.wings-aline[data-state="thinking"] .wings-aline-verb {
+  background: linear-gradient(90deg, var(--muted) 20%, var(--text) 50%, var(--muted) 80%);
+  background-size: 220% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  animation: wings-aline-shimmer 2.4s linear infinite;
+}
+@keyframes wings-aline-shimmer {
+  0% { background-position: 120% 0; }
+  100% { background-position: -120% 0; }
+}
+
+/* No expand chevron — the whole line is the affordance */
+.wings-aline-chevron { display: none; }
+
+/* Quiet download chip on settled lines that produced files */
+.wings-aline-files {
+  flex-shrink: 0;
+  margin-left: auto;
+  padding: 2px 9px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--muted);
+  text-decoration: none;
+  cursor: pointer;
+  transition: color var(--dur) var(--ease), border-color var(--dur) var(--ease), background-color var(--dur) var(--ease);
+}
+.wings-aline-files:hover {
+  color: var(--accent-text);
+  border-color: var(--accent-bg-strong);
+  background: var(--accent-bg);
+}
+
+/* Row visibility, driven purely by turn state. Un-managed turns (no activity
+   line, e.g. plain-text answers) are never touched. */
+.assistant-turn.wings-aline-managed:not(.wings-aline-open) .transparent-event-row {
+  display: none !important;
+}
+.assistant-turn.wings-aline-open .transparent-event-row {
+  animation: wings-aline-rows-in .28s ease;
+}
+/* Expanded trace reads as one quiet timeline: a hairline rail links the rows */
+.assistant-turn.wings-aline-open .transparent-event-row {
+  border-left: 1px solid var(--border);
+  border-radius: 0 6px 6px 0;
+  margin-left: calc(var(--msg-rail) + 3px);
+}
+@keyframes wings-aline-rows-in {
+  from { opacity: 0; transform: translateY(3px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* The legacy "Trace: N tools · Expand all · Collapse all" bar is replaced by
+   the activity line. */
+.transparent-event-controls { display: none !important; }
+
+/* Subtle panel-switch fade — one consistent motion language */
+.panel-view.active { animation: wings-panel-in .22s ease; }
+@keyframes wings-panel-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wings-aline-dot { animation: none; opacity: .8; }
+  .wings-aline[data-state="thinking"] .wings-aline-verb {
+    animation: none;
+    background: none;
+    -webkit-text-fill-color: currentColor;
+    color: var(--muted);
+  }
+  .wings-aline-verb, .wings-aline-preview { transition: none; }
+  .assistant-turn.wings-aline-open .transparent-event-row { animation: none; }
+  .panel-view.active { animation: none; }
+}
+
+/* ── Curated micro-interactions (Wings polish) ─────────────────────────────
+   Quiet, single-language motion: fast entrances, physical presses, no bounce. */
+
+/* Activity line entrance */
+.wings-aline { animation: wings-aline-in .24s ease; }
+@keyframes wings-aline-in {
+  from { opacity: 0; transform: translateY(2px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* Physical press feedback on icon buttons */
+.icon-btn:active,
+.panel-head-btn:active,
+.rail-btn:active { transform: scale(.94); }
+.icon-btn, .panel-head-btn, .rail-btn { transition: transform .12s ease, background .15s ease, color .15s ease, border-color .15s ease; }
+
+/* User turns: a single calm rise when the latest one lands */
+.msg-row[data-role="user"]:last-of-type { animation: wings-user-in .32s cubic-bezier(.2,.7,.3,1); }
+@keyframes wings-user-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wings-aline { animation: none; }
+  .icon-btn:active, .panel-head-btn:active, .rail-btn:active { transform: none; }
+  .msg-row[data-role="user"]:last-of-type { animation: none; }
+}
+
+  [data-mode="basic"] .transparent-turn-footer{display:none!important;}
+  [data-mode="basic"] .msg-usage-inline,
+  [data-mode="basic"] .msg-duration-inline,
+  [data-mode="basic"] .msg-gateway-inline{display:none!important;}
+
+  /* Basic mode: pill covers model + context — the mobile config burger is redundant */
+  [data-mode="basic"] #composerMobileConfigBtn{display:none!important;}
+  /* Basic mode: attach is the only left control — no trailing divider */
+  [data-mode="basic"] .composer-divider{display:none;}
+
+  [data-mode="basic"] .icon-btn#btnWorkspaceChip{display:inline-flex;}
+  [data-mode="advanced"] .icon-btn#btnWorkspaceChip{display:none !important;}
+  @media (max-width:640px){
+    [data-mode="basic"] .icon-btn#btnWorkspaceChip{display:none !important;}
+  }

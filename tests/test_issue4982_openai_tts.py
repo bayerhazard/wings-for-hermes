@@ -8,6 +8,7 @@ from pathlib import Path
 import pytest
 
 import api.routes as routes
+import api.wings_voice as wings_voice
 
 
 STATIC_DIR = Path(__file__).resolve().parent.parent / "static"
@@ -108,7 +109,7 @@ def _fresh_tts_limiter(monkeypatch):
     monkeypatch.setattr(routes, "is_auth_enabled", lambda: False, raising=False)
     monkeypatch.delenv("HERMES_WEBUI_TRUST_FORWARDED_FOR", raising=False)
     monkeypatch.delenv("HERMES_WEBUI_TTS_TRUSTED_HOSTS", raising=False)
-    monkeypatch.setattr(routes, "_TTS_TRUSTED_HOSTS_CACHE", None)
+    monkeypatch.setattr(wings_voice, "_TTS_TRUSTED_HOSTS_CACHE", None)
     monkeypatch.delenv("VOICE_TOOLS_OPENAI_KEY", raising=False)
     monkeypatch.delenv("OPENAI_API_KEY", raising=False)
     _reset_limiter()
@@ -141,7 +142,7 @@ def test_openai_tts_uses_api_key_from_shared_config(monkeypatch):
     monkeypatch.setattr(config, "get_config", lambda: {
         "tts": {"openai": {"base_url": "https://custom.example.com/v1/", "api_key": "sk-config-key"}}
     })
-    monkeypatch.setattr(routes, "_tts_open", lambda req, **kw: _fake_urlopen(req))
+    monkeypatch.setattr(wings_voice, "_tts_open", lambda req, **kw: _fake_urlopen(req))
     h = _post({"text": "Hello", "engine": "openai"}, client="10.82.0.20")
     routes._handle_tts(h, None)
 
@@ -160,7 +161,7 @@ def test_openai_tts_success_returns_audio(monkeypatch):
         return _StreamOnceResponse([b"audio-openai"])
 
     monkeypatch.setenv("OPENAI_API_KEY", "sk-openai")
-    monkeypatch.setattr(routes, "_tts_open", lambda req, **kw: _fake_urlopen(req))
+    monkeypatch.setattr(wings_voice, "_tts_open", lambda req, **kw: _fake_urlopen(req))
     h = _post({"text": "Hello", "engine": "openai"}, client="10.82.0.2")
     routes._handle_tts(h, None)
 
@@ -181,7 +182,7 @@ def test_openai_tts_prefers_voice_tools_key_over_openai_key(monkeypatch):
 
     monkeypatch.setenv("VOICE_TOOLS_OPENAI_KEY", "sk-voice-tools")
     monkeypatch.setenv("OPENAI_API_KEY", "sk-openai")
-    monkeypatch.setattr(routes, "_tts_open", lambda req, **kw: _fake_urlopen(req))
+    monkeypatch.setattr(wings_voice, "_tts_open", lambda req, **kw: _fake_urlopen(req))
     h = _post({"text": "Hello", "engine": "openai"}, client="10.82.0.3")
     routes._handle_tts(h, None)
 
@@ -202,7 +203,7 @@ def test_openai_tts_config_overrides(monkeypatch):
     monkeypatch.setattr(config, "get_config", lambda: {
         "tts": {"openai": {"base_url": "https://custom.example.com/v1/", "model": "tts-custom", "voice": "nova"}}
     })
-    monkeypatch.setattr(routes, "_tts_open", lambda req, **kw: _fake_urlopen(req))
+    monkeypatch.setattr(wings_voice, "_tts_open", lambda req, **kw: _fake_urlopen(req))
     h = _post({"text": "Hello", "engine": "openai"}, client="10.82.0.4")
     routes._handle_tts(h, None)
 
@@ -215,7 +216,7 @@ def test_tts_resolve_pinned_address_accepts_public_ip(monkeypatch):
     def _fake_getaddrinfo(*_args, **_kwargs):
         return [(0, 0, 0, "", ("1.1.1.1", 0))]
     monkeypatch.setattr(socket, "getaddrinfo", _fake_getaddrinfo)
-    assert routes._tts_resolve_pinned_address("1.1.1.1") == "1.1.1.1"
+    assert wings_voice._tts_resolve_pinned_address("1.1.1.1") == "1.1.1.1"
 
 
 def test_tts_resolve_pinned_address_rejects_blocked_target(monkeypatch):
@@ -223,7 +224,7 @@ def test_tts_resolve_pinned_address_rejects_blocked_target(monkeypatch):
         return [(0, 0, 0, "", ("10.0.0.5", 0))]
     monkeypatch.setattr(socket, "getaddrinfo", _fake_getaddrinfo)
     with pytest.raises(ValueError, match="not allowed"):
-        routes._tts_resolve_pinned_address("public.example.com")
+        wings_voice._tts_resolve_pinned_address("public.example.com")
 
 
 def test_tts_addr_is_blocked_covers_non_global_ranges():
@@ -231,16 +232,16 @@ def test_tts_addr_is_blocked_covers_non_global_ranges():
     # link-local flags miss — most importantly RFC 6598 CGNAT (100.64.0.0/10,
     # also Tailscale's default space) so a rebinding host can't reach a victim's
     # tailnet/carrier-NAT peer — while genuine public addresses stay allowed.
-    assert routes._tts_addr_is_blocked("100.64.0.1") is True   # CGNAT / Tailscale
-    assert routes._tts_addr_is_blocked("100.127.255.254") is True  # CGNAT upper edge
-    assert routes._tts_addr_is_blocked("198.18.0.1") is True   # benchmarking (RFC 2544)
-    assert routes._tts_addr_is_blocked("192.0.2.5") is True    # TEST-NET-1 (docs, non-global)
+    assert wings_voice._tts_addr_is_blocked("100.64.0.1") is True   # CGNAT / Tailscale
+    assert wings_voice._tts_addr_is_blocked("100.127.255.254") is True  # CGNAT upper edge
+    assert wings_voice._tts_addr_is_blocked("198.18.0.1") is True   # benchmarking (RFC 2544)
+    assert wings_voice._tts_addr_is_blocked("192.0.2.5") is True    # TEST-NET-1 (docs, non-global)
     # Real public addresses still pass through:
-    assert routes._tts_addr_is_blocked("1.1.1.1") is False
-    assert routes._tts_addr_is_blocked("8.8.8.8") is False
-    assert routes._tts_addr_is_blocked("140.82.112.3") is False  # github.com range
+    assert wings_voice._tts_addr_is_blocked("1.1.1.1") is False
+    assert wings_voice._tts_addr_is_blocked("8.8.8.8") is False
+    assert wings_voice._tts_addr_is_blocked("140.82.112.3") is False  # github.com range
     # 203.0.113.0/24 is TEST-NET-3 (documentation, non-global) -> blocked too:
-    assert routes._tts_addr_is_blocked("203.0.113.10") is True
+    assert wings_voice._tts_addr_is_blocked("203.0.113.10") is True
 
 
 def test_tts_resolve_pinned_address_rejects_cgnat_rebind_target(monkeypatch):
@@ -250,7 +251,7 @@ def test_tts_resolve_pinned_address_rejects_cgnat_rebind_target(monkeypatch):
         return [(0, 0, 0, "", ("100.64.12.34", 0))]
     monkeypatch.setattr(socket, "getaddrinfo", _fake_getaddrinfo)
     with pytest.raises(ValueError, match="not allowed"):
-        routes._tts_resolve_pinned_address("tailnet-rebind.example.com")
+        wings_voice._tts_resolve_pinned_address("tailnet-rebind.example.com")
 
 
 def test_tts_resolve_pinned_address_rejects_mixed_addresses(monkeypatch):
@@ -261,7 +262,7 @@ def test_tts_resolve_pinned_address_rejects_mixed_addresses(monkeypatch):
         ]
     monkeypatch.setattr(socket, "getaddrinfo", _fake_getaddrinfo)
     with pytest.raises(ValueError, match="not allowed"):
-        routes._tts_resolve_pinned_address("public.example.com")
+        wings_voice._tts_resolve_pinned_address("public.example.com")
 
 
 def test_openai_tts_does_not_connect_to_rebound_private_address(monkeypatch):
@@ -543,7 +544,7 @@ def test_openai_tts_trusted_host_bypasses_private_address_block(monkeypatch):
         "tts": {"openai": {"base_url": "https://internal-gateway.example.com/v1"}}
     })
     # Force the env allowlist cache to re-read the patched env.
-    monkeypatch.setattr(routes, "_TTS_TRUSTED_HOSTS_CACHE", None)
+    monkeypatch.setattr(wings_voice, "_TTS_TRUSTED_HOSTS_CACHE", None)
 
     h = _post({"text": "Hello", "engine": "openai"}, client="10.82.0.13")
     routes._handle_tts(h, None)
@@ -566,7 +567,7 @@ def test_openai_tts_private_address_still_blocked_when_not_trusted(monkeypatch):
     monkeypatch.setattr(config, "get_config", lambda: {
         "tts": {"openai": {"base_url": "https://private-gateway.example.com/v1"}}
     })
-    monkeypatch.setattr(routes, "_TTS_TRUSTED_HOSTS_CACHE", None)
+    monkeypatch.setattr(wings_voice, "_TTS_TRUSTED_HOSTS_CACHE", None)
 
     h = _post({"text": "Hello", "engine": "openai"}, client="10.82.0.14")
     routes._handle_tts(h, None)
@@ -583,7 +584,7 @@ def test_openai_tts_rejects_non_audio_upstream_response(monkeypatch):
         )
 
     monkeypatch.setenv("OPENAI_API_KEY", "sk-openai")
-    monkeypatch.setattr(routes, "_tts_open", lambda req, **kw: _fake_urlopen(req))
+    monkeypatch.setattr(wings_voice, "_tts_open", lambda req, **kw: _fake_urlopen(req))
     h = _post({"text": "Hello", "engine": "openai"}, client="10.82.0.6")
     routes._handle_tts(h, None)
 
@@ -608,7 +609,7 @@ def test_openai_tts_does_not_follow_upstream_redirect(monkeypatch):
         )
 
     monkeypatch.setenv("OPENAI_API_KEY", "sk-openai")
-    monkeypatch.setattr(routes, "_tts_open", _redirecting_open)
+    monkeypatch.setattr(wings_voice, "_tts_open", _redirecting_open)
     h = _post({"text": "Hello", "engine": "openai"}, client="10.82.0.9")
     routes._handle_tts(h, None)
 
@@ -621,8 +622,8 @@ def test_openai_tts_rejects_oversized_upstream_audio(monkeypatch):
         return _StreamOnceResponse([b"1234", b"5"], headers={"Content-Type": "audio/mpeg"})
 
     monkeypatch.setenv("OPENAI_API_KEY", "sk-openai")
-    monkeypatch.setattr(routes, "_TTS_PROXY_MAX_BYTES", 4)
-    monkeypatch.setattr(routes, "_tts_open", lambda req, **kw: _fake_urlopen(req))
+    monkeypatch.setattr(wings_voice, "_TTS_PROXY_MAX_BYTES", 4)
+    monkeypatch.setattr(wings_voice, "_tts_open", lambda req, **kw: _fake_urlopen(req))
     h = _post({"text": "Hello", "engine": "openai"}, client="10.82.0.7")
     routes._handle_tts(h, None)
 

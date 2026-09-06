@@ -13,6 +13,7 @@ from types import SimpleNamespace
 import pytest
 
 import api.routes as routes
+import api.wings_voice as wings_voice
 
 
 class _FakeHandler:

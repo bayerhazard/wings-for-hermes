@@ -1,7 +1,7 @@
 """Coverage for the ElevenLabs TTS engine on the /api/ttt endpoint (#3510).
 
 Exercises the engine routing + guard rails of _handle_tts's elevenlabs branch
-in-process via a fake handler. The happy path mocks routes._tts_open so no real
+in-process via a fake handler. The happy path mocks wings_voice._tts_open so no real
 ElevenLabs network call is made; the rejection paths (missing key, bad config
 voice_id) bail before any network call.
 """
@@ -11,6 +11,7 @@ import json
 import pytest
 
 import api.routes as routes
+import api.wings_voice as wings_voice
 
 
 class _FakeHandler:
@@ -112,7 +113,7 @@ def test_elevenlabs_happy_path_streams_mp3(monkeypatch):
         return _Resp()
 
     # The ElevenLabs branch now routes through `_tts_open`.
-    monkeypatch.setattr(routes, "_tts_open", _fake_tts_open)
+    monkeypatch.setattr(wings_voice, "_tts_open", _fake_tts_open)
 
     h = _post({"text": "hello world", "engine": "elevenlabs"}, client="9.9.9.3")
     routes._handle_tts(h, None)
@@ -133,7 +134,7 @@ def test_elevenlabs_overlong_text_rejected_before_engine(monkeypatch):
     def _fail_if_called(*_args, **_kwargs):
         raise AssertionError("ElevenLabs upstream called")
 
-    monkeypatch.setattr(routes, "_tts_open", _fail_if_called)
+    monkeypatch.setattr(wings_voice, "_tts_open", _fail_if_called)
     h = _post({"text": "x" * 5001, "engine": "elevenlabs"}, client="9.9.9.4")
     routes._handle_tts(h, None)
     assert h.status == 400
@@ -164,8 +165,8 @@ def test_elevenlabs_rejects_oversized_upstream_audio(monkeypatch):
     def _fake_tts_open(req, timeout=30, opener_factory=None, **_kw):
         return _Resp()
 
-    monkeypatch.setattr(routes, "_TTS_PROXY_MAX_BYTES", 4)
-    monkeypatch.setattr(routes, "_tts_open", _fake_tts_open)
+    monkeypatch.setattr(wings_voice, "_TTS_PROXY_MAX_BYTES", 4)
+    monkeypatch.setattr(wings_voice, "_tts_open", _fake_tts_open)
 
     h = _post({"text": "hello world", "engine": "elevenlabs"}, client="9.9.9.5")
     routes._handle_tts(h, None)
@@ -215,7 +216,7 @@ def test_elevenlabs_tts_does_not_follow_upstream_redirect(monkeypatch):
     monkeypatch.setenv("ELEVENLABS_API_KEY", "sk-test")
     import api.config as _cfg
     monkeypatch.setattr(_cfg, "get_config", lambda: {"tts": {"elevenlabs": {"voice_id": "pNInz6obpgDQGcFmaJgB", "model": "eleven_multilingual_v2"}}})
-    monkeypatch.setattr(routes, "_tts_open", _fake_tts_open)
+    monkeypatch.setattr(wings_voice, "_tts_open", _fake_tts_open)
     h = _post({"text": "hello world", "engine": "elevenlabs"}, client="9.9.9.6")
     routes._handle_tts(h, None)
 
@@ -248,18 +249,18 @@ def test_elevenlabs_tts_uses_no_proxy_opener(monkeypatch):
 
     from urllib.request import HTTPRedirectHandler
 
-    original_proxy_handler = routes.ProxyHandler
+    original_proxy_handler = wings_voice.ProxyHandler
 
     def _spy_proxy_handler(proxies=None, **_kw):
         captured["proxy_init_kwargs"] = {"proxies": proxies}
         return original_proxy_handler(proxies)
 
-    monkeypatch.setattr(routes, "ProxyHandler", _spy_proxy_handler)
+    monkeypatch.setattr(wings_voice, "ProxyHandler", _spy_proxy_handler)
 
     monkeypatch.setenv("ELEVENLABS_API_KEY", "sk-test")
     import api.config as _cfg
     monkeypatch.setattr(_cfg, "get_config", lambda: {"tts": {"elevenlabs": {"voice_id": "pNInz6obpgDQGcFmaJgB", "model": "eleven_multilingual_v2"}}})
-    monkeypatch.setattr(routes, "_tts_open", _fake_tts_open)
+    monkeypatch.setattr(wings_voice, "_tts_open", _fake_tts_open)
 
     h = _post({"text": "hello world", "engine": "elevenlabs"}, client="9.9.9.7")
     routes._handle_tts(h, None)

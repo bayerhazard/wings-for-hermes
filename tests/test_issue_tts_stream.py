@@ -13,6 +13,7 @@ import json
 import pytest
 
 import api.routes as routes
+import api.wings_voice as wings_voice
 
 
 @pytest.fixture(autouse=True)
@@ -99,8 +100,8 @@ def _stub_open(monkeypatch):
         calls.append(payload["input"])
         return _StubAudioResponse(_make_audio(payload["input"]))
 
-    monkeypatch.setattr(routes, "_tts_open", fake_open)
-    monkeypatch.setattr(routes, "_TTS_TRUSTED_HOSTS_CACHE", None)
+    monkeypatch.setattr(wings_voice, "_tts_open", fake_open)
+    monkeypatch.setattr(wings_voice, "_TTS_TRUSTED_HOSTS_CACHE", None)
     return calls
 
 
@@ -128,7 +129,7 @@ def _setup_openai_config(monkeypatch):
 
 
 def test_chunker_splits_on_sentence_boundaries():
-    chunker = routes._SpeechSentenceChunker()
+    chunker = wings_voice._SpeechSentenceChunker()
     sentences = chunker.feed(
         "Das ist der erste Satz. Und hier der zweite Satz! "
         "Jetzt folgt die dritte Frage?\n\nUnd ein neuer Absatz."
@@ -143,7 +144,7 @@ def test_chunker_splits_on_sentence_boundaries():
 
 
 def test_chunker_merges_short_fragments():
-    chunker = routes._SpeechSentenceChunker(min_len=20)
+    chunker = wings_voice._SpeechSentenceChunker(min_len=20)
     out = chunker.feed("Ja. Das ist hier der ausreichend lange zweite Satz. "
                        "Nein. Und noch ein ausreichend langer Satz danach.") + chunker.flush()
     assert len(out) == 2
@@ -152,7 +153,7 @@ def test_chunker_merges_short_fragments():
 
 
 def test_chunker_strips_think_blocks():
-    chunker = routes._SpeechSentenceChunker()
+    chunker = wings_voice._SpeechSentenceChunker()
     out = chunker.feed("<think>This is internal reasoning.</think> "
                        "Hier kommt die eigentliche Antwort. Und der Rest.") + chunker.flush()
     assert len(out) == 2
@@ -160,7 +161,7 @@ def test_chunker_strips_think_blocks():
 
 
 def test_chunker_flush_returns_tail():
-    chunker = routes._SpeechSentenceChunker()
+    chunker = wings_voice._SpeechSentenceChunker()
     assert chunker.feed("Ein vollständiger Satz. Noch ein Satz ohne Punkt am Ende") == [
         "Ein vollständiger Satz. "
     ]
@@ -224,7 +225,7 @@ def test_tts_stream_missing_key_returns_503(monkeypatch):
     monkeypatch.setattr(routes, "is_auth_enabled", lambda: False, raising=False)
     monkeypatch.delenv("VOICE_TOOLS_OPENAI_KEY", raising=False)
     monkeypatch.delenv("OPENAI_API_KEY", raising=False)
-    monkeypatch.setattr(routes, "_TTS_TRUSTED_HOSTS_CACHE", None)
+    monkeypatch.setattr(wings_voice, "_TTS_TRUSTED_HOSTS_CACHE", None)
     h = _post({"text": "Erster Satz. Zweiter Satz."})
     routes._handle_tts_stream(h, None)
     assert h.status == 503
@@ -243,7 +244,7 @@ def test_tts_stream_emits_error_event_on_upstream_failure(monkeypatch):
     def failing_open(req, **kwargs):
         raise ConnectionError("upstream down")
 
-    monkeypatch.setattr(routes, "_tts_open", failing_open)
+    monkeypatch.setattr(wings_voice, "_tts_open", failing_open)
     h = _post({"text": "Erster Satz. Zweiter Satz."})
     routes._handle_tts_stream(h, None)
     events = h.sse_events()
