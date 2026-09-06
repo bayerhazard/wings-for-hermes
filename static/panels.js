@@ -25,6 +25,37 @@ function getUIMode() {
 
 function isAdvancedPanel(name) { return ADVANCED_PANELS.has(name); }
 
+/* Gauge-Karte (#titlebarStatusPill) und New-Chat-Plus (#btnNewChatPill):
+   Basic-Mode docks the whole gauge card into the composer center (ring +
+   model chip + tokens as one status cluster) and the plus into the composer
+   right, before the mic — the footer pill is dissolved. Advanced-Mode keeps
+   the card in the chat panel-head with the plus inside it. The card is moved
+   whole on purpose: ctx-mid/ctx-high color states live on the card and reach
+   the ring via descendant selectors, and _positionModelDropdown() anchors on
+   the card. Node moves preserve ids, inline handlers and delegated listeners. */
+function _relocateGaugePill() {
+  const g = $('titlebarStatusPill');
+  if (!g) return;
+  const center = $('composerCenter');
+  const right = document.querySelector('.composer-right');
+  const plus = $('btnNewChatPill');
+  const head = document.querySelector('#panelChat .panel-head');
+  if (!center || !right || !head) return;
+  if (getUIMode() === 'basic') {
+    if (g.parentElement !== center) center.appendChild(g);
+    if (plus && plus.parentElement !== right) {
+      const mic = $('btnMic');
+      right.insertBefore(plus, mic || right.firstChild);
+    }
+  } else {
+    if (g.parentElement !== head) head.insertBefore(g, head.firstChild);
+    if (plus && plus.parentElement !== g) {
+      const sel = $('modelSelect');
+      g.insertBefore(plus, sel || null);
+    }
+  }
+}
+
 function setUIMode(mode) {
   mode = mode === 'advanced' ? 'advanced' : 'basic';
   try { localStorage.setItem('wings-mode', mode); } catch (e) {}
@@ -44,6 +75,7 @@ function setUIMode(mode) {
     // so keep its state instead of force-closing it — the pill reflects it.
     if (typeof syncWorkspacePanelUI === 'function') syncWorkspacePanelUI();
   }
+  _relocateGaugePill();
 }
 
 function _syncUIModeSwitch() {
@@ -78,11 +110,18 @@ function _syncUIModeSwitch() {
       if (ADVANCED_SETTINGS_SECTIONS.has(_currentSettingsSection)) switchSettingsSection('preferences');
       if (document.documentElement.dataset.workspacePanel === 'open' && typeof toggleWorkspacePanel === 'function') toggleWorkspacePanel();
       _syncUIModeSwitch();
+      _relocateGaugePill();
     };
     if (mq.addEventListener) mq.addEventListener('change', onChange);
     else if (mq.addListener) mq.addListener(onChange);
   } catch (e) {}
 })();
+
+// Initial dock placement (deferred script → DOM is parsed; panels.js loads
+// before boot.js applies the stored mode, so re-run once on DOMContentLoaded
+// to stay correct no matter which script set the mode attribute first).
+_relocateGaugePill();
+document.addEventListener('DOMContentLoaded', _relocateGaugePill);
 
 let _renamingAppTitlebar = false;  // guard against re-entrant rename
 let _kanbanBoard = null;

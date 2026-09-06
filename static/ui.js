@@ -6268,7 +6268,7 @@ function _syncCtxIndicator(usage){
   if(!promptTok&&!totalTok&&!cost&&!cacheReadTok&&!cacheWriteTok){
     if(wrap) wrap.style.display='';
     const tokensEl=$('ctxGaugeTokens');
-    if(tokensEl) tokensEl.textContent='Token —';
+    if(tokensEl){tokensEl.textContent='Token —';tokensEl.style.display='none';} /* wings: leeren Platzhalter ausblenden */
     const ring=$('ctxRingValue');
     if(ring){
       const circumference=91.106186954;
@@ -6299,6 +6299,7 @@ function _syncCtxIndicator(usage){
   // ── Token-Anzeige in der Karte ──
   const tokensEl=$('ctxGaugeTokens');
   if(tokensEl){
+    tokensEl.style.display=''; /* wings: Wert da -> wieder zeigen */
     tokensEl.textContent=hasPromptTok
       ?`Token ${_fmtTokens(contextPromptTok)} / ${_fmtTokens(ctxWindow)}`
       :(totalTok?`Token ${_fmtTokens(totalTok)}`:'Token —');

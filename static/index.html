@@ -82,8 +82,6 @@
   <style>
   .app-titlebar{display:none!important;}
   .composer-box:focus-within{border-color:var(--border2)!important;box-shadow:none!important;}
-  .session-item.active{background:transparent!important;color:var(--muted)!important;box-shadow:none!important;}
-  .session-item.active .session-title{color:var(--text)!important;}
   [data-mode="basic"] .transparent-turn-footer{display:none!important;}
   [data-mode="basic"] .msg-usage-inline,
   [data-mode="basic"] .msg-duration-inline,
@@ -123,14 +121,14 @@
   .ctx-gauge-new-chat:hover{background:var(--accent-bg);color:var(--accent);}
   .ctx-gauge-new-chat svg{width:16px;height:16px;}
   .ctx-gauge-new-chat span{font-size:9px;font-weight:600;line-height:1;white-space:nowrap;}
-  /* ── Sidebar footer search ── */
-  .sidebar-footer-search{display:flex;align-items:center;gap:4px;flex:1;min-width:0;height:28px;padding:0 6px;border-radius:8px;background:var(--surface);border:1px solid var(--border);transition:border-color .15s;}
+  /* ── Sidebar footer search: Basis-Layout (Display/Flex) ──
+     Maße und Farben im Basic-Mode: wings.css (Relay-Port). ── */
+  .sidebar-footer-search{display:flex;align-items:center;gap:8px;min-width:0;background:var(--surface);border:1px solid var(--border);transition:border-color .15s;}
   .sidebar-footer-search:focus-within{border-color:var(--accent);}
-  .sidebar-footer-search-icon{width:13px;height:13px;flex-shrink:0;color:var(--muted);opacity:.5;}
-  .sidebar-footer-search-input{flex:1;min-width:0;border:none;outline:none;background:transparent;color:var(--text);font-size:12px;font-family:inherit;}
-  .sidebar-footer-search-input::placeholder{color:var(--muted);opacity:.5;}
+  .sidebar-footer-search-icon{flex-shrink:0;color:var(--muted);}
+  .sidebar-footer-search-input{flex:1;min-width:0;border:none;outline:none;background:transparent;color:var(--text);font-family:inherit;}
+  .sidebar-footer-search-input::placeholder{color:var(--muted);}
   .sidebar-footer-search-clear{flex-shrink:0;border:none;background:none;color:var(--muted);cursor:pointer;padding:2px;display:flex;align-items:center;}
-  .sidebar-footer-search-clear svg{width:12px;height:12px;}
   /* ── Basic mode: hide project pills and session color dots ── */
   [data-mode="basic"] .session-tag,
   [data-mode="basic"] .session-project-dot,
@@ -147,16 +145,10 @@
   .empty-state h2{font-weight:300!important;letter-spacing:-.01em!important;margin-top:0!important;}
   /* ── Hide workspace panel edge toggle arrow ── */
   .workspace-panel-edge-toggle{display:none!important;}
-  /* ── Disable search field focus highlight ── */
-  .sidebar-footer-search:focus-within{border-color:var(--border)!important;box-shadow:none!important;}
-  /* ── Sidebar footer search: wider, centered ── */
-  .sidebar-footer-search{flex:1.75!important;max-width:160px;margin:0 auto;}
-  .sidebar-footer-spacer{display:none!important;}
-  /* ── Gauge card: full width sidebar pill ── */
-  .ctx-gauge-card{margin:10px 0!important;width:100%!important;box-sizing:border-box!important;}
+  /* ── Gauge card: volle Breite, Box-Model (Positionierung: wings.css) ── */
+  .ctx-gauge-card{width:100%;box-sizing:border-box;}
   /* ── Ring always visible (even on new session with no data) ── */
   .ctx-gauge-ring-wrap{display:flex!important;}
-  @media(max-width:640px){.ctx-gauge-card{display:none!important;}}
   </style>
   <!-- streaming-markdown: incremental DOM-building markdown parser for live streams -->
   <!-- Self-hosted from npm:streaming-markdown@0.2.15 — no CDN dependency.           -->
@@ -286,6 +278,16 @@
     <script>(function(){try{var fixed=new Set(['chat','settings']);var clean=function(v){var o=[];if(!Array.isArray(v))return o;v.forEach(function(id){if(typeof id!=='string')return;id=id.trim();if(!id||fixed.has(id)||o.indexOf(id)!==-1)return;o.push(id);});return o;};var reorder=function(order){order=clean(order);if(!order.length)return;['.rail','.sidebar-nav'].forEach(function(sel){var c=document.querySelector(sel);if(!c)return;var available=[];c.querySelectorAll('.nav-tab[data-panel]').forEach(function(el){var id=el.dataset.panel;if(!id||fixed.has(id)||el.classList.contains('dashboard-link')||el.hasAttribute('data-dashboard-link'))return;if(available.indexOf(id)===-1)available.push(id);});var final=[];order.forEach(function(id){if(available.indexOf(id)!==-1&&final.indexOf(id)===-1)final.push(id);});available.forEach(function(id){if(final.indexOf(id)===-1)final.push(id);});var anchor=Array.prototype.find.call(c.children,function(el){if(el.classList&&el.classList.contains('rail-spacer'))return true;if(el.classList&&el.classList.contains('dashboard-link'))return true;if(el.hasAttribute&&el.hasAttribute('data-dashboard-link'))return true;return el.dataset&&el.dataset.panel==='settings';});final.forEach(function(id){var el=c.querySelector('.nav-tab[data-panel="'+id+'"]');if(el)c.insertBefore(el,anchor||null);});});};var o=localStorage.getItem('wings-tab-order');if(o)reorder(JSON.parse(o));var h=localStorage.getItem('wings-hidden-tabs');if(!h)return;var p=clean(JSON.parse(h));p.forEach(function(id){document.querySelectorAll('[data-panel="'+id+'"]').forEach(function(el){el.classList.add('nav-tab-hidden');});});try{var ac=document.querySelector('.rail .rail-btn.nav-tab.active[data-panel]')||document.querySelector('.sidebar-nav .nav-tab.active[data-panel]');if(ac&&ac.classList.contains('nav-tab-hidden')){ac.classList.remove('active');var c=document.querySelector('.rail .rail-btn.nav-tab[data-panel="chat"]')||document.querySelector('.sidebar-nav .nav-tab[data-panel="chat"]');if(c)c.classList.add('active');}}catch(_){}}catch(e){}})();</script>
     <!-- Chat panel -->
     <div class="panel-view active" id="panelChat">
+      <div class="wings-brand" id="wingsBrand">
+        <button type="button" class="wings-brand-btn" onclick="sidebarFooterNav('settings')" aria-label="Account settings" data-i18n-aria-label="tab_settings">
+<svg class="wings-brand-logo" viewBox="0 0 472 167" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <path d="M66.6667 166.667C47.3611 161.806 31.4236 150.729 18.8542 133.437C6.28472 116.146 0 96.9444 0 75.8333V25L66.6667 0L133.333 25V75.8333C133.333 96.9444 127.049 116.146 114.479 133.437C101.91 150.729 85.9722 161.806 66.6667 166.667Z" fill="#CAA960"/>
+    <path d="M90.4395 114.575V42.3335H103.667V114.575H90.4395Z" fill="white"/>
+    <path d="M19.6667 114.575L45.7142 42.3335H61.8921L87.9395 114.575H74.1018L68.0987 97.4809H39.5075L33.5044 114.575H19.6667ZM43.374 86.1868H64.2323L53.854 55.6625L43.374 86.1868Z" fill="white"/>
+    <path d="M143.867 115.333V64.2615H153.179L153.371 72.9975C155.867 66.7575 161.147 63.1095 167.579 63.1095C175.163 63.1095 180.443 67.0455 182.651 73.6695C184.955 66.8535 190.139 63.1095 197.435 63.1095C208.187 63.1095 214.331 70.0215 214.331 82.5015V115.333H204.155V84.9975C204.155 76.1655 200.987 71.6535 194.459 71.6535C188.027 71.6535 183.899 76.7415 183.899 85.3815V115.333H174.203V85.3815C174.203 76.7415 171.515 71.6535 164.699 71.6535C158.171 71.6535 154.043 76.8375 154.043 85.3815V115.333H143.867ZM232.85 56.8695V46.6935H243.41V56.8695H232.85ZM233.042 115.333V64.2615H243.218V115.333H233.042ZM282.011 130.885C269.819 130.885 261.947 125.029 259.739 116.197L270.299 115.525C271.643 119.845 274.811 122.437 282.011 122.437C290.459 122.437 295.163 118.981 295.163 111.589V104.197C292.667 109.381 286.907 112.741 280.283 112.741C267.419 112.741 258.299 102.661 258.299 87.9735C258.299 73.3815 267.227 63.1095 279.899 63.1095C287.195 63.1095 293.051 66.6615 295.547 72.3255V64.2615H305.339V111.301C305.339 123.877 296.315 130.885 282.011 130.885ZM281.915 104.101C289.883 104.101 295.067 97.9575 295.163 87.8775C295.355 77.8935 289.979 71.7495 281.915 71.7495C273.659 71.7495 268.859 77.9895 268.859 87.8775C268.859 97.8615 273.851 104.101 281.915 104.101ZM323.36 115.333V47.1735H333.536V71.6535C336.224 65.7975 341.792 63.1095 348.512 63.1095C359.648 63.1095 365.696 71.0775 365.696 82.5015V115.333H355.52V85.1895C355.52 76.0695 352.352 71.6535 345.824 71.6535C338.336 71.6535 333.536 76.4535 333.536 85.3815V115.333H323.36ZM400.807 115.333C391.111 115.333 386.599 111.109 386.599 101.509V72.6135H378.823V64.2615H386.599V52.2615H396.775V64.2615H410.311V72.6135H396.775V100.741C396.775 105.541 398.791 106.981 403.015 106.981H410.311V115.333H400.807ZM427.247 129.733V121.381H433.487C436.943 121.381 438.287 120.421 439.247 118.021L440.879 113.797H437.711L419.279 64.2615H430.031L444.047 104.389L457.391 64.2615H468.239L447.887 121.285C445.775 127.141 442.127 129.733 434.927 129.733H427.247Z" fill="currentColor"/>
+  </svg>
+        </button>
+      </div>
       <div class="panel-head">
         <div class="ctx-gauge-card" id="titlebarStatusPill">
           <div class="ctx-gauge-ring-wrap" id="ctxIndicatorWrap" style="display:none">
@@ -298,7 +300,7 @@
             <span class="ctx-gauge-model" id="composerModelChip" onclick="toggleModelDropdown()" title="Conversation model">
               Modell: <span id="composerModelLabel">agent</span>
             </span>
-            <span class="ctx-gauge-tokens" id="ctxGaugeTokens">Token —</span>
+            <span class="ctx-gauge-tokens" id="ctxGaugeTokens" style="display:none">Token —</span>
           </div>
           <button class="ctx-gauge-new-chat" id="btnNewChatPill" onclick="$('btnNewChat') && $('btnNewChat').click()" type="button" aria-label="New conversation" data-i18n-title="new_conversation" title="New conversation">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -523,11 +525,14 @@
       </div>
     </div>
   <div class="sidebar-footer" id="sidebarFooter">
+    <div class="wings-footer-row">
+    <div class="sidebar-footer-search" id="sessionSearchWrap"><svg class="sidebar-footer-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg><input id="sessionSearch" type="search" class="sidebar-footer-search-input" placeholder="Filter…" data-i18n-placeholder="filter_conversations" oninput="filterSessions()" autocomplete="off" data-1p-ignore data-lpignore="true" data-bwignore="true" data-form-type="other"><button type="button" id="sessionSearchClear" class="sidebar-footer-search-clear" aria-label="Clear conversation filter" data-tooltip="Clear conversation filter" onclick="clearSessionSearch()" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+    </div>
+    <div class="wings-footer-row module-row">
     <button class="sidebar-footer-btn has-tooltip" type="button" data-panel="insights" onclick="sidebarFooterNav('insights')" data-tooltip="Insights" data-i18n-title="tab_insights" aria-label="Insights"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg></button>
     <button class="sidebar-footer-btn has-tooltip" type="button" data-panel="memory" onclick="sidebarFooterNav('memory')" data-tooltip="Memory" data-i18n-title="tab_memory" aria-label="Memory"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5V19A9 3 0 0 0 21 19V5"/><path d="M3 12A9 3 0 0 0 21 12"/></svg></button>
-    <span class="sidebar-footer-spacer" aria-hidden="true"></span>
-    <div class="sidebar-footer-search" id="sessionSearchWrap"><svg class="sidebar-footer-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg><input id="sessionSearch" type="search" class="sidebar-footer-search-input" placeholder="Filter…" data-i18n-placeholder="filter_conversations" oninput="filterSessions()" autocomplete="off" data-1p-ignore data-lpignore="true" data-bwignore="true" data-form-type="other"><button type="button" id="sessionSearchClear" class="sidebar-footer-search-clear" aria-label="Clear conversation filter" data-tooltip="Clear conversation filter" onclick="clearSessionSearch()" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
     <button class="sidebar-footer-btn has-tooltip" type="button" data-panel="settings" onclick="sidebarFooterNav('settings')" data-tooltip="Settings" data-i18n-title="tab_settings" aria-label="Settings"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06-.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
+    </div>
   </div>
   <div class="resize-handle" id="sidebarResize"></div>
   </aside>
@@ -733,7 +738,7 @@
           <div class="composer-left">
             <input type="file" id="fileInput" class="file-input-visually-hidden" multiple accept="image/*,text/*,application/pdf,application/json,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,.md,.py,.js,.ts,.yaml,.yml,.toml,.csv,.sh,.txt,.log,.env,.xls,.xlsx,.doc,.docx,.zip,.tar,.gz,.tgz,.bz2,.xz">
             <button type="button" class="icon-btn" id="btnAttach" aria-label="Attach files">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
             </button>
             <button type="button" class="icon-btn" id="btnWorkspaceChip"
                     onclick="toggleWorkspacePanel()" aria-pressed="false"
@@ -789,6 +794,7 @@
             </div>
           </div>
           <div id="savedPromptsPopup" class="saved-prompts-popup" style="display:none" role="menu" aria-label="Saved prompts" data-i18n-aria-label="composer_control_saved_prompts"></div>
+          <div class="composer-center" id="composerCenter" aria-label="Model and context"></div>
           <div class="composer-right">
             <span class="composer-timeout" id="composerTimeout" style="display:none" aria-live="polite"></span>
             <span class="composer-status" id="composerStatus" style="display:none"></span>

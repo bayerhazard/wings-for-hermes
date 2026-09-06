@@ -82,15 +82,16 @@ const LI_PATHS = {
 
 /**
  * Returns a Lucide SVG string for the given icon name.
- * @param {string} name  – key in LI_PATHS (e.g. 'folder', 'trash-2')
- * @param {number} size  – width/height in px (default 16)
+ * @param {string} name   – key in LI_PATHS (e.g. 'folder', 'trash-2')
+ * @param {number} size   – width/height in px (default 16)
+ * @param {number|string} stroke – stroke-width (default 2; Relay-Port Basic-Mode: 1.5)
  * @returns {string} SVG element string ready for innerHTML
  */
-function li(name, size = 16) {
+function li(name, size = 16, stroke = 2) {
   const p = LI_PATHS[name];
   if (!p) { console.warn('li(): unknown icon', name); return ''; }
   return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" `
-       + `stroke="currentColor" stroke-width="2" stroke-linecap="round" `
+       + `stroke="currentColor" stroke-width="${stroke}" stroke-linecap="round" `
        + `stroke-linejoin="round" aria-hidden="true" `
        + `style="display:inline-block;vertical-align:-0.15em;flex-shrink:0">${p}</svg>`;
 }
