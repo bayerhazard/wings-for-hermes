@@ -1,0 +1,145 @@
+# wings_update.md — Upstream-Sync-Betriebsanleitung (lebendes Dokument)
+
+> **Zweck:** this file is the machine- and agent-readable contract for syncing
+> `nesquena/hermes-webui` → `bayerhazard/wings-for-hermes`. It replaces manual
+> archaeology: every sync round starts here, ends with a release, and updates
+> the state block below. `UPSTREAM_SYNC.md` remains as historical record
+> (Runden 1–3, manuelle Port-Phase).
+
+## 0. Maschinenlesbarer Zustand
+
+```yaml
+upstream_repo: nesquena/hermes-webui
+upstream_anchor: e168b67e          # exp-v0.52.264 — Vorfahre via -s ours Merge
+upstream_anchor_date: 2026-08-26
+wings_version: 26.9.1            # wird bei jedem Release aktualisiert
+sync_mode: merge                   # AB ANKER: git merge upstream/<tag> (kein manuelles Portieren)
+last_sync_round: 4
+round4_outcome:
+  ported: []                       # nichts zu portieren — einziger Fix #6826 = SKIP (Klasse 4)
+  skipped: ["#6826"]
+  structural:
+    - "anchor merge -s ours e168b67e (merge-base ist jetzt upstream-Code)"
+    - "Voice-Backend extrahiert: api/wings_voice.py"
+    - "Wings-CSS extrahiert: static/wings.css"
+    - "node_modules + 9 Root-JS aus Git entfernt"
+```
+
+## 1. Preserve-Liste — Wings-only, NIEMALS bei Sync überschreiben
+
+| Feature | Ort (Wings-Inseln) | Isolation | Sync-Behandlung |
+|---|---|---|---|
+| Voice-Backend (TTS sync+stream, Satz-Chunker, SSRF-Pinning, Rate-Limiter, Config-Resolution inkl. `HERMES_WEBUI_TTS_VOICE`) | `api/wings_voice.py` | ✅ eigenständig | Datei nie anfassen; nur `routes.py`-Hook (`from api.wings_voice import _handle_tts, _handle_tts_stream`) + Dispatch-Zeilen (`/api/tts`, `/api/tts/stream`) bei Upstream-Refactoren nachziehen |
+| STT-Model-Pin (`HERMES_WEBUI_STT_MODEL`) | `api/upload.py` (`handle_transcribe`, ~Z. 442) | ❌ inline (klein) | Bei Konflikten: Env-Override-Block wieder einsetzen (Fallback `whisper-1` → Gateway-401) |
+| Basic/Advanced-Mode — **CSS** | `static/wings.css` (Interface-Mode, Sidebar-Footer, Mode-Switch, Activity-Line, Micro-Interactions) | ✅ eigenständig | Datei nie anfassen; nur `index.html`-Link nach style.css erhalten |
+| Basic/Advanced-Mode — **JS-Guards** | `static/panels.js` (`getUIMode/setUIMode/ADVANCED_PANELS`, switchPanel-Guards) | ❌ inline |panels.js-Konflikt: Guard-Blöcke manuell zurücksetzen; Liste mit `wings.css`-Selektoren synchron halten |
+| Voice-Mode-Client (Barge-In, Auto-Read, SSE-Playback) | `static/boot.js` (voice-mode IIFE), `static/ui.js` (`_playOpenaiTts`, `stopTTS`) | ❌ inline (Runde-5-Kandidat für `static/wings_voice.js`) | Bei Konflikten: IIFE-Blöcke am Stück wieder einsetzen; Fallstricke 1–5 in `AGENTS.md` (Wings-Repo) beachten |
+| Rebranding + i18n (en/de, AImighty-Texte) | `static/i18n.js` (Voll-Rewrite), `static/index.html` (Titel/Logo/Meta), Favicons/SVG/Fonts | ❌ schwerster Drift | i18n.js-Konflikte: Wings-Fassung behalten, Upstream-NEUE Keys per `git show <upstream>:static/i18n.js` ergänzen (nur `en`+`de`) |
+| Design-Theme (Hanseatenblau/dark, Designguide) | `static/style.css` (Theme-Blöcke) | ❌ inline | Theme-Blöcke (`:root`, `:root.dark`, `--am-*`) bei Konflikten bevorzugen |
+| No-op Service Worker | `static/sw.js` | ✅ eigenständig | Upstream-SW-Änderungen sind KATEGORIE SKIP (begründet: stale-cache-Fix #6196 existiert nicht mehr) |
+| Olares-Packaging | `wings/` (Chart), `OlaresManifest.yaml` (Root+Chart), `Dockerfile*`, `.github/workflows/`, `values.yaml` | ✅ 100 % Wings-only | von Upstream unberührt |
+| Activityline-Modul | `static/activityline.js` | ✅ eigenständig | CSS dazu in `wings.css` |
+
+**Grundregel bei Konflikten:** Wings-Insel (✅) gewinnen immer; Upstream-Code
+gewinnt in Nicht-Inseln; bei ❌-Inline-Drift entscheidet die Preserve-Liste.
+
+## 2. Skip-Liste — bewusst NICHT übernommene Upstream-Architektur
+
+| Upstream-Modul/Fix | Grund | Wieder aufgreifen wenn |
+|---|---|---|
+| `api/agent_runtime.py`, `api/process_event_utils.py`, `api/subprocess_utils.py`, `api/media_snapshots.py`, `api/extension_sidecar_auth.py` (#6283-Async-Delegation-Architektur) | Wings hat eigenes, schlankeres Runtime-Modell; Port = ~3800 Z. + neues Architektur-Modul | Upstream-Feature wird für Wings-Nutzer Pflicht (z. B. Security-Fix darauf gebaut) |
+| #6481, #7133/#7230, #7006, #7128, #7212, #7231, #6621, #6677 | bauen auf die fehlende Row-Identity-/Cache-Maschinerie auf oder sind Refactors funktionierender Wings-Pfade | Architektur-Adoption (Zeile 1) |
+| **#6826 Fast-Regenerate (Runde 4)** | baut auf `plan_regeneration`/`regeneration_context`/`with_revision`-Fence auf — **existiert in Wings nicht** (Wings hat eigenen Retry-Pfad in `api/session_ops.py`); Port = komplettes Subsystem, Nutzen null | Wings-Regenerate zeigt reales Performance-Problem → dann Subsystem-Adoption als eigenes Projekt |
+| Upstream-SW-Cache-Änderungen (`static/sw.js`) | Wings betreibt No-op-SW (bewusst, #6196-hinfällig) | nie |
+| Upstream-Locales `ja/zh/...` | Wings pflegt nur en+de | nie |
+
+## 3. Sync-Algorithmus (der neue Weg — ab Anker `e168b67e`)
+
+```bash
+cd wings-for-hermes
+git fetch upstream --tags
+NEW=$(git describe --tags upstream/master)        # z. B. exp-v0.52.271
+git merge upstream/master -m "sync: upstream <NEW>"
+#   → Konflikte NUR in Wings-angefassten Dateien (Preserve-Liste ❌-Einträge)
+#   → Wings-Inseln (wings_voice.py, wings.css, wings/, activityline.js) bleiben unangetastet
+```
+
+Konflikt-Lösungsreihenfolge pro Datei:
+1. **Preserve-Liste §1** konsultieren — Wings-Insel-Code hat Vorrang, Upstream-NEUES
+   (neue Funktionen/Endpoints) wird daneben übernommen.
+2. `static/i18n.js`: Wings-Fassung als Basis, Upstream-Neukeys (nur `en`,`de`) ergänzen.
+3. `api/routes.py`: Upstream-Struktur + Wings-Hook/Dispatch-Zeilen wieder einsetzen.
+4. Nach jedem Merge: `python3 -m py_compile` über `api/`, dann Voice-Suite + Fix-Tests
+   (§6 Befehle), Failset gegen Vorher-Baseline vergleichen (`/tmp/fail_*.txt`-Muster).
+5. Merge-Commit ins Repo pushen; Release-Kette §5.
+
+**Warum das funktioniert:** der `-s ours`-Anker-Merge (`08869990`) macht den kompletten
+Upstream bis `e168b67e` zum Vorfahren. `git merge-base HEAD upstream/master` =
+Upstream-Stand → 3-Way-Merge rechnet nur noch Deltas seit dem letzten Sync.
+
+**Einmalige Folgen des Anker-Merges (bewusst):** alle Upstream-Änderungen 13.07.–26.08.
+gelten als „adjudiziert" (portiert lt. Runden 1–3 oder skippt lt. §2). Git wird sie
+nie erneut anbieten. Neue Upstream-Änderungen an Modulen, die Wings nie hatte
+(z. B. `agent_runtime.py`), erscheinen als neue Dateien — dann §2 prüfen.
+
+## 4. Klassifizierung neuer Upstream-Änderungen (Regeln bleiben)
+
+1. **Security** (LFI/XSS/Auth/Race) → MÜSSEN rein; falls auf fehlender Architektur:
+   §2-Eintrag mit Zwangsumweg prüfen (nie still überspringen).
+2. **Bugfix** → betrifft er Wings-Logik? Meist ja → rein (per Merge automatisch).
+3. **Feature/UX** → bewerten; Wings-Design (Basic-Mode, Theme) darf nicht aufbrechen.
+4. **SKIP** → i18n-Batches (außer en/de-Keys), Docker/CI/Test-Infra upstream-seitig,
+   Windows-only, Module von §2.
+
+## 5. Release-Kette (unverändert bewährt)
+
+Versionsschema `YY.M.<n>` (Monat ohne führende Null, Zähler pro App,
+Monatsreset). **26.9.1 = erster Release im neuen Schema + erste Runde mit
+Anker-Merge.** Alle 5+ Stellen identisch:
+
+| Datei | Feld |
+|---|---|
+| `wings/Chart.yaml` | `version:` + `appVersion:` |
+| `wings/OlaresManifest.yaml` | `metadata.version` + `spec.versionName` + `upgradeDescription` |
+| `OlaresManifest.yaml` (Root) | dito |
+| `wings/values.yaml` | `image.tag` (OHNE `v`-Präfix) |
+| Market `_apps.ts` | `metadata.version` + `upgradeDescription` |
+| Market `_lib.ts` | CHARTS-Key `wings-<ver>.tgz` + FRISCHES base64 |
+
+```bash
+# 1. yaml.safe_load() über BEIDE Manifeste VOR helm package (Quote-Falle!)
+# 2. git add . && git commit -m "v26.9.1: …" && git push origin main
+# 3. git tag v26.9.1 && git push origin v26.9.1     # CI → ghcr (Tag OHNE v)
+# 4. helm package wings/
+# 5. Market-Source: _apps.ts + _lib.ts (frisch base64), wrangler deploy --branch main
+# 6. olares-cli market uninstall wings && olares-cli market install wings -s market.AImighty --watch
+#    (IMMER uninstall+install; market upgrade blockiert bei 26.0x.x Altformat)
+# 7. olares-cli settings apps domain set wings wings --third-level wings
+```
+
+## 6. Verifikations-Befehle
+
+```bash
+# Voice-Suite (Failset muss gegen Baseline identisch sein):
+HERMES_HOME=/tmp/x HERMES_WEBUI_STATE_DIR=/tmp/y ./scripts/test.sh \
+  tests/test_issue4982_openai_tts.py tests/test_issue_tts_stream.py \
+  tests/test_issue3510_elevenlabs_tts.py tests/test_issue2931_edge_tts_endpoint.py \
+  tests/test_issue3582_tts_content_length.py tests/test_french_voices_tts_allowlist.py
+# Sync-Basis-Check:
+git merge-base HEAD upstream/master   # == letzter Sync-Commit
+git log --oneline $(git merge-base HEAD upstream/master)..upstream/master | wc -l  # neue Upstream-Commits
+# Live-Rauchtests nach Deploy:
+curl -s -o /dev/null -w "%{http_code}\n" https://wings.aimighty.olares.de/static/wings.css
+curl -s -X POST https://wings.aimighty.olares.de/api/tts -H 'Content-Type: application/json' \
+  -d '{"text":"Test","engine":"openai"}' -o /tmp/t.mp3 -w "%{http_code} %{size_download}\n"
+```
+
+## 7. Historie
+
+| Runde | Datum | Upstream-Stand | Modus | Ergebnis |
+|---|---|---|---|---|
+| 1 | 2026-07-22 | `d2a4ecb7` | manuell portiert | v1.9.7, 9 Fixes |
+| 2 | 2026-08-02 | `41321f6f` | manuell portiert | v1.9.8, 5 Fixes |
+| 3 | 2026-08-25 | `3b9c632a` | manuell portiert | v26.08.9, 13 Fixes + Agent 0.20.5 |
+| **4** | **2026-09-06** | **`e168b67e`** | **ANKER-MERGE** | **#6826 skippt; Struktur: wings_voice.py, wings.css, Hygiene** |
+
