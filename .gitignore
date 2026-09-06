@@ -7,3 +7,6 @@ __pycache__/
 wings/*.tgz
 # Root-Packaging-Artefakte (helm package wings/ liefert wings-<ver>.tgz ins Repo-Root)
 *.tgz
+
+# Dev-Tooling (eslint) — nicht committen
+node_modules/
