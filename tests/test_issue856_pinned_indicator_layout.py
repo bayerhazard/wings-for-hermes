@@ -145,13 +145,22 @@ def test_sidebar_uses_local_inflight_state_for_immediate_spinner():
     assert "if(typeof renderSessionListFromCache==='function') renderSessionListFromCache();" in messages_js
 
 
-def test_folder_grouping_emits_one_header_per_project_and_dblclick_toggles():
+def test_folder_grouping_emits_one_header_per_project_and_single_tap_toggles():
     """Folder grouping buckets sessions per project so each project folder appears
-    exactly once, expands/collapses on double-click, and renders a header element."""
-    assert "const _renderFolderHeader=(key)=>{" in SESSIONS_JS
+    exactly once, expands/collapses on a single tap/click, and renders a header element.
+
+    Wings 26.9.5: the toggle moved from dblclick to a pointerdown/pointerup tap.
+    iOS never synthesizes dblclick for touch, so folders could not be opened at
+    all on a phone. `pointerup` (not `click`) because the header is draggable and
+    browsers suppress click on draggable elements; >8px of movement is a drag or
+    a scroll, not a tap.
+    """
+    assert "const _renderFolderHeader=(key, group)=>{" in SESSIONS_JS
     assert "const _groupedBuckets" in SESSIONS_JS
     assert "for(const group of _groupedBuckets){" in SESSIONS_JS
-    assert "header.ondblclick" in SESSIONS_JS
+    assert "header.ondblclick" not in SESSIONS_JS
+    assert "header.addEventListener('pointerdown'" in SESSIONS_JS
+    assert "header.addEventListener('pointerup'" in SESSIONS_JS
     assert "session-folder-header" in STYLE_CSS
     assert ".session-folder-caret{" not in STYLE_CSS
 

@@ -286,6 +286,17 @@
   --fs-xs:0.75rem;--fs-sm:0.8125rem;--fs-base:0.875rem;
   --fs-md:1rem;--fs-lg:1.125rem;--fs-xl:1.25rem;
   --am-radius-s:3px;--am-radius-m:8px;--am-radius-l:12px;
+  /* Kleine Raumstufen + Zeigerziel: style.css kennt erst --am-raum-4 aufwärts.
+     Der Ordnerkopf (Beacon-Port) braucht 1/2/3 und 40px als Zielgröße. */
+  --am-raum-1:calc(var(--am-einheit)*1*var(--am-skalierung));
+  --am-raum-2:calc(var(--am-einheit)*2*var(--am-skalierung));
+  --am-raum-3:calc(var(--am-einheit)*3*var(--am-skalierung));
+  /* Zeigerziel = echte 40px, absolut. Bewusst nicht in rem: Wings' Basis ist
+     --am-einheit 0.25rem bei 15px-Root, also 3,75px je Einheit — „10 Einheiten"
+     ergäben 37,5px, und mit der Textgröße würde das Ziel mitschrumpfen. Ein
+     Klickziel darf sich nicht mit der Schriftgröße ändern. */
+  --am-ziel-zeiger:40px;
+  --am-radius-klein:4px;
   --active-wash:var(--b-900);--unread-wash:rgba(63,96,130,.10);
   /* ── iOS-Safe-Area (nur mit viewport-fit=cover überhaupt ≠ 0) ──
      Alle Wings-Mobile-Regeln lesen diese Variablen, nie env() direkt, damit
@@ -393,6 +404,48 @@
 [data-mode="basic"] .session-item:hover{background:var(--active-wash);color:var(--text);}
 [data-mode="basic"] .session-item.active{background:var(--active-wash)!important;color:var(--accent-text)!important;font-weight:600;}
 [data-mode="basic"] .session-item.active .session-title{color:var(--accent-text)!important;}
+
+/* ══ Projektordner nach Beacon-Vorbild ════════════════════════════════════
+   Quelle: beacon/frontend/app/globals.css, `.huelle-nav-item` ab 1024px
+   (Zeile 908 ff.) + `components/huelle.tsx` (Zeichen size=18 strokeWidth=1.75).
+   14px/400 ohne Versalien, führendes 18px-Icon, 12px Abstand, 8/12 Polster,
+   40px Zielhöhe, 4px Radius, gedämpfte Farbe, Hover = Fläche 2, aktiv = Gold
+   + 600. Kein Modus-Präfix: der Ordnerkopf ist in Basic (Seitenleiste) und
+   Advanced (Session-Panel) dieselbe Zeile. style.css bleibt unangetastet —
+   spätere Datei bei gleicher Spezifität gewinnt. */
+.session-folder-header{
+  display:flex;align-items:center;gap:var(--am-raum-3);
+  min-height:var(--am-ziel-zeiger);
+  padding:var(--am-raum-2) var(--am-raum-3);
+  margin:2px 0;
+  border-radius:var(--am-radius-klein);
+  font-size:var(--fs-base);font-weight:400;letter-spacing:0;text-transform:none;
+  color:var(--muted);cursor:pointer;
+  transition:background .15s ease-in-out,color .15s ease-in-out;
+}
+.session-folder-header:hover{background:var(--active-wash);color:var(--text);}
+.session-folder-header svg{width:18px;height:18px;stroke-width:1.75;flex-shrink:0;}
+.session-folder-header .session-folder-name{
+  min-width:0;color:inherit;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+/* Zähler rechts: sagt, wie viel im Ordner liegt — auch wenn er zu ist.
+   Zahlen in Mono, wie Beacons technische Werte (.mono). */
+.session-folder-header .session-folder-count{
+  margin-left:auto;flex-shrink:0;
+  font-family:var(--font-mono);font-size:11px;line-height:1;
+  color:var(--muted);font-variant-numeric:tabular-nums;
+}
+/* Der Ordner, in dem die offene Sitzung liegt (Beacons .aktiv). */
+.session-folder-header.folder-aktiv{color:var(--accent-text);font-weight:600;}
+.session-folder-header.folder-aktiv .session-folder-count{color:var(--accent-text);}
+/* Ziehen bleibt ziehbar — der Zeiger sagt es. */
+.session-folder-header[draggable="true"]{cursor:grab;}
+.session-folder-header[draggable="true"]:active{cursor:grabbing;}
+/* Auf Touch: 44px Zielhöhe, ohne Ausnahme. */
+@media (hover:none){
+  .session-folder-header{min-height:44px;}
+}
 
 /* ── Technische Werte in Geist Mono (Relay .mono) ── */
 .mono,.ctx-gauge-tokens{font-family:var(--font-mono);}
@@ -541,6 +594,15 @@
   :root .composer-wrap{
     padding-bottom:calc(17px + var(--keyboard-bottom-inset,0px) + var(--wings-inset-bottom))!important;
   }
+  /* M1a-2 (26.9.5, nur mobil): das Eingabefeld trägt den Sidebar-Ton und hebt
+     sich damit vom Chatgrund ab — im Dunkeln fiel es vorher mit b-100 auf
+     b-100 zusammen und war nur noch an der Border zu erkennen. Das Band bleibt
+     --chat-bg, damit das Feld als erhabene Fläche liest. Überschreibt bewusst
+     das modusweite `:root.dark .composer-box{b-100}` (26.9.3) für Phone.
+     Das `:root`-Präfix ist nötig: `:root.dark .composer-box` wiegt (0,3,0),
+     `[data-mode="basic"] .composer-box` nur (0,2,0) — gleiche Spezifität,
+     spätere Datei gewinnt. */
+  :root[data-mode="basic"] .composer-box{background:var(--sidebar);}
 }
 
 /* ── M1b: Edge-Swipe-Zone unter der Mobile-Navbar statt unter der (in Wings
@@ -688,7 +750,7 @@
     padding:var(--wings-inset-top) max(8px,var(--wings-inset-right)) 0 max(8px,var(--wings-inset-left));
     box-sizing:border-box;
     align-items:center;justify-content:space-between;
-    background:var(--chat-bg);border-bottom:1px solid var(--border);
+    background:var(--sidebar);border-bottom:1px solid var(--border);
     font-size:var(--fs-base);
   }
   /* Symmetrie + Reduktion auf drei Elemente */

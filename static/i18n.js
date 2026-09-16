@@ -545,6 +545,7 @@ const LOCALES = {
     new_file_prompt_title: 'New file name in {0}:',
     new_folder_prompt_title: 'New folder name in {0}:',
     project_name_prompt: 'Project name:',
+    session_folder_unassigned: 'Unassigned',
     created: 'Created ',
     create_failed: 'Create failed: ',
     new_folder_prompt: 'New folder name:',
@@ -1327,7 +1328,7 @@ const LOCALES = {
     save_skill: 'Save skill',
     editing: 'Editing',
     // Empty state
-    empty_title: 'Wings for Hermes',
+    empty_title: 'Wings',
     empty_subtitle: 'Ask anything, run commands, explore files, or manage your scheduled tasks.',
     suggest_files: 'What files are in this workspace?',
     suggest_schedule: "What's on my schedule today?",
@@ -2186,6 +2187,7 @@ const LOCALES = {
     new_file_prompt_title: 'Neuer Dateiname in {0}:',
     new_folder_prompt_title: 'Neuer Ordnername in {0}:',
     project_name_prompt: 'Projektname:',
+    session_folder_unassigned: 'Nicht zugewiesen',
     created: 'Erstellt ',
     create_failed: 'Erstellen fehlgeschlagen: ',
     new_folder_prompt: 'Neuer Ordnername:',
@@ -2656,7 +2658,7 @@ const LOCALES = {
     save_skill: 'Skill speichern',
     editing: 'Bearbeitung',
     // Empty state
-    empty_title: 'Wings for Hermes',
+    empty_title: 'Wings',
     empty_subtitle: 'Frage mich alles, führe Befehle aus, erkunde Dateien oder verwalte deine Aufgaben.',
     suggest_files: 'Welche Dateien sind in diesem Workspace?',
     suggest_schedule: 'Was steht heute auf meinem Plan?',

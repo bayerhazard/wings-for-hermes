@@ -7947,20 +7947,57 @@ function renderSessionListFromCache(){
   // Render flat session list (no date group headers); when folder grouping is
   // active, emit a project folder header before each project's sessions.
   let globalSessionRowIndex=0;
-  const _renderFolderHeader=(key)=>{
+  const _renderFolderHeader=(key, group)=>{
     const proj=(_allProjects||[]).find(p=>p.project_id===key);
-    const label=proj?proj.name:'Unassigned';
+    const isUnassigned=key===NO_PROJECT_FILTER;
+    const label=proj?proj.name:(typeof t==='function'?t('session_folder_unassigned'):'Unassigned');
+    const count=(group&&Array.isArray(group.sessions))?group.sessions.length:0;
+    const isCollapsed=_folderCollapsed.has(key);
+    const holdsActive=!!(activeSidForSidebar&&group&&Array.isArray(group.sessions)
+      &&group.sessions.some(s=>s&&s.session_id===activeSidForSidebar));
     const header=document.createElement('div');
-    header.className='session-folder-header';
+    header.className='session-folder-header'+(holdsActive?' folder-aktiv':'');
     header.dataset.folderKey=key;
+    // Zeile ist bedienbar: Icon + Name als eine Fläche, die auf-/zuklappt.
+    header.setAttribute('role','button');
+    header.tabIndex=0;
+    header.setAttribute('aria-expanded',isCollapsed?'false':'true');
+    header.title=(header.title?header.title+' · ':'')+(isCollapsed?'Expand':'Collapse')+' folder';
+    const icon=document.createElement('span');
+    icon.className='session-folder-icon';
+    icon.dataset.wingsIcon='1';
+    icon.innerHTML=(typeof li==='function')?li(isUnassigned?'archive':'folder',18,1.75):'';
+    header.appendChild(icon);
     const name=document.createElement('span');
     name.className='session-folder-name';
     name.textContent=label;
     header.appendChild(name);
-    header.ondblclick=()=>{
+    if(count>0){
+      const badge=document.createElement('span');
+      badge.className='session-folder-count';
+      badge.textContent=String(count);
+      header.appendChild(badge);
+    }
+    const toggleFolder=()=>{
       if(_folderCollapsed.has(key)) _folderCollapsed.delete(key); else _folderCollapsed.add(key);
       renderSessionListFromCache();
     };
+    // Einzelklick/-tipp statt dblclick: iOS synthetisiert bei Touch kein
+    // dblclick, dadurch ließ sich am iPhone kein Ordner öffnen. pointerup
+    // statt click, weil der Kopf draggable ist und Browser auf draggable
+    // Elementen click unterdrücken können (Bewegung > 8px = Ziehen/Scrollen).
+    let _tapStart=null;
+    header.addEventListener('pointerdown',(e)=>{_tapStart={x:e.clientX,y:e.clientY,id:e.pointerId};},{passive:true});
+    header.addEventListener('pointerup',(e)=>{
+      const start=_tapStart; _tapStart=null;
+      if(!start||start.id!==e.pointerId) return;
+      if(Math.abs(e.clientX-start.x)>8||Math.abs(e.clientY-start.y)>8) return;
+      toggleFolder();
+    });
+    header.addEventListener('pointercancel',()=>{_tapStart=null;},{passive:true});
+    header.addEventListener('keydown',(e)=>{
+      if(e.key==='Enter'||e.key===' '||e.key==='Spacebar'){ e.preventDefault(); toggleFolder(); }
+    });
     if(key!==NO_PROJECT_FILTER&&!_sessionSelectMode){
       header.draggable=true;
       header.title=(header.title?header.title+' · ':'')+'Drag to reorder folders';
@@ -7973,7 +8010,7 @@ function renderSessionListFromCache(){
   };
   if(folderGrouping){
     for(const group of _groupedBuckets){
-      _renderFolderHeader(group.key);
+      _renderFolderHeader(group.key, group);
       if(_folderCollapsed.has(group.key)) continue;
       for(const s of group.sessions){
         const rowIndex=globalSessionRowIndex++;

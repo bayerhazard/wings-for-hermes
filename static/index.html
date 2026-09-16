@@ -30,11 +30,11 @@
 <script>(function(){try{var _hadAppearance=localStorage.getItem('wings-theme')!==null||localStorage.getItem('hermes-theme')!==null;var themes={light:1,dark:1,system:1},legacy={midnight:'dark',neon:'dark',light:'light',dark:'dark',slate:'dark',solarized:'dark',monokai:'dark',nord:'dark',oled:'dark',codex:'dark',terracotta:'dark',graphite:'dark',github:'light','wings-light':'light','wings-dark':'dark'},t=(localStorage.getItem('wings-theme')||localStorage.getItem('hermes-theme')||'dark').toLowerCase(),m=legacy[t],theme=((m||themes[t])?t:'dark');if(_hadAppearance){localStorage.setItem('wings-theme',theme);localStorage.setItem('hermes-theme',theme);}localStorage.removeItem('wings-skin');if(theme==='system')theme=window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';if(theme==='dark')document.documentElement.classList.add('dark');}catch(e){document.documentElement.classList.add('dark');}})()</script>
 <script>(function(){try{var fs=localStorage.getItem('wings-font-size');if(fs&&fs!=='default')document.documentElement.dataset.fontSize=fs;}catch(e){}})()</script>
 <script>(function(){try{var m=(localStorage.getItem('wings-mode')==='advanced')?'advanced':'basic';if(!window.matchMedia('(min-width:641px)').matches)m='basic';document.documentElement.dataset.mode=m;}catch(e){document.documentElement.dataset.mode='basic';}})()</script>
-<!-- theme-color: surfaces the active app chrome color to native status bars (Safari status bar, PWA, native WKWebView wrappers). Updated dynamically by boot.js when theme/skin changes. The light/dark default values are the Wings mobile nav bar surface (= --chat-bg, the top-most painted chrome on phones): #ffffff light / #051729 dark. -->
-<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#051729" media="(prefers-color-scheme: dark)">
-<meta name="theme-color" id="wings-theme-color" content="#051729">
-<script>(function(){try{var t=localStorage.getItem('wings-theme')||'dark';if(t==='system')t=window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';var c=t==='dark'?'#051729':'#ffffff';document.querySelectorAll('meta[name="theme-color"]').forEach(function(m){m.setAttribute('content',c);m.removeAttribute('media');});}catch(e){}})()</script>
+<!-- theme-color: surfaces the active app chrome color to native status bars (Safari status bar, PWA, native WKWebView wrappers). Updated dynamically by boot.js when theme/skin changes (it reads --sidebar). The light/dark defaults match the Wings mobile nav bar, which now carries the sidebar tone (#f4f7fa light / #0a2238 dark, b-150). -->
+<meta name="theme-color" content="#f4f7fa" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0a2238" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" id="wings-theme-color" content="#0a2238">
+<script>(function(){try{var t=localStorage.getItem('wings-theme')||'dark';if(t==='system')t=window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';var c=t==='dark'?'#0a2238':'#f4f7fa';document.querySelectorAll('meta[name="theme-color"]').forEach(function(m){m.setAttribute('content',c);m.removeAttribute('media');});}catch(e){}})()</script>
 <script>(function(){try{var adv=localStorage.getItem('wings-mode')==='advanced';if(!window.matchMedia('(min-width:641px)').matches)adv=false;var wp=(adv&&localStorage.getItem('wings-workspace-panel')==='open')?'open':'closed';document.documentElement.dataset.workspacePanel=wp;}catch(e){document.documentElement.dataset.workspacePanel='closed';}})()</script>
 <script>(function(){try{if(localStorage.getItem('wings-sidebar-collapsed')==='1')document.documentElement.dataset.sidebarCollapsed='1';}catch(e){}})()</script>
 <link rel="preload" href="static/pwa-startup.js?v=__WEBUI_VERSION__&w=185" as="script">
@@ -152,12 +152,36 @@
   [data-mode="basic"] .project-chip-quick-create,
   [data-mode="basic"] .project-new-btn,
   [data-mode="basic"] .project-create-btn{display:none!important;}
-  /* ── Empty-state logo: no glow, wide aspect ratio ── */
-  .empty-logo::before{display:none!important;}
-  .empty-logo img{width:200px!important;height:auto!important;display:block;}
-  .empty-logo{margin-bottom:0!important;}
+  /* ── Empty state lockup: Wings mark + wordmark ──
+     Replaces the old wide "AImighty" wordmark image and the separate
+     "Wings for Hermes" caption with a single mark-and-word lockup.
+     Font size is derived, not guessed: the AI letters in wings-shield.svg
+     span 59.599 of the 150 viewBox units (39.73 %), Geist's cap height is
+     0.71 em, so font-size = 0.3973 / 0.71 = 0.56 x mark height.
+     Lives here (not wings.css) because the overrides it replaces had to beat
+     style.css and this inline block is the last stylesheet in the document. */
+  .wings-lockup{
+    --wings-mark-size:80px;
+    display:flex;align-items:center;justify-content:center;
+    /* The SVG carries 13.3 % transparent padding left/right, so a 12px box gap
+       would read as ~23px. 4px lands the eye at ~14px. */
+    gap:4px;
+    margin-bottom:6px;
+  }
+  .wings-lockup .wings-mark{
+    display:block;width:var(--wings-mark-size);height:var(--wings-mark-size);
+    flex-shrink:0;
+  }
+  .wings-lockup h2{
+    font-size:calc(var(--wings-mark-size) * .56)!important;
+    font-weight:300!important;letter-spacing:-.02em!important;
+    line-height:1;margin:0!important;white-space:nowrap;
+  }
+  /* Phone: mark above the word, both centred, same size. */
+  @media (max-width:640px){
+    .wings-lockup{flex-direction:column;gap:2px;}
+  }
   .empty-state{gap:4px!important;}
-  .empty-state h2{font-weight:300!important;letter-spacing:-.01em!important;margin-top:0!important;}
   /* ── Hide workspace panel edge toggle arrow ── */
   .workspace-panel-edge-toggle{display:none!important;}
   /* ── Gauge card: volle Breite, Box-Model (Positionierung: wings.css) ── */
@@ -594,8 +618,10 @@
         aria-controls="outlinePanelWrapper"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="3" x2="9" y2="21"/></svg></button>
     <div class="messages" id="messages">
       <div class="empty-state no-suggestions" id="emptyState">
-        <div class="empty-logo"><img class="empty-logo-light" src="static/ai_mighty_blue_white_bg.svg" alt="AImighty" width="200" /><img class="empty-logo-dark" src="static/ai_mighty_gold_shield_dark_bg.svg" alt="AImighty" width="200" /></div>
-        <h2 data-i18n="empty_title">Wings for Hermes</h2>
+        <div class="wings-lockup">
+          <img class="wings-mark" src="static/wings-shield.svg" alt="" width="80" height="80" />
+          <h2 data-i18n="empty_title">Wings</h2>
+        </div>
         <p data-i18n="empty_subtitle" style="display:none"></p>
         <div class="suggestion-grid">
           <button class="suggestion" data-msg="What files are in this workspace?"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg> <span data-i18n="suggest_files">What files are in this workspace?</span></button>
