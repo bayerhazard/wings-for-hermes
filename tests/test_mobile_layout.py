@@ -1009,17 +1009,37 @@ def test_100dvh_viewport_height():
 
 
 def test_viewport_disables_page_zoom_for_native_pwa_shell():
-    """Installed PWA launches should not rubber-band into browser-style page zoom."""
-    assert 'name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"' in HTML
+    """Installed PWA launches should not rubber-band into browser-style page zoom.
+
+    26.9.4 (Wings): the zoom lock stays, and viewport-fit=cover is added so the
+    installed shell can paint edge-to-edge under the Dynamic Island / home
+    indicator. Without cover mode every env(safe-area-inset-*) resolves to 0 and
+    the whole safe-area handling is dead. The three flags belong together: the
+    lock keeps accidental page zoom out, cover keeps the app chrome out of the
+    notch.
+    """
+    assert 'name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"' in HTML
 
 
 def test_pwa_safe_area_top_stays_scoped_to_installed_modes():
-    """The PWA shell should not opt into cover-mode geometry for every browser surface."""
-    assert 'viewport-fit=cover' not in HTML
+    """Cover geometry is intentional for the installed shell (Wings 26.9.4).
+
+    The safe-area insets are only consumed inside the installed display modes —
+    in a browser tab the insets stay 0 and no padding is applied — while the
+    viewport itself opts into cover so the installed shell reaches the screen
+    edges. Covers env() being unreliable on iOS 26.1 (WebKit #301994): the
+    Wings fallback variables feed max(...) in wings.css and are set by
+    static/wings_mobile.js only when env() measurably returns 0.
+    """
+    assert 'viewport-fit=cover' in HTML
     assert 'apple-mobile-web-app-status-bar-style" content="black-translucent"' in HTML
     assert "@media (display-mode: standalone), (display-mode: fullscreen)" in CSS
     assert "--app-titlebar-safe-top:env(safe-area-inset-top" in CSS
     assert "--app-safe-bottom:" not in CSS
+    wings_css = (REPO / "static" / "wings.css").read_text(encoding="utf-8")
+    assert "--wings-safe-top-fallback" in wings_css
+    assert "max(env(safe-area-inset-top,0px),var(--wings-safe-top-fallback))" in wings_css
+    assert "wingsSyncSafeArea" in (REPO / "static" / "wings_mobile.js").read_text(encoding="utf-8")
 
 
 def test_titlebar_safe_area_top_uses_scoped_variable():

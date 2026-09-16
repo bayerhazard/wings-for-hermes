@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>Wings for Hermes</title>
 <!-- base href enables subpath mount support; all static paths must stay relative (no leading slash).
      MUST appear before manifest/favicon links so browsers resolve relative URLs against the
@@ -17,14 +17,24 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Wings">
 <link rel="apple-touch-icon" sizes="512x512" href="static/apple-touch-v5.png?v=wings5">
+<!-- iOS-Startbilder (installierte PWA): solides Hanseatenblau statt weißem
+     Blitz beim Kaltstart. Erzeugt aus der Marken-Rampe (--b-100 #051729).
+     Relative Pfade wegen des <base>-Tags oben. -->
+<link rel="apple-touch-startup-image" href="static/splash-1179x2556.png" media="(device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+<link rel="apple-touch-startup-image" href="static/splash-1206x2622.png" media="(device-width: 402px) and (device-height: 874px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+<link rel="apple-touch-startup-image" href="static/splash-1290x2796.png" media="(device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+<link rel="apple-touch-startup-image" href="static/splash-1170x2532.png" media="(device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+<link rel="apple-touch-startup-image" href="static/splash-1125x2436.png" media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+<link rel="apple-touch-startup-image" href="static/splash-828x1792.png" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
+<link rel="apple-touch-startup-image" href="static/splash-750x1334.png" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
 <script>(function(){try{var _hadAppearance=localStorage.getItem('wings-theme')!==null||localStorage.getItem('hermes-theme')!==null;var themes={light:1,dark:1,system:1},legacy={midnight:'dark',neon:'dark',light:'light',dark:'dark',slate:'dark',solarized:'dark',monokai:'dark',nord:'dark',oled:'dark',codex:'dark',terracotta:'dark',graphite:'dark',github:'light','wings-light':'light','wings-dark':'dark'},t=(localStorage.getItem('wings-theme')||localStorage.getItem('hermes-theme')||'dark').toLowerCase(),m=legacy[t],theme=((m||themes[t])?t:'dark');if(_hadAppearance){localStorage.setItem('wings-theme',theme);localStorage.setItem('hermes-theme',theme);}localStorage.removeItem('wings-skin');if(theme==='system')theme=window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';if(theme==='dark')document.documentElement.classList.add('dark');}catch(e){document.documentElement.classList.add('dark');}})()</script>
 <script>(function(){try{var fs=localStorage.getItem('wings-font-size');if(fs&&fs!=='default')document.documentElement.dataset.fontSize=fs;}catch(e){}})()</script>
 <script>(function(){try{var m=(localStorage.getItem('wings-mode')==='advanced')?'advanced':'basic';if(!window.matchMedia('(min-width:641px)').matches)m='basic';document.documentElement.dataset.mode=m;}catch(e){document.documentElement.dataset.mode='basic';}})()</script>
-<!-- theme-color: surfaces the active app chrome color to native status bars (Safari status bar, PWA, native WKWebView wrappers). Updated dynamically by boot.js when theme/skin changes. The light/dark default values match style.css :root --sidebar / :root.dark --sidebar. -->
-<meta name="theme-color" content="#F5F8FA" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#010f20" media="(prefers-color-scheme: dark)">
-<meta name="theme-color" id="wings-theme-color" content="#010f20">
-<script>(function(){try{var t=localStorage.getItem('wings-theme')||'dark';if(t==='system')t=window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';var c=t==='dark'?'#010f20':'#F5F8FA';document.querySelectorAll('meta[name="theme-color"]').forEach(function(m){m.setAttribute('content',c);m.removeAttribute('media');});}catch(e){}})()</script>
+<!-- theme-color: surfaces the active app chrome color to native status bars (Safari status bar, PWA, native WKWebView wrappers). Updated dynamically by boot.js when theme/skin changes. The light/dark default values are the Wings mobile nav bar surface (= --chat-bg, the top-most painted chrome on phones): #ffffff light / #051729 dark. -->
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#051729" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" id="wings-theme-color" content="#051729">
+<script>(function(){try{var t=localStorage.getItem('wings-theme')||'dark';if(t==='system')t=window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';var c=t==='dark'?'#051729':'#ffffff';document.querySelectorAll('meta[name="theme-color"]').forEach(function(m){m.setAttribute('content',c);m.removeAttribute('media');});}catch(e){}})()</script>
 <script>(function(){try{var adv=localStorage.getItem('wings-mode')==='advanced';if(!window.matchMedia('(min-width:641px)').matches)adv=false;var wp=(adv&&localStorage.getItem('wings-workspace-panel')==='open')?'open':'closed';document.documentElement.dataset.workspacePanel=wp;}catch(e){document.documentElement.dataset.workspacePanel='closed';}})()</script>
 <script>(function(){try{if(localStorage.getItem('wings-sidebar-collapsed')==='1')document.documentElement.dataset.sidebarCollapsed='1';}catch(e){}})()</script>
 <link rel="preload" href="static/pwa-startup.js?v=__WEBUI_VERSION__&w=185" as="script">
@@ -81,6 +91,11 @@
        from reaching the browser. Inline styles in the HTML shell are always fresh. -->
   <style>
   .app-titlebar{display:none!important;}
+  /* Mobile Navbar (26.9.4): auf Phone-Breite wird die (in Wings sonst
+     ausgeblendete) Upstream-Titelbar als schmale Navbar reaktiviert —
+     Menü links, Chat-Titel mittig, Neu-Chat rechts. Desktop/Advanced
+     bleiben unverändert ohne Titelbar. Styling: static/wings.css. */
+  @media (max-width:640px){ .app-titlebar{display:flex!important;} }
   .composer-box:focus-within{border-color:var(--border2)!important;box-shadow:none!important;}
   [data-mode="basic"] .transparent-turn-footer{display:none!important;}
   [data-mode="basic"] .msg-usage-inline,
@@ -1859,6 +1874,8 @@
 </div>
 <div class="toast" id="toast"></div>
 <script src="static/i18n.js?v=__WEBUI_VERSION__&w=185" defer></script>
+<!-- Wings-only Mobile-/iOS-PWA-Schicht (Safe-Area-Fallback, Gesten) — siehe wings_update.md -->
+<script src="static/wings_mobile.js?v=__WEBUI_VERSION__" defer></script>
 <script src="static/icons.js?v=__WEBUI_VERSION__&w=185" defer></script>
 <script src="static/assistant_turn_anchors.js?v=__WEBUI_VERSION__&w=185" defer></script>
 <script src="static/ui.js?v=__WEBUI_VERSION__&w=185" defer></script>

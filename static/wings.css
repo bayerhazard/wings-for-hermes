@@ -287,9 +287,21 @@
   --fs-md:1rem;--fs-lg:1.125rem;--fs-xl:1.25rem;
   --am-radius-s:3px;--am-radius-m:8px;--am-radius-l:12px;
   --active-wash:var(--b-900);--unread-wash:rgba(63,96,130,.10);
+  /* ── iOS-Safe-Area (nur mit viewport-fit=cover überhaupt ≠ 0) ──
+     Alle Wings-Mobile-Regeln lesen diese Variablen, nie env() direkt, damit
+     der iOS-26.1-Fallback (--wings-safe-top-fallback, per JS gesetzt) greift. */
+  --wings-safe-top-fallback:0px;
+  --wings-safe-bottom-fallback:0px;
+  --wings-inset-top:max(env(safe-area-inset-top,0px),var(--wings-safe-top-fallback));
+  --wings-inset-bottom:max(env(safe-area-inset-bottom,0px),var(--wings-safe-bottom-fallback));
+  --wings-inset-left:env(safe-area-inset-left,0px);
+  --wings-inset-right:env(safe-area-inset-right,0px);
+  /* Mobile Navbar (M2): 44px Inhaltszeile + Safe-Top */
+  --wings-mnav-h:44px;
 }
 /* Helles Theme — Relay-Oberflächen (sidebar #f4f7fa, list/preview #fff) */
 :root:not(.dark){
+  color-scheme:light;
   --bg:#ffffff;--sidebar:#f4f7fa;--surface:#ffffff;--chat-bg:#ffffff;
   --border:var(--b-800);--border2:var(--b-700);
   --text:var(--b-150);--muted:var(--b-500);
@@ -300,6 +312,7 @@
    Eingabefeld), rechts einheitlich das dunklere (b-100). --surface bleibt
    b-150 für Dropdowns/Cards (Kontrast auf der dunklen rechten Seite). */
 :root.dark{
+  color-scheme:dark;
   --bg:var(--b-100);--sidebar:var(--b-150);--surface:var(--b-150);--chat-bg:var(--b-100);
   --border:var(--b-300);--border2:var(--b-400);
   --text:var(--b-800);--muted:var(--b-500);
@@ -321,7 +334,8 @@
 .wings-brand{display:none;}
 [data-mode="basic"] .wings-brand{
   display:flex;align-items:center;gap:8px;
-  height:var(--am-header-h);padding:0 16px;flex-shrink:0;
+  height:calc(var(--am-header-h) + var(--wings-inset-top));
+  padding:var(--wings-inset-top) 16px 0;box-sizing:border-box;flex-shrink:0;
   border-bottom:1px solid var(--border);margin-bottom:16px;
 }
 .wings-brand-btn{
@@ -343,7 +357,8 @@
    padding 12px + border-top; Zeilen: Gauge-Dock, Suche (34px, r=8),
    Modul-Icons (32×32-Buttons, 16px-Icons stroke 1.5, gap 8, zentriert). */
 [data-mode="basic"] .sidebar-footer{
-  flex-direction:column;align-items:stretch;gap:0;padding:12px;
+  flex-direction:column;align-items:stretch;gap:0;
+  padding:12px;padding-bottom:calc(12px + var(--wings-inset-bottom));
   border-top:1px solid var(--border);
 }
 .wings-footer-row{display:flex;align-items:center;justify-content:center;gap:8px;}
@@ -466,13 +481,42 @@
 [data-mode="basic"] .composer-center .ctx-gauge-card .model-dropdown{
   top:auto;bottom:calc(100% + 8px);left:0;border-radius:14px;box-shadow:var(--shadow-lg);
 }
-/* Sehr schmal: Cluster aus der absoluten Mitte nehmen, Tokens weg */
-@media (max-width:480px){
+/* Phone: Cluster aus der absoluten Mitte nehmen und links an das Paperclip
+   rücken. Reihenfolge bleibt [Werkzeuge] [Ring + Modell-Pille] ... [Mikro] [Senden];
+   der freie Raum liegt bewusst zwischen Pille und den Aktionen (margin-right:auto),
+   statt als totes Loch zwischen Paperclip und Ring (bis 26.9.3: flex:1/right). */
+@media (max-width:640px){
   [data-mode="basic"] .composer-center{
-    position:static;transform:none;left:auto;max-width:none;flex:1;justify-content:flex-end;
+    position:static;transform:none;left:auto;max-width:none;
+    flex:1 1 auto;min-width:0;justify-content:flex-start;margin-right:0;gap:6px;
   }
+  /* Der Freiraum gehört jetzt dem Cluster (rechts der Pille), nicht dem
+     Werkzeug-Block — sonst klafft das Loch wieder zwischen Paperclip und Ring.
+     Auf dem Phone hält .composer-left in Basic nur das Paperclip, Überlauf ist
+     damit ausgeschlossen (die cf-icons/cf-burger-Fit-Stufen bleiben unberührt). */
+  [data-mode="basic"] .composer-left{flex:0 0 auto;}
+  /* Leerer Advanced-Wrapper: kostet in Basic nur zwei 10px-Gaps */
+  [data-mode="basic"] .composer-left .composer-ws-wrap{display:none;}
+  /* Ring 20px als Status-Anführer — liegt IN der Pille (linkes Padding),
+     pointer-events:none, damit der Klick auf toggleModelDropdown() durchgeht.
+     Vorher schwebte er als eigener Ghost-Kreis zwischen Paperclip und Pille. */
+  [data-mode="basic"] .composer-center .ctx-gauge-card{position:relative;}
+  [data-mode="basic"] .composer-center .ctx-gauge-ring-wrap{
+    position:absolute;left:11px;top:50%;transform:translateY(-50%);
+    width:20px;height:20px;pointer-events:none;
+  }
+  [data-mode="basic"] .composer-center .ctx-gauge-svg{width:20px;height:20px;}
+  /* Modell-Pille auf 44px Touch-Ziel (war 28px), linkes Padding = Ringplatz */
+  [data-mode="basic"] .composer-center .ctx-gauge-model{
+    height:44px;padding:0 14px 0 38px;background:var(--surface);
+  }
+  [data-mode="basic"] .composer-center #composerModelLabel{font-size:14px;max-width:18ch;}
+  [data-mode="basic"] .composer-center .ctx-gauge-tokens{font-size:11.5px;}
+}
+/* Sehr schmal: Tokens raus, der Ring trägt die Kontext-Info allein */
+@media (max-width:480px){
   [data-mode="basic"] .composer-center .ctx-gauge-tokens{display:none;}
-  [data-mode="basic"] .composer-center #composerModelLabel{max-width:14ch;}
+  [data-mode="basic"] .composer-center #composerModelLabel{max-width:12ch;}
 }
 
 /* ── Dark-Flächen (26.9.3): rechtes Feld = einheitlich b-100 ──
@@ -481,3 +525,208 @@
    Einhorn auf der aufgehellen Sidebar b-150). */
 :root.dark .composer-box{background:var(--b-100);}
 :root.dark [data-mode="basic"] .sidebar-footer-search{background:var(--b-100);}
+
+/* ══ Mobile / iOS-PWA (ab 26.9.4) ═════════════════════════════════════════
+   Ziel: iPhone 15 Pro als installierte PWA. Grundlage ist viewport-fit=cover
+   (index.html) — ohne das sind ALLE env(safe-area-inset-*) gleich 0 und die
+   Safe-Area-Polster wären wirkungslos.
+   Nur Wings-Insel: Masse hier, style.css bleibt unangetastet. */
+
+/* ── M1a: unteres Safe-Area im Chat-Composer ──
+   style.css setzt `padding:8px 10px calc(17px + --keyboard-bottom-inset)!important`
+   im 640px-Block; hier kommt der Home-Indicator-Abstand obendrauf. Longhand +
+   !important + spätere Datei schlägt den Shorthand aus style.css. Der
+   Keyboard-Inset bleibt additiv, damit Tastatur + Indikator nie doppelt zählen. */
+@media (max-width:640px){
+  :root .composer-wrap{
+    padding-bottom:calc(17px + var(--keyboard-bottom-inset,0px) + var(--wings-inset-bottom))!important;
+  }
+}
+
+/* ── M1b: Edge-Swipe-Zone unter der Mobile-Navbar statt unter der (in Wings
+   ausgeblendeten) 52px-Upstream-Titelbar. --app-titlebar-safe-top wird im
+   Standalone von style.css gesetzt; hier zählt die Wings-Navbar-Höhe. ── */
+@media (max-width:640px){
+  .pwa-sidebar-edge-guard{
+    top:calc(var(--wings-mnav-h) + var(--wings-inset-top));
+  }
+  /* M4a: Live-Drag der Sidebar (Edge-Follow / Swipe-Close). Während des
+     Ziehens hängt die Position am Finger — ohne Transition, sonst kämpft die
+     0.25s-Animation aus style.css gegen die Bewegung. Spezifität +
+     !important schlägt `.sidebar.mobile-open{transform:translateX(0)}`. */
+  .sidebar.wings-dragging{
+    transition:none!important;
+    transform:translateX(var(--wings-sidebar-drag,0px))!important;
+  }
+}
+
+/* ── M4b: Long-Press-Sheet (iOS-Action-Sheet) ──
+   Von unten einfahrend, Grabber, Kontext-Kopfzeile, 52px-Zeilen, Danger-frei
+   (die Nachricht kennt kein Löschen), separater Abbrechen-Button. Der Scrim
+   liegt über allem außer dem Toast und respektiert den Home-Indicator. */
+.wings-msg-pressing{
+  transform:scale(.985);
+  opacity:.92;
+  transition:transform .12s ease,opacity .12s ease;
+}
+.wings-sheet-scrim{
+  position:fixed;inset:0;z-index:1400;display:flex;align-items:flex-end;
+  background:rgba(0,0,0,.42);
+  animation:wings-sheet-fade .2s ease;
+}
+@keyframes wings-sheet-fade{from{opacity:0;}to{opacity:1;}}
+.wings-sheet{
+  width:100%;box-sizing:border-box;
+  background:var(--surface);
+  border-top:1px solid var(--border);
+  border-radius:16px 16px 0 0;
+  padding:8px 0 calc(8px + var(--wings-inset-bottom));
+  animation:wings-sheet-up .26s cubic-bezier(.2,.8,.25,1);
+}
+@keyframes wings-sheet-up{from{transform:translateY(16px);opacity:.6;}to{transform:none;opacity:1;}}
+.wings-sheet-grab{
+  width:36px;height:4px;border-radius:999px;background:var(--border2);
+  margin:2px auto 10px;
+}
+.wings-sheet-head{
+  padding:0 20px 8px;margin-bottom:6px;
+  border-bottom:1px solid var(--border);
+  font-size:12px;font-weight:600;color:var(--muted);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.wings-sheet-item{
+  display:flex;align-items:center;gap:12px;width:100%;box-sizing:border-box;
+  min-height:52px;padding:0 20px;
+  background:none;border:none;color:var(--text);
+  font-size:16px;font-weight:500;text-align:left;
+  font-family:inherit;cursor:pointer;
+}
+.wings-sheet-item:active{background:var(--active-wash);}
+.wings-sheet-item svg{width:20px;height:20px;stroke-width:1.7;color:var(--muted);flex-shrink:0;}
+.wings-sheet-cancel{
+  display:flex;align-items:center;justify-content:center;
+  width:calc(100% - 24px);box-sizing:border-box;
+  min-height:52px;margin:6px 12px 0;padding:0;
+  background:var(--chat-bg);border:1px solid var(--border);border-radius:13px;
+  color:var(--text);font-size:16px;font-weight:600;font-family:inherit;cursor:pointer;
+}
+.wings-sheet-cancel:active{background:var(--active-wash);}
+@media (prefers-reduced-motion:reduce){
+  .wings-sheet-scrim,.wings-sheet{animation:none;}
+  .wings-msg-pressing{transform:none;opacity:1;transition:none;}
+}
+
+/* ══ M5: Touch-Ziele, Lesegröße, kein Sticky-Hover ════════════════════════
+   Gemessen bei 393px vor diesem Block: Modul-Icons 32px, Such-Pille 34px mit
+   13.1px-Input (iOS zoomt beim Fokus auf Inputs < 16px), Session-Tabs 24px mit
+   10px, Attach/Mikro 40px. style.css' `min-width:44px`-Regel greift dort nicht
+   (liegt in einem nicht passenden Media-Kontext), deshalb hier explizit. */
+
+@media (max-width:640px){
+  /* Modul-Reihe + Neu-Chat: 44px wie alle übrigen Ziele */
+  [data-mode="basic"] .sidebar-footer-btn,
+  [data-mode="basic"] .sidebar-footer .ctx-gauge-new-chat{
+    width:44px;height:44px;min-width:44px;min-height:44px;
+  }
+  [data-mode="basic"] .sidebar-footer-btn svg,
+  [data-mode="basic"] .sidebar-footer .ctx-gauge-new-chat svg{width:20px;height:20px;}
+  /* Such-Pille 44px, Input 16px -> kein Auto-Zoom beim Fokussieren */
+  [data-mode="basic"] .sidebar-footer-search{
+    height:44px;padding:0 14px;border-radius:10px;
+  }
+  [data-mode="basic"] .sidebar-footer-search-input{font-size:16px;}
+  /* Composer: Paperclip und Mikro auf 44px */
+  #btnAttach,#btnMic{width:44px;height:44px;min-width:44px;min-height:44px;}
+  /* Session-Umschalter als iOS-Segmented-Control statt 24px-Chip */
+  .session-source-tab{min-height:40px;font-size:12.5px;padding:8px 10px;}
+  /* Lesegröße: 14px ist auf dem Phone zu klein. Explizite Nutzerwahl
+     (data-font-size=small/large/xlarge) hat per Spezifität weiter Vorrang. */
+  :root{--message-body-font-size:15px;}
+}
+
+/* Sticky-Hover: iOS lässt :hover nach einem Tap „kleben" — die Fläche bliebe
+   markiert, bis man woanders hintippt. Auf Touch-Geräten daher Hover neutral
+   und die Rückmeldung nur während des Drucks (:active). `.active`-Zustände
+   (gewählte Session, aktives Modul) bleiben unberührt. */
+@media (hover:none){
+  [data-mode="basic"] .session-item:not(.active):hover{
+    background:none;color:var(--muted);
+  }
+  [data-mode="basic"] .sidebar-footer-btn:not(.active):hover,
+  [data-mode="basic"] .sidebar-footer .ctx-gauge-new-chat:hover{
+    background:none;color:var(--muted);
+  }
+  .wings-brand-btn:hover{background:none;}
+  [data-mode="basic"] .session-item:not(.active):active,
+  [data-mode="basic"] .sidebar-footer-btn:not(.active):active,
+  [data-mode="basic"] .sidebar-footer .ctx-gauge-new-chat:active,
+  .wings-brand-btn:active{background:var(--active-wash);}
+}
+
+/* ── M1c: Standalone-Höhe (WebKit-Bug 254868) ──
+   Bei viewport-fit=cover liefert 100dvh in der installierten iOS-PWA
+   „Bildschirmhöhe minus Top-Inset" -> unten bleibt ein leerer Streifen.
+   100vh rechnet in Standalone korrekt (inkl. Safe-Area). Spätere Datei
+   schlägt `body{height:100vh;height:100dvh}` aus style.css. */
+@media (display-mode:standalone),(display-mode:fullscreen){
+  html,body{height:100vh;}
+  /* style.css setzt --app-titlebar-safe-top nur hier; Wings spiegelt den Wert
+     auf --wings-inset-top inkl. iOS-26.1-Fallback (wings_mobile.js). */
+  :root{--app-titlebar-safe-top:var(--wings-inset-top);}
+}
+
+/* ── M2: Mobile Navbar (Phone) ──
+   Reaktiviert die Upstream-Titelbar (die Wings inline auf display:none!important
+   setzt) als schmale iOS-artige Leiste: Menü links, Chat-Titel exakt mittig,
+   Neu-Chat rechts — alle drei auf einer optischen Linie (44px Inhaltszeile).
+   Das exakte Zentrum entsteht durch Symmetrie: links 44px Hamburger, rechts
+   44px Neu-Chat; der 44px-Spacer wird dafür ausgeblendet, der Reload-Button
+   und der Advanced-Profil-Button bleiben auf dem Phone weg. */
+@media (max-width:640px){
+  .app-titlebar{
+    height:calc(var(--wings-mnav-h) + var(--wings-inset-top));
+    padding:var(--wings-inset-top) max(8px,var(--wings-inset-right)) 0 max(8px,var(--wings-inset-left));
+    box-sizing:border-box;
+    align-items:center;justify-content:space-between;
+    background:var(--chat-bg);border-bottom:1px solid var(--border);
+    font-size:var(--fs-base);
+  }
+  /* Symmetrie + Reduktion auf drei Elemente */
+  .app-titlebar-spacer{display:none!important;}
+  .app-titlebar-reload{display:none!important;}
+  .app-titlebar-icon{display:none!important;}
+  .app-titlebar-sub{display:none!important;}
+  .app-titlebar-profile{display:none!important;}
+  /* style.css:168 verbirgt den Neu-Chat-Button ID-genau mit !important
+     (#btnTitlebarNewChat) — auf dem Phone braucht die Navbar ihn wieder. */
+  #btnTitlebarNewChat{display:flex!important;}
+  /* Menü + Neu-Chat: 44px-Ziele, ruhige Strichstärke */
+  .app-titlebar-hamburger,
+  .app-titlebar-new-chat{
+    display:flex;align-items:center;justify-content:center;
+    width:44px;height:44px;min-width:44px;border-radius:var(--am-radius-m);
+    color:var(--text);flex-shrink:0;
+  }
+  .app-titlebar-hamburger svg,
+  .app-titlebar-new-chat svg{width:22px;height:22px;stroke-width:1.8;}
+  .app-titlebar-hamburger:active,
+  .app-titlebar-new-chat:active{background:var(--active-wash);}
+  .app-titlebar-hamburger:hover,
+  .app-titlebar-new-chat:hover{background:none;color:var(--text);}
+  /* Titel exakt mittig in der verbleibenden 44px-Symmetrie.
+     display:flex muss style.css `@media(max-width:900px){.app-titlebar-inner{display:none}}`
+     überschreiben (gleiche Spezifität, spätere Datei). */
+  .app-titlebar-inner{display:flex;flex:1 1 auto;min-width:0;justify-content:center;gap:0;}
+  .app-titlebar-title{
+    font-size:17px;font-weight:600;letter-spacing:-.02em;line-height:1.1;
+    color:var(--text);max-width:100%;text-align:center;
+  }
+
+  /* Sidebar-Schließen (X) auf dieselbe optische Linie wie die Wortmarke:
+     style.css zentriert es mit -2px auf die 41px-Upstream-Kopfzeile; Wings'
+     Markenblock ist aber --am-header-h hoch und um das Safe-Top abgesenkt.
+     Formel = Safe-Top + (Markenhöhe - 44) / 2. */
+  [data-mode="basic"] .panel-head-btn.mobile-sidebar-close{
+    top:calc(var(--wings-inset-top) + (var(--am-header-h) - 44px) / 2);
+  }
+}

@@ -422,6 +422,9 @@ const _PWA_SIDEBAR_SWIPE_EDGE=80;
 const _PWA_SIDEBAR_SWIPE_CLAIM=10;
 const _PWA_SIDEBAR_SWIPE_TRIGGER=64;
 const _PWA_SIDEBAR_SWIPE_MAX_VERTICAL=56;
+// Wings (26.9.4): Schwelle, ab der ein Links-Swipe auf der offenen Sidebar
+// diese schließt (statt zurückzuschnappen).
+const _WINGS_SIDEBAR_CLOSE_TRIGGER=56;
 let _pwaSidebarSwipe=null;
 
 function _isPwaStandalone(){
@@ -466,12 +469,21 @@ function _onPwaSidebarSwipeStart(e){
   if(_isDesktopWidth())return;
   if(_isTouchPointerEvent(e))return;
   if(e.pointerType==='mouse'||(e.pointerType&&e.pointerType!=='touch'&&e.pointerType!=='pen'))return;
-  if(document.querySelector('.sidebar')?.classList.contains('mobile-open'))return;
   const point=_pwaSidebarSwipePoint(e);
   if(!point)return;
+  const sidebar=_mobileSidebarEl();
+  if(!sidebar)return;
+  // Offene Sidebar: Swipe nach links schließt sie (Finger darf auf der Liste
+  // liegen, nur Bedienelemente sind ausgenommen).
+  if(sidebar.classList.contains('mobile-open')){
+    if(!_isSidebarCloseSwipeTarget(e.target))return;
+    _pwaSidebarSwipe={startX:point.clientX,startY:point.clientY,active:true,mode:'close',dragging:false};
+    return;
+  }
   if(point.clientX>_PWA_SIDEBAR_SWIPE_EDGE)return;
   if(_isInteractiveSwipeTarget(e.target))return;
-  _pwaSidebarSwipe={startX:point.clientX,startY:point.clientY,active:true,opened:false};
+  _pwaSidebarSwipe={startX:point.clientX,startY:point.clientY,active:true,opened:false,mode:'open',dragging:false,
+    base:-Math.round(sidebar.getBoundingClientRect().width)};
 }
 
 function _onPwaSidebarSwipeMove(e){
@@ -482,19 +494,111 @@ function _onPwaSidebarSwipeMove(e){
   if(!point)return;
   const dx=point.clientX-swipe.startX;
   const dy=point.clientY-swipe.startY;
+  const follow=_canFollowSidebarDrag();
+  if(swipe.mode==='close'){
+    if(dx>0||Math.abs(dy)>_PWA_SIDEBAR_SWIPE_MAX_VERTICAL*1.5){
+      _pwaSidebarSwipe=null;_clearSidebarDragOffset();return;
+    }
+    if(dx<=-_PWA_SIDEBAR_SWIPE_CLAIM&&Math.abs(dx)>Math.abs(dy)*1.2){
+      if(e.cancelable)e.preventDefault();
+      if(follow){swipe.dragging=true;_beginSidebarDrag();_setSidebarDragOffset(dx);}
+    }
+    return;
+  }
   if(dx<0||Math.abs(dy)>_PWA_SIDEBAR_SWIPE_MAX_VERTICAL*1.5){_pwaSidebarSwipe=null;return;}
   if(dx>=_PWA_SIDEBAR_SWIPE_CLAIM&&dx>Math.abs(dy)*1.2){
     if(e.cancelable)e.preventDefault();
   }
+  if(follow&&!swipe.dragging&&dx>=_PWA_SIDEBAR_SWIPE_CLAIM&&dx>Math.abs(dy)*1.2){
+    swipe.dragging=true;_beginSidebarDrag();
+  }
+  if(swipe.dragging)_setSidebarDragOffset(swipe.base+dx);
   if(dx>=_PWA_SIDEBAR_SWIPE_TRIGGER&&Math.abs(dy)<=_PWA_SIDEBAR_SWIPE_MAX_VERTICAL&&dx>Math.abs(dy)*1.5){
     if(e.cancelable)e.preventDefault();
     swipe.opened=true;
+    _clearSidebarDragOffset();
     _openMobileSidebarFromGesture();
   }
 }
 
-function _onPwaSidebarSwipeEnd(e){if(_isTouchPointerEvent(e))return;_pwaSidebarSwipe=null;}
-function _onPwaSidebarSwipeCancel(e){if(_isTouchPointerEvent(e))return;_pwaSidebarSwipe=null;}
+function _onPwaSidebarSwipeEnd(e){
+  if(_isTouchPointerEvent(e))return;
+  const swipe=_pwaSidebarSwipe;
+  _pwaSidebarSwipe=null;
+  if(!swipe||!swipe.active)return;
+  const point=_pwaSidebarSwipePoint(e);
+  const dx=point?point.clientX-swipe.startX:0;
+  const dy=point?point.clientY-swipe.startY:0;
+  const vertical=Math.abs(dy)<=_PWA_SIDEBAR_SWIPE_MAX_VERTICAL;
+  // Das Commit hängt NICHT am Live-Drag: in Safari-Tabs (kein Follow) muss die
+  // Schwellen-Geste genauso greifen wie in der installierten PWA.
+  if(swipe.mode==='close'){
+    if(dx<=-_WINGS_SIDEBAR_CLOSE_TRIGGER&&vertical)_finishSidebarDrag(false);
+    else _clearSidebarDragOffset();
+    return;
+  }
+  if(swipe.opened){_clearSidebarDragOffset();return;}
+  if(dx>=_PWA_SIDEBAR_SWIPE_TRIGGER&&vertical)_finishSidebarDrag(true);
+  else _clearSidebarDragOffset();
+}
+
+function _onPwaSidebarSwipeCancel(e){
+  if(_isTouchPointerEvent(e))return;
+  _pwaSidebarSwipe=null;
+  _clearSidebarDragOffset();
+}
+
+// ── Wings: interaktives Sidebar-Ziehen (26.9.4) ───────────────────────────
+// Nur in der installierten PWA: dort gibt es keine Zurück-Geste des Browsers,
+// also darf die Sidebar dem Finger folgen. In Safari-Tabs bleibt es beim alten
+// Schwellen-Öffnen (Style zur Seite legen, dann umschlagen), damit wir Safaris
+// Edge-Back nicht in die Quere kommen.
+function _mobileSidebarEl(){return document.querySelector('.sidebar');}
+
+function _canFollowSidebarDrag(){return _isPwaStandalone();}
+
+function _beginSidebarDrag(){
+  const el=_mobileSidebarEl();
+  if(el)el.classList.add('wings-dragging');
+}
+
+function _setSidebarDragOffset(px){
+  const el=_mobileSidebarEl();
+  if(!el)return;
+  el.style.setProperty('--wings-sidebar-drag',Math.round(px)+'px');
+}
+
+function _clearSidebarDragOffset(){
+  const el=_mobileSidebarEl();
+  if(!el)return;
+  el.classList.remove('wings-dragging');
+  el.style.removeProperty('--wings-sidebar-drag');
+}
+
+// Schließen-Geste: Finger irgendwo auf der offenen Sidebar, außer auf
+// Bedienelementen — die Liste selbst bleibt ziehbar.
+function _isSidebarCloseSwipeTarget(target){
+  try{
+    if(!target||!target.closest)return false;
+    if(!target.closest('.sidebar'))return false;
+    return !target.closest('input,textarea,select,button,a,[contenteditable="true"]');
+  }catch(_){return false;}
+}
+
+// open===true -> öffnen, false -> schließen, null -> in den Ausgangszustand
+// zurückschnappen lassen.
+function _finishSidebarDrag(open){
+  const el=_mobileSidebarEl();
+  if(!el)return;
+  const wasOpen=el.classList.contains('mobile-open');
+  _clearSidebarDragOffset();
+  if(open===true){_openMobileSidebarFromGesture();return;}
+  if(open===false){
+    if(typeof closeMobileSidebar==='function')closeMobileSidebar();
+    return;
+  }
+  if(wasOpen)el.classList.add('mobile-open');
+}
 
 function _installPwaSidebarSwipeGesture(){
   // #4660 review (Codex CORE): the #pwaSidebarEdgeGuard element is now

@@ -12,7 +12,7 @@
 upstream_repo: nesquena/hermes-webui
 upstream_anchor: e168b67e          # exp-v0.52.264 — Vorfahre via -s ours Merge
 upstream_anchor_date: 2026-08-26
-wings_version: 26.9.1            # wird bei jedem Release aktualisiert
+wings_version: 26.9.4            # wird bei jedem Release aktualisiert
 sync_mode: merge                   # AB ANKER: git merge upstream/<tag> (kein manuelles Portieren)
 last_sync_round: 4
 round4_outcome:
@@ -40,6 +40,7 @@ round4_outcome:
 | No-op Service Worker | `static/sw.js` | ✅ eigenständig | Upstream-SW-Änderungen sind KATEGORIE SKIP (begründet: stale-cache-Fix #6196 existiert nicht mehr) |
 | Olares-Packaging | `wings/` (Chart), `OlaresManifest.yaml` (Root+Chart), `Dockerfile*`, `.github/workflows/`, `values.yaml` | ✅ 100 % Wings-only | von Upstream unberührt |
 | Activityline-Modul | `static/activityline.js` | ✅ eigenständig | CSS dazu in `wings.css` |
+| **Mobile-/iOS-PWA-Schicht** | `static/wings_mobile.js` (Safe-Area-Probe mit iOS-26.1-Fallback, Long-Press-Sheet), `static/wings.css` (Mobile-Block: Safe-Area-Variablen, Navbar, Touch-Ziele, Sheet, Drag), `index.html` (`viewport-fit=cover`, `color-scheme`, theme-color, Splash-Links, Titelbar-Reaktivierung), `static/splash-*.png` | ✅ eigenständig (außer index.html/boot.js unten) | Dateien nie von Upstream überschreiben. Bei `index.html`-Konflikten: Viewport-Zeile, Splash-Links, `.app-titlebar`-Mobile-Regel im Inline-Block erhalten. `boot.js`: nur die Wings-Helfer (`_canFollowSidebarDrag`, `_isSidebarCloseSwipeTarget`, `_finishSidebarDrag`, `_WINGS_SIDEBAR_CLOSE_TRIGGER`) wieder einsetzen; `test_wings_mobile.py` ist die Wings-Insel-Prüfung |
 
 **Grundregel bei Konflikten:** Wings-Insel (✅) gewinnen immer; Upstream-Code
 gewinnt in Nicht-Inseln; bei ❌-Inline-Drift entscheidet die Preserve-Liste.
@@ -146,4 +147,7 @@ curl -s -X POST https://wings.aimighty.olares.de/api/tts -H 'Content-Type: appli
 | 5a | 2026-09-06 | — (Wings-only) | Relay-Design-Port | Basic-Shell nach Relay-One: Tokens (Rampe/Hell/Dunkel), Sidebar 220px, Logo-Block (ModuleLogo-SVG, Klick→Settings), Filter-Pille 34px, Modul-Icons 32px/16px/stroke-1.5, Session-Items wie folder-item; `li()` +stroke-Parameter; NICHT released (Screenshots: wings-relay-*.png) |
 | 5c | 2026-09-06 | — (Wings-only) | Dark-Flächen + Plus-Umzug | Dark: Sidebar b-150 / rechte Seite inkl. composer-box einheitlich b-100, Such-Pille b-100; New-Chat-Plus vom Composer in die Modul-Reihe (erstes Icon, Ghost-Stil wie Nachbarn); released als 26.9.3 |
 | 5b | 2026-09-06 | — (Wings-only) | Composer-Cluster | Gauge-Footer-Pille aufgelöst: Karte komplett → `.composer-center` (absolut zentriert; Ring 18px + Modell-Pill r=999 ohne „Modell:"-Prefix + Token-Wert mono), New-Chat-Plus → `.composer-right` vor Mic, Attach→Paperclip (Plus-Kollision), Dropdown öffnet nach oben, Token-Empty-Hide (ui.js 2 Zeilen + init display:none), Mobile ≤480px: Cluster static/rechts + Tokens aus; Advanced unverändert (Rückverschiebung beweisen); NICHT released (Screenshots: composer-*.png) |
+| 6a | 2026-09-16 | — (Wings-only) | M1 Safe-Area + M2 Navbar | `viewport-fit=cover` + `color-scheme` je Theme + theme-color auf Palette; `--wings-inset-*` = `max(env(),Fallback)`; Composer-/Footer-/Brand-Insets; Edge-Guard auf 44px-Navbar; Standalone-`100vh` (WebKit 254868); neue Wings-Navbar (Menü · Titel exakt zentriert 17px · Neu-Chat, 44px-Zeile, Safe-Top) über Reaktivierung der vorhandenen `#appTitlebar`; Sidebar-X auf die Brand-Zeile zentriert; `wings_mobile.js` mit env()-Probe + iOS-26.1-Fallback (nur iOS-Standalone, nur Hochformat); 2 Upstream-Tests auf die neue Cover-Intent umgeschrieben |
+| 6b | 2026-09-16 | — (Wings-only) | M3 Composer + M4 Gesten | M3: Cluster links an das Paperclip (`.composer-left{flex:0 0 auto}` statt Freiraum-Fresser), Ring 20px **in** der 44px-Modell-Pille (pointer-events:none → Klick öffnet weiter das Dropdown), toter Wrapper aus; M4a: Edge-Follow (Sidebar hängt am Finger, nur in der installierten PWA — Safari-Tabs behalten das Schwellen-Öffnen) + Swipe-links-zum-Schließen (56px), Commit unabhängig vom Follow; M4b: Long-Press auf eine Nachricht → iOS-Bottom-Sheet, das **nur die real vorhandenen** `.msg-action-btn` spiegelt (kein erfundenes Verzweigen/Löschen), Escape/Scrim/Scroll schließen |
+| 6c | 2026-09-16 | — (Wings-only) | M5 Touch + M6 PWA | M5: alle Ziele ≥44px (Modul-Icons 32→44, Such-Pille 34→44, Attach/Mikro 40→44, Session-Tabs 24→40), Such-Input 16px (killt den iOS-Fokus-Zoom bei gemessenen 13,1px), Message-Body 15px auf dem Phone, `@media (hover:none)` neutralisiert Sticky-Hover; M6: 7 iOS-Splash-Screens (solides #051729, pure Python/zlib); neues `tests/test_wings_mobile.py` (9 Assertions) |
 
