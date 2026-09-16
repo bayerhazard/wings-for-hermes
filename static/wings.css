@@ -297,6 +297,10 @@
      Klickziel darf sich nicht mit der Schriftgröße ändern. */
   --am-ziel-zeiger:40px;
   --am-radius-klein:4px;
+  /* Breite der führenden Icon-Spalte im Ordnerkopf. Eine Quelle für zwei
+     Verbraucher: das Symbol selbst und der Einzug der Chats darunter, damit
+     Chat-Titel und Ordnername auf derselben Flucht stehen. */
+  --wings-nav-icon:18px;
   --active-wash:var(--b-900);--unread-wash:rgba(63,96,130,.10);
   /* ── iOS-Safe-Area (nur mit viewport-fit=cover überhaupt ≠ 0) ──
      Alle Wings-Mobile-Regeln lesen diese Variablen, nie env() direkt, damit
@@ -398,11 +402,11 @@
    active: wash + accent + 600 (Relay .folder-item.active). */
 [data-mode="basic"] .session-item{
   padding:10px 12px;margin-bottom:4px;border-radius:var(--am-radius-m);
-  font-size:var(--fs-base);font-weight:500;color:var(--muted);
+  font-size:var(--fs-base);font-weight:400;color:var(--muted);
   transition:background .15s ease-in-out,color .15s ease-in-out;
 }
 [data-mode="basic"] .session-item:hover{background:var(--active-wash);color:var(--text);}
-[data-mode="basic"] .session-item.active{background:var(--active-wash)!important;color:var(--accent-text)!important;font-weight:600;}
+[data-mode="basic"] .session-item.active{background:var(--active-wash)!important;color:var(--accent-text)!important;font-weight:400;}
 [data-mode="basic"] .session-item.active .session-title{color:var(--accent-text)!important;}
 
 /* ══ Projektordner nach Beacon-Vorbild ════════════════════════════════════
@@ -424,7 +428,7 @@
   transition:background .15s ease-in-out,color .15s ease-in-out;
 }
 .session-folder-header:hover{background:var(--active-wash);color:var(--text);}
-.session-folder-header svg{width:18px;height:18px;stroke-width:1.75;flex-shrink:0;}
+.session-folder-header svg{width:var(--wings-nav-icon);height:var(--wings-nav-icon);stroke-width:1.75;flex-shrink:0;}
 .session-folder-header .session-folder-name{
   min-width:0;color:inherit;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
@@ -436,9 +440,22 @@
   font-family:var(--font-mono);font-size:11px;line-height:1;
   color:var(--muted);font-variant-numeric:tabular-nums;
 }
-/* Der Ordner, in dem die offene Sitzung liegt (Beacons .aktiv). */
-.session-folder-header.folder-aktiv{color:var(--accent-text);font-weight:600;}
+/* Der Ordner, in dem die offene Sitzung liegt (Beacons .aktiv).
+   Auszeichnung nur über Farbe und Fläche — im Ordnerbaum ist nichts fett. */
+.session-folder-header.folder-aktiv{color:var(--accent-text);font-weight:400;}
 .session-folder-header.folder-aktiv .session-folder-count{color:var(--accent-text);}
+/* Chat-Titel auf der Flucht des Ordnernamens: der Name beginnt hinter der
+   Icon-Spalte (2 x --am-raum-3 + --wings-nav-icon), also muss der Chat dorthin.
+   style.css:493 rückte ihn nur 4px ein, dadurch stand er 25px links vom Namen.
+   Nur bei aktiver Gruppierung — die flache Liste behält ihr Polster. */
+.folder-grouping .session-item{
+  margin-left:0;
+  padding-left:calc(var(--am-raum-3) * 2 + var(--wings-nav-icon));
+}
+/* Untergeordnete Sitzungen bleiben eine Stufe tiefer als ihr Elternteil. */
+.folder-grouping .session-tree-child.session-item{
+  padding-left:calc(var(--am-raum-3) * 3 + var(--wings-nav-icon));
+}
 /* Ziehen bleibt ziehbar — der Zeiger sagt es. */
 .session-folder-header[draggable="true"]{cursor:grab;}
 .session-folder-header[draggable="true"]:active{cursor:grabbing;}

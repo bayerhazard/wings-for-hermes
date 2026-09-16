@@ -51,11 +51,49 @@ def test_folder_row_adopts_beacon_nav_item_metrics():
 
 
 def test_folder_icon_and_count_are_part_of_the_row():
-    assert ".session-folder-header svg{width:18px;height:18px;stroke-width:1.75;flex-shrink:0;}" in WINGS_CSS
+    assert ".session-folder-header svg{width:var(--wings-nav-icon);height:var(--wings-nav-icon);stroke-width:1.75;flex-shrink:0;}" in WINGS_CSS
+    assert "--wings-nav-icon:18px;" in WINGS_CSS, "one source for the icon column"
     assert ".session-folder-header .session-folder-count{" in WINGS_CSS
     assert "font-family:var(--font-mono)" in WINGS_CSS, "numbers read in mono, like Beacon"
     assert "margin-left:auto" in WINGS_CSS
-    assert ".session-folder-header.folder-aktiv{color:var(--accent-text);font-weight:600;}" in WINGS_CSS
+    assert ".session-folder-header.folder-aktiv{color:var(--accent-text);font-weight:400;}" in WINGS_CSS, (
+        "the active folder is marked by colour alone — nothing in the tree is bold"
+    )
+
+
+def test_chats_line_up_with_the_folder_name():
+    """The name starts behind the icon column, so the chats below must too.
+
+    style.css:493 only indented them 4px, which left them 25px to the left of
+    the folder name. The indent is derived from the same two values the row
+    uses (its padding and the icon column), not from a magic number.
+    """
+    assert ".folder-grouping .session-item{" in WINGS_CSS
+    block = WINGS_CSS[WINGS_CSS.find(".folder-grouping .session-item{"):]
+    block = block[:block.find("\n}")]
+    assert "margin-left:0" in block, "the old 4px indent must go"
+    assert "padding-left:calc(var(--am-raum-3) * 2 + var(--wings-nav-icon))" in block, (
+        "2 x row padding + icon column = where the folder name begins"
+    )
+    # Sub-sessions stay one step deeper than their parent.
+    assert ".folder-grouping .session-tree-child.session-item{" in WINGS_CSS
+    assert "var(--am-raum-3) * 3 + var(--wings-nav-icon)" in WINGS_CSS
+
+
+def test_nothing_in_the_folder_tree_is_bold():
+    """Folder names were already regular; the chat titles were 500/600."""
+    base = _folder_block()
+    assert "font-weight:400" in base
+    item = WINGS_CSS[WINGS_CSS.find('[data-mode="basic"] .session-item{'):]
+    item = item[:item.find("\n}")]
+    assert "font-weight:400" in item, "chat titles are regular weight"
+    assert "font-weight:500" not in item
+    assert "font-weight:600" not in item
+    active = WINGS_CSS[WINGS_CSS.find('[data-mode="basic"] .session-item.active{'):]
+    active = active[:active.find("}")]
+    assert "font-weight:600" not in active, (
+        "the active session is marked by colour and wash, not by weight"
+    )
 
 
 def test_folder_row_is_44px_on_touch():
