@@ -110,7 +110,7 @@ from api.helpers import (
 )
 from api.profiles import set_request_profile, clear_request_profile
 from api.routes import handle_delete, handle_get, handle_patch, handle_post, handle_put, apply_cors_preflight_headers
-from api.startup import auto_install_agent_deps, fix_credential_permissions
+from api.startup import auto_install_agent_deps, fix_credential_permissions, reconcile_plugin_toolsets
 from api.updates import WEBUI_VERSION
 from api.crash_visibility import install_crash_visibility
 
@@ -567,6 +567,11 @@ def main() -> None:
         print(f"[!!] WARNING: Could not raise file descriptor limit: {fd_limit.get('error')}", flush=True)
 
     fix_credential_permissions()
+
+    # Wire enabled plugins' toolsets into platform_toolsets so their tools are
+    # visible to sessions without a manual `hermes tools enable <plugin>` step.
+    # Idempotent and best-effort; never blocks startup.
+    reconcile_plugin_toolsets()
 
     try:
         from api.models import _active_state_db_path

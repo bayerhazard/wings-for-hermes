@@ -126,3 +126,87 @@ def auto_install_agent_deps() -> bool:
     except Exception as e:
         print(f'[!!] Auto-install error: {e}', flush=True)
         return False
+
+
+def reconcile_plugin_toolsets() -> int:
+    """Wire every enabled plugin's toolset into the platform toolset lists.
+
+    A plugin can be enabled in ``plugins.enabled`` while its toolset is absent
+    from ``platform_toolsets`` — the agent then loads the plugin but sessions
+    never see its tools (``hermes tools enable <plugin>`` fixes that manually).
+    Mirror that command at startup so the wiring cannot drift after a plugin is
+    installed or enabled through the config file.
+
+    Scope: plugins named in ``plugins.enabled`` (minus ``plugins.disabled``).
+    When the enabled list is absent, Hermes default-enables plugin toolsets
+    itself, so there is nothing to reconcile here.
+
+    Idempotent and best-effort: returns the number of entries added (0 when
+    nothing changed, the flag is set, or the agent package/config is missing).
+    """
+    if os.environ.get('HERMES_WEBUI_SKIP_TOOLSET_WIRING') == '1':
+        return 0
+    try:
+        from hermes_cli.config import load_config, save_config
+        from hermes_cli.plugins_cmd import _get_plugin_toolset_key
+    except Exception:
+        return 0
+
+    try:
+        config = load_config()
+    except Exception as e:
+        print(f'[toolsets] wiring skipped: could not load config: {e}', flush=True)
+        return 0
+    if not isinstance(config, dict):
+        return 0
+
+    plugins_cfg = config.get('plugins')
+    if not isinstance(plugins_cfg, dict):
+        return 0
+    enabled = plugins_cfg.get('enabled')
+    if not isinstance(enabled, list) or not enabled:
+        return 0
+    disabled = set(plugins_cfg.get('disabled') or [])
+
+    platform_toolsets = config.get('platform_toolsets')
+    if not isinstance(platform_toolsets, dict) or not platform_toolsets:
+        return 0
+    known = config.get('known_plugin_toolsets')
+    if not isinstance(known, dict):
+        known = {}
+        config['known_plugin_toolsets'] = known
+
+    added = 0
+    for name in enabled:
+        if not isinstance(name, str) or not name or name in disabled:
+            continue
+        try:
+            key = _get_plugin_toolset_key(name)
+        except Exception:
+            key = None
+        if not key:
+            continue
+        for platform, ts_list in platform_toolsets.items():
+            if not isinstance(ts_list, list):
+                continue
+            if key not in ts_list:
+                ts_list.append(key)
+                added += 1
+            klist = known.get(platform)
+            if not isinstance(klist, list):
+                klist = []
+                known[platform] = klist
+            if key not in klist:
+                klist.append(key)
+                klist.sort()
+                added += 1
+
+    if not added:
+        return 0
+    try:
+        save_config(config)
+    except Exception as e:
+        print(f'[toolsets] wiring could not be saved: {e}', flush=True)
+        return 0
+    print(f'[toolsets] wired {added} plugin toolset entry(ies) into platform_toolsets.', flush=True)
+    return added

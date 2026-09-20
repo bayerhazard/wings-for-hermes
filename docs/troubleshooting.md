@@ -177,6 +177,35 @@ turn in the exhausted session instead of being blocked with recovery guidance.
 
 ---
 
+## Tools from an enabled plugin never appear in a session
+
+**Symptom.** A plugin is listed in `plugins.enabled` and loads (the agent log shows
+its capability check), but sessions cannot call its tools — the model reports them
+as "not in my tool list".
+
+**Why.** The plugin's *toolset* is not listed in `platform_toolsets`, so tool
+resolution drops it even though the plugin registered. Enabling a plugin via
+`hermes config set plugins.enabled …` (or by editing `config.yaml`) does not wire
+the toolset; `hermes tools enable <plugin>` does.
+
+**Diagnostic.**
+```bash
+hermes tools list                 # "Plugin toolsets": is the plugin ✓ enabled?
+python3 -c "from hermes_cli.config import load_config; from hermes_cli.tools_config import _get_platform_tools; print(sorted(_get_platform_tools(load_config(), 'cli')))"
+```
+
+**Fix.** The WebUI reconciles this at startup (`reconcile_plugin_toolsets()` in
+`api/startup.py`): every enabled plugin's toolset is added to `platform_toolsets`
+and `known_plugin_toolsets`, mirroring `hermes tools enable`. If the wiring still
+does not stick the shared home is read-only — run `hermes tools enable <plugin>`
+manually and restart. Set `HERMES_WEBUI_SKIP_TOOLSET_WIRING=1` to disable the
+automatic reconcile.
+
+**When to file a bug.** File a bug if an enabled plugin's toolset is still missing
+after a restart with a writable home, or if the reconcile rewrites unrelated keys.
+
+---
+
 ## Other troubleshooting
 
 This document grows over time. If a recurring failure mode isn't covered here yet, add it via PR. The format for each entry: **Symptom → Why → Diagnostic commands → Fix → When to file a bug**.
