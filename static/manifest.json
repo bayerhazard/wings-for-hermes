@@ -1,8 +1,8 @@
 {
   "id": "./",
-  "name": "Wings for Hermes",
+  "name": "Wings",
   "short_name": "Wings",
-  "description": "Wings for Hermes — AI Agent UI",
+  "description": "Wings — AI Agent UI",
   "start_url": "./?source=pwa",
   "scope": "./",
   "display": "standalone",
@@ -15,7 +15,7 @@
     {
       "name": "New chat",
       "short_name": "New chat",
-      "description": "Open Wings for Hermes ready for a new chat",
+      "description": "Open Wings ready for a new chat",
       "url": "./?source=pwa&action=new-chat",
       "icons": [
         {
@@ -31,7 +31,7 @@
       "src": "static/favicon-v5.svg",
       "sizes": "any",
       "type": "image/svg+xml",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
       "src": "static/favicon-v5-32.png",
@@ -44,7 +44,7 @@
       "type": "image/png"
     },
     {
-      "src": "static/favicon-v5-512.png",
+      "src": "static/favicon-wings-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"

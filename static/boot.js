@@ -4421,8 +4421,8 @@ window.addEventListener('pageshow', async (event) => {
 
 async function shutdownServer() {
   const ok = await showConfirmDialog({
-    title: (typeof t === 'function' ? t('settings_shutdown_confirm_title') : 'Stop Wings for Hermes'),
-    message: (typeof t === 'function' ? t('settings_shutdown_confirm_message') : 'Stop the Wings for Hermes server?'),
+    title: (typeof t === 'function' ? t('settings_shutdown_confirm_title') : 'Stop Wings'),
+    message: (typeof t === 'function' ? t('settings_shutdown_confirm_message') : 'Stop the Wings server?'),
     confirmLabel: (typeof t === 'function' ? t('settings_shutdown_confirm_btn') : 'Stop'),
     danger: true,
   });
