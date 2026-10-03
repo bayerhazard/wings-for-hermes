@@ -25,15 +25,16 @@ env:
   HERMES_WEBUI_AUTO_INSTALL: "1"
   HERMES_WEBUI_TTS_TIMEOUT: "300"
   HERMES_WEBUI_TTS_VOICE: "clone:new"
-  HERMES_WEBUI_STT_MODEL: "stt"
-  STT_OPENAI_MODEL: "stt"
+  HERMES_WEBUI_STT_MODEL: "default-stt"
+  STT_OPENAI_MODEL: "default-stt"
   WANTED_UID: "1000"
   WANTED_GID: "1000"
   TZ: Etc/UTC
 olaresEnv:
   HERMES_WEBUI_PASSWORD: ""
   HERMES_WEBUI_DEFAULT_MODEL: ""
-  HERMES_WEBUI_TTS_TRUSTED_HOSTS: "llm.aimighty.olares.de"
+  HERMES_WEBUI_STT_MODEL: "default-stt"
+  HERMES_WEBUI_TTS_TRUSTED_HOSTS: "router.aimighty.olares.de"
 startupProbe:
   httpGet:
     path: /health

@@ -10,13 +10,13 @@ metadata:
   appid: wings
   icon: https://raw.githubusercontent.com/bayerhazard/wings-for-hermes/main/icon.png
   title: Wings
-  version: 26.10.1
+  version: 26.10.3
   categories:
     - Applications
   description: AI Agent Web UI for Hermes — chat, sessions, memory, skills, cron
 
 spec:
-  versionName: '26.10.1'
+  versionName: '26.10.3'
   fullDescription: >
     **Wings** — AI Agent Web UI, forked from hermes-webui.
 
@@ -40,7 +40,7 @@ spec:
     **Requirements**
     - Requires the Hermes Agent app (hermesagent) installed for the same Olares user.
     - Upstream project: https://github.com/nesquena/hermes-webui (MIT)
-  upgradeDescription: "v26.10.1: Initial Release for AImighty Analyst"
+  upgradeDescription: "v26.10.3: STT/TTS moved from the retired LiteLLM proxy to the Olares Router (default-stt / default-tts); audio endpoints now editable in the app settings."
   developer: Aimighty
   website: https://github.com/bayerhazard/wings-for-hermes
   sourceCode: https://github.com/bayerhazard/wings-for-hermes
@@ -67,7 +67,21 @@ entrances:
 
 permission: {}
 
-envs: []
+envs:
+  - envName: HERMES_WEBUI_STT_MODEL
+    required: false
+    default: default-stt
+    type: string
+    editable: true
+    applyOnChange: true
+    description: Speech-to-text model (Olares Router default category `default-stt`, or a qualified model name).
+  - envName: HERMES_WEBUI_TTS_TRUSTED_HOSTS
+    required: false
+    default: router.aimighty.olares.de
+    type: string
+    editable: true
+    applyOnChange: true
+    description: Comma-separated host allow-list for the OpenAI-compatible TTS endpoint (SSRF guard).
 
 options:
   apiTimeout: 0
