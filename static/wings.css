@@ -360,7 +360,7 @@ html[data-dichte="kompakt"] { --am-skalierung: 0.9; }
   border: none;
   border-radius: 6px;
   cursor: pointer;
-  transition: color .15s ease, background .15s ease;
+  transition: color var(--am-dauer-schnell) var(--am-kurve), background var(--am-dauer-schnell) var(--am-kurve);
 }
 .mode-switch-btn:hover { color: var(--am-text-primaer); }
 .mode-switch-btn.active {
@@ -426,7 +426,7 @@ html[data-dichte="kompakt"] { --am-skalierung: 0.9; }
   flex-shrink: 0;
   font-weight: 500;
   color: var(--am-text-primaer);
-  transition: opacity .14s ease, transform .14s ease, color var(--am-dauer-mittel) var(--am-kurve);
+  transition: opacity var(--am-dauer-schnell) var(--am-kurve), transform var(--am-dauer-schnell) var(--am-kurve), color var(--am-dauer-mittel) var(--am-kurve);
 }
 .wings-aline-preview {
   flex: 1 1 auto;
@@ -436,7 +436,7 @@ html[data-dichte="kompakt"] { --am-skalierung: 0.9; }
   color: var(--am-text-gedaempft);
   -webkit-mask-image: linear-gradient(90deg, #000 78%, transparent);
   mask-image: linear-gradient(90deg, #000 78%, transparent);
-  transition: opacity .14s ease, transform .14s ease, color var(--am-dauer-mittel) var(--am-kurve);
+  transition: opacity var(--am-dauer-schnell) var(--am-kurve), transform var(--am-dauer-schnell) var(--am-kurve), color var(--am-dauer-mittel) var(--am-kurve);
 }
 .wings-aline-verb.wings-aline-swap,
 .wings-aline-preview.wings-aline-swap { opacity: 0; transform: translateY(2px); }
@@ -485,7 +485,7 @@ html[data-dichte="kompakt"] { --am-skalierung: 0.9; }
   display: none !important;
 }
 .assistant-turn.wings-aline-open .transparent-event-row {
-  animation: wings-aline-rows-in .28s ease;
+  animation: wings-aline-rows-in var(--am-dauer-mittel) var(--am-kurve);
 }
 /* Expanded trace reads as one quiet timeline: a hairline rail links the rows */
 .assistant-turn.wings-aline-open .transparent-event-row {
@@ -503,7 +503,7 @@ html[data-dichte="kompakt"] { --am-skalierung: 0.9; }
 .transparent-event-controls { display: none !important; }
 
 /* Subtle panel-switch fade — one consistent motion language */
-.panel-view.active { animation: wings-panel-in .22s ease; }
+.panel-view.active { animation: wings-panel-in var(--am-dauer-mittel) var(--am-kurve); }
 @keyframes wings-panel-in {
   from { opacity: 0; }
   to { opacity: 1; }
@@ -526,7 +526,7 @@ html[data-dichte="kompakt"] { --am-skalierung: 0.9; }
    Quiet, single-language motion: fast entrances, physical presses, no bounce. */
 
 /* Activity line entrance */
-.wings-aline { animation: wings-aline-in .24s ease; }
+.wings-aline { animation: wings-aline-in var(--am-dauer-mittel) var(--am-kurve); }
 @keyframes wings-aline-in {
   from { opacity: 0; transform: translateY(2px); }
   to { opacity: 1; transform: none; }
@@ -536,10 +536,10 @@ html[data-dichte="kompakt"] { --am-skalierung: 0.9; }
 .icon-btn:active,
 .panel-head-btn:active,
 .rail-btn:active { transform: scale(.94); }
-.icon-btn, .panel-head-btn, .rail-btn { transition: transform .12s ease, background .15s ease, color .15s ease, border-color .15s ease; }
+.icon-btn, .panel-head-btn, .rail-btn { transition: transform var(--am-dauer-schnell) var(--am-kurve), background var(--am-dauer-schnell) var(--am-kurve), color var(--am-dauer-schnell) var(--am-kurve), border-color var(--am-dauer-schnell) var(--am-kurve); }
 
 /* User turns: a single calm rise when the latest one lands */
-.msg-row[data-role="user"]:last-of-type { animation: wings-user-in .32s cubic-bezier(.2,.7,.3,1); }
+.msg-row[data-role="user"]:last-of-type { animation: wings-user-in var(--am-dauer-langsam) var(--am-kurve); }
 @keyframes wings-user-in {
   from { opacity: 0; transform: translateY(6px); }
   to { opacity: 1; transform: none; }
@@ -624,7 +624,7 @@ html.dunkel{color-scheme:dark;}
 .wings-brand-btn{
   display:flex;align-items:center;justify-content:center;width:100%;
   padding:8px;background:none;border:none;border-radius:12px;cursor:pointer;
-  color:var(--am-text-primaer);transition:background .15s ease-in-out;
+  color:var(--am-text-primaer);transition:background var(--am-dauer-schnell) var(--am-kurve);
 }
 .wings-brand-btn:hover{background:var(--am-flaeche-2);}
 .wings-brand-logo{display:block;width:102.4px;height:auto;}
@@ -650,7 +650,7 @@ html.dunkel{color-scheme:dark;}
 [data-mode="basic"] .sidebar-footer-search{
   flex:1;max-width:none;height:34px;padding:0 12px;gap:8px;
   border-radius:var(--am-radius-mittel);border:1px solid var(--am-trennlinie);
-  background:var(--am-flaeche-1);transition:border-color .15s ease-in-out;
+  background:var(--am-flaeche-1);transition:border-color var(--am-dauer-schnell) var(--am-kurve);
 }
 [data-mode="basic"] .sidebar-footer-search-icon{width:14px;height:14px;opacity:.6;}
 [data-mode="basic"] .sidebar-footer-search-input{font-size:var(--fs-base);}
@@ -658,7 +658,7 @@ html.dunkel{color-scheme:dark;}
 /* Modul-Icons wie Relay mi-btn: 32×32, r 8, muted → hover wash/text */
 [data-mode="basic"] .sidebar-footer-btn{
   width:32px;height:32px;border-radius:var(--am-radius-mittel);
-  color:var(--am-text-gedaempft);transition:background .15s ease-in-out,color .15s ease-in-out;
+  color:var(--am-text-gedaempft);transition:background var(--am-dauer-schnell) var(--am-kurve),color var(--am-dauer-schnell) var(--am-kurve);
 }
 [data-mode="basic"] .sidebar-footer-btn:hover{background:var(--am-flaeche-2);color:var(--am-text-primaer);}
 [data-mode="basic"] .sidebar-footer-btn.active{background:var(--am-auswahl-flaeche);color:var(--am-handlung-ruhend);}
@@ -671,7 +671,7 @@ html.dunkel{color-scheme:dark;}
 [data-mode="basic"] .session-item{
   padding:10px 12px;margin-bottom:4px;border-radius:var(--am-radius-mittel);
   font-size:var(--fs-base);font-weight:400;color:var(--am-text-gedaempft);
-  transition:background .15s ease-in-out,color .15s ease-in-out;
+  transition:background var(--am-dauer-schnell) var(--am-kurve),color var(--am-dauer-schnell) var(--am-kurve);
 }
 [data-mode="basic"] .session-item:hover{background:var(--am-flaeche-2);color:var(--am-text-primaer);}
 [data-mode="basic"] .session-item.active{background:var(--am-auswahl-flaeche)!important;color:var(--am-handlung-ruhend)!important;font-weight:400;}
@@ -693,7 +693,7 @@ html.dunkel{color-scheme:dark;}
   border-radius:var(--am-radius-klein);
   font-size:var(--fs-base);font-weight:400;letter-spacing:0;text-transform:none;
   color:var(--am-text-gedaempft);cursor:pointer;
-  transition:background .15s ease-in-out,color .15s ease-in-out;
+  transition:background var(--am-dauer-schnell) var(--am-kurve),color var(--am-dauer-schnell) var(--am-kurve);
 }
 .session-folder-header:hover{background:var(--am-flaeche-2);color:var(--am-text-primaer);}
 .session-folder-header svg{width:var(--wings-nav-icon);height:var(--wings-nav-icon);stroke-width:1.75;flex-shrink:0;}
@@ -783,7 +783,7 @@ html.dunkel{color-scheme:dark;}
   height:28px;padding:0 11px;flex-shrink:1;min-width:0;
   border:1px solid var(--am-trennlinie);border-radius:999px;background:transparent;
   color:var(--am-text-primaer);font-weight:500;white-space:nowrap;cursor:pointer;
-  transition:border-color .15s ease-in-out,background .15s ease-in-out;
+  transition:border-color var(--am-dauer-schnell) var(--am-kurve),background var(--am-dauer-schnell) var(--am-kurve);
 }
 [data-mode="basic"] .composer-center #composerModelLabel{
   font-size:12.5px;line-height:1;font-weight:500;
@@ -810,7 +810,7 @@ html.dunkel{color-scheme:dark;}
   width:32px;height:32px;padding:0;gap:0;border-radius:var(--am-radius-mittel);
   background:none;border:none;color:var(--am-text-gedaempft);cursor:pointer;
   display:flex;align-items:center;justify-content:center;
-  transition:background .15s ease-in-out,color .15s ease-in-out;
+  transition:background var(--am-dauer-schnell) var(--am-kurve),color var(--am-dauer-schnell) var(--am-kurve);
 }
 [data-mode="basic"] .sidebar-footer .ctx-gauge-new-chat:hover{
   background:var(--am-flaeche-2);color:var(--am-text-primaer);
@@ -818,7 +818,7 @@ html.dunkel{color-scheme:dark;}
 [data-mode="basic"] .sidebar-footer .ctx-gauge-new-chat svg{width:16px;height:16px;stroke-width:1.5;}
 /* Dropdown vom Composer aus nach oben; Spezifität schlägt den Inline-Block */
 [data-mode="basic"] .composer-center .ctx-gauge-card .model-dropdown{
-  top:auto;bottom:calc(100% + 8px);left:0;border-radius:14px;box-shadow:var(--shadow-lg);
+  top:auto;bottom:calc(100% + 8px);left:0;border-radius:14px;box-shadow:var(--am-schatten-1);
 }
 /* Phone: Cluster aus der absoluten Mitte nehmen und links an das Paperclip
    rücken. Reihenfolge bleibt [Werkzeuge] [Ring + Modell-Pille] ... [Mikro] [Senden];
@@ -915,12 +915,12 @@ html.dunkel{color-scheme:dark;}
 .wings-msg-pressing{
   transform:scale(.985);
   opacity:.92;
-  transition:transform .12s ease,opacity .12s ease;
+  transition:transform var(--am-dauer-schnell) var(--am-kurve),opacity var(--am-dauer-schnell) var(--am-kurve);
 }
 .wings-sheet-scrim{
   position:fixed;inset:0;z-index:1400;display:flex;align-items:flex-end;
   background:var(--am-deckschicht);
-  animation:wings-sheet-fade .2s ease;
+  animation:wings-sheet-fade var(--am-dauer-mittel) var(--am-kurve);
 }
 @keyframes wings-sheet-fade{from{opacity:0;}to{opacity:1;}}
 .wings-sheet{
@@ -929,7 +929,7 @@ html.dunkel{color-scheme:dark;}
   border-top:1px solid var(--am-trennlinie);
   border-radius:16px 16px 0 0;
   padding:8px 0 calc(8px + var(--wings-inset-bottom));
-  animation:wings-sheet-up .26s cubic-bezier(.2,.8,.25,1);
+  animation:wings-sheet-up var(--am-dauer-mittel) var(--am-kurve);
 }
 @keyframes wings-sheet-up{from{transform:translateY(16px);opacity:.6;}to{transform:none;opacity:1;}}
 .wings-sheet-grab{
@@ -1078,3 +1078,53 @@ html.dunkel{color-scheme:dark;}
     top:calc(var(--wings-inset-top) + (var(--wings-header-h) - 44px) / 2);
   }
 }
+
+/* ══ Regeln des CI auf Oberflächen des Upstream (Etappe 2b, CI ABGLEICH WG-B1) ══
+   Das Markup des Upstream bleibt; diese Abschnitte geben seinen Klassen die
+   Regeln des CI, nur aus --am-*. Spätere Datei, gleiche Spezifität gewinnt. */
+
+/* ── Schatten nur für Schwebendes [WG-SCHWEBE] (CI R6) ──
+   Klappmenüs, Popover, Meldungen, Dialoge und das Blatt am Handy tragen den
+   einen Schatten, immer mit dem betonten Rand. Karten, Tafeln und Knöpfe nie. */
+.app-titlebar-title-popover,.cmd-dropdown,.composer-reasoning-dropdown,
+.composer-toolsets-dropdown,.kanban-board-switcher-menu,.model-dropdown,
+.profile-dropdown,.project-picker,.session-action-menu,.skill-picker-dropdown,
+.toast,.workspace-prefs-menu,.ws-dropdown,.wings-sheet{box-shadow:var(--am-schatten-1);}
+.app-titlebar-title-popover,.kanban-board-switcher-menu{border-color:var(--am-rand-betont-farbe);}
+.app-dialog,:root:not(.dunkel) .app-dialog,:root.dunkel .app-dialog{box-shadow:var(--am-schatten-1);}
+:root:not(.dunkel) .app-dialog{border-color:var(--am-rand-betont-farbe);}
+
+/* ── Knöpfe [WG-KNOPF] (CI R1, R7) ──
+   Rot nur für Löschen. Stoppen ist die eine Handlung, während eine Antwort
+   läuft: Handlungsfarbe. Die Schrift auf der Handlungsfläche ist
+   --am-handlung-text (weiß hell, Blau 900 auf dem Gold im Dunkeln). */
+.send-btn{color:var(--am-handlung-text);}
+.send-btn.stop,.send-btn.interrupt{background:var(--am-handlung-ruhend);}
+.send-btn.stop:hover,.send-btn.interrupt:hover{background:var(--am-handlung-hover);filter:none;}
+/* Aufnahme: Gold zeichnet sie aus (wie Insilo), Rot bleibt dem Fehler. */
+.mic-btn.recording{color:var(--am-blau-900);background:var(--am-gold-500);animation-name:wings-aufnahme;}
+@keyframes wings-aufnahme{0%,100%{box-shadow:0 0 0 0 var(--am-gold-300);}55%{box-shadow:0 0 0 9px transparent;}}
+/* Löschen ist rot, gefüllt, mit dem Wort (CI R1). Die Themen-Regeln für
+   .confirm in style.css malten auch .danger in der Handlungsfarbe — im Dunkeln
+   mit !important, darum hier ebenso. Schrift wie AM-KNOPF .btn-gefahr:
+   hell Weiß, dunkel Blau 900 (Weiß auf dem hellen Rot kam auf 2,45:1). */
+:root:not(.dunkel) .app-dialog-btn.confirm.danger,
+:root.dunkel .app-dialog-btn.confirm.danger{background:var(--am-fehler)!important;border-color:var(--am-fehler)!important;color:var(--am-handlung-text)!important;}
+:root:not(.dunkel) .app-dialog-btn.confirm.danger:hover,
+:root.dunkel .app-dialog-btn.confirm.danger:hover{background:var(--am-fehler-hover)!important;border-color:var(--am-fehler-hover)!important;}
+/* Ablehnen löscht nichts: Zweitknopf mit betontem Rand. */
+.approval-btn.deny{border-color:var(--am-rand-betont-farbe);color:var(--am-text-primaer);}
+.approval-btn.deny:hover{background:var(--am-flaeche-2);border-color:var(--am-rand-betont-farbe);}
+/* Kontext fast voll: Achtung, kein Fehler. */
+.ctx-indicator.ctx-high .ctx-compress-btn{border-color:var(--am-achtung);color:var(--am-achtung);}
+.ctx-indicator.ctx-high .ctx-compress-btn:hover{background:var(--am-achtung-flaeche);}
+
+/* ── Bewegung [WG-BEWEGUNG] (CI T6) ──
+   Kein Überschwingen: der Sende-Knopf erscheint ohne Federn. Statt
+   `transition: all` nur die Eigenschaften, die sich wirklich ändern; die
+   kurzen Dauern des Upstream bleiben (CI ABGLEICH WG-T6). */
+.send-btn.visible{animation-timing-function:var(--am-kurve);}
+.new-chat-btn,.approval-btn,.yolo-pill,.clarify-choice,.clarify-input,.clarify-submit,
+.cron-btn,.skill-item,.skill-toggle,.sm-btn,.help-card-link,.suggestion,.panel-icon-btn,
+.file-item,.ws-action-btn,.project-chip,.project-create-btn,.project-picker-item,
+.code-copy-btn{transition-property:background-color,border-color,color,opacity,box-shadow,transform;}
