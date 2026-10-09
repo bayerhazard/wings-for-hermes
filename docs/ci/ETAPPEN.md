@@ -5,6 +5,10 @@ und Relay: **Das CI ist die Quelle** für Token, Zeichen und Bausteine; Wings h�
 einen Stand `ci-YY.M.n` als Kopie und prüft sich ohne Netz dagegen
 (CI `STAND.md`, `ABGLEICH.md` Paket 4). Jede Etappe ist ein eigener PR.
 
+Die Entscheidungen dazu hat Kai am 09.10.2026 getroffen. Sie stehen im
+Abschnitt „Wings“ der CI-`ABGLEICH.md` (Einträge `WG-…`) und unten unter
+„Entschieden“.
+
 Alle Zahlen stehen in [`BESTAND.md`](BESTAND.md) und kommen aus
 `scripts/ci/bestand.py` — dieses Dokument nennt keine eigenen. Neu messen:
 
@@ -20,7 +24,7 @@ python3 scripts/ci/bestand.py --ci <klon von aimighty-ci> \
   ein Eintrag im Abschnitt „Wings“ der CI-`ABGLEICH.md`, mit Kais Entscheidung.
 - **CI-Änderungen zuerst ins CI** (PR dort, Merge, neuer Stand `ci-YY.M.n`);
   Wings holt danach genau diesen Stand — nie `main`, nie zur Bauzeit.
-- **Wings' Eigenes trägt eine eigene Kennung** (Vorschlag unten, E1).
+- **Wings' Eigenes trägt die Kennung `WG-`** (CI `ABGLEICH.md` WG-K).
 - **Zahlen in Berichten kommen aus Skripten**, nicht von Hand.
 - **Das Versionsschema bleibt** (`YY.MM.<n>`, `AGENTS.md`) — es wird hier nicht
   angefasst.
@@ -66,9 +70,9 @@ Was die Messung sagt (`BESTAND.md` §6, §7):
    `master`, Wings arbeitet auf `main` — in GitHub läuft für Wings-PRs keine
    Testsuite (§6). Eine Wache wacht nur, wenn ihr Workflow auf `main` läuft.
 
-Daraus der Vorschlag: **Schichtmodell.** Wings übernimmt das CI vollständig in
-einer eigenen Schicht und fasst die Upstream-Schicht nur an, wo es nicht anders
-geht.
+Daraus das **Schichtmodell** (entschieden mit WG-T2, WG-T3, WG-B1): Wings
+übernimmt das CI vollständig in einer eigenen Schicht und fasst die
+Upstream-Schicht nur an, wo es nicht anders geht.
 
 | Schicht | Datei | Was darin passiert |
 |---|---|---|
@@ -76,13 +80,16 @@ geht.
 | Brücke | `static/style.css`, `:root` und `:root.dark` | Die Upstream-Namen (`--accent`, `--text`, `--muted`, `--border` …) bekommen ihren Wert **aus** `--am-*`, in **einem** Block statt fester Werte. Alle Upstream-Regeln, die sie lesen, bleiben, wie sie sind |
 | Upstream | übriges `style.css`, `index.html`, JS | bleibt; geändert nur, wo eine Regel es verlangt (Rot, Schatten, Hauptaktion …), und dann mit Wert aus `--am-*` statt neuem Hex-Wert |
 
-**Der Haken: Die Brücke ist ein Alias**, und das CI sagt in T2 ausdrücklich
-„keine Aliasse“ (zwei Namen für einen Wert sind die zweite Wahrheit). Rocket
-und Insilo durften ihre Namen behalten, weil sie ihre eigenen waren; Wings'
-Namen gehören dem Upstream. Die Brücke braucht deshalb einen Eintrag mit
-Entscheidung (E2). Die Gegenrichtung — jede `var(--accent)` in Upstream-CSS
-und -JS durch `var(--am-handlung-ruhend)` ersetzen — hält T2 ein, bricht aber
+**Die Brücke ist ein Alias**, und das CI sagt in T2 ausdrücklich „keine
+Aliasse“ (zwei Namen für einen Wert sind die zweite Wahrheit). Rocket und
+Insilo durften ihre Namen behalten, weil sie ihre eigenen waren; Wings' Namen
+gehören dem Upstream. Die Gegenrichtung — jede `var(--accent)` in Upstream-CSS
+und -JS durch `var(--am-handlung-ruhend)` ersetzen — hielte T2 ein, bräche aber
 die meisten der gekoppelten Upstream-Tests und jeden späteren CSS-Port.
+Entschieden ist deshalb **WG-T2, Weg C**: die Brücke als enge Ausnahme, und
+**Neues und Wings-Eigenes liest nur `--am-*`**. Eine Wache prüft, dass in
+`wings.css` kein Upstream-Name steht; die Brücke wächst nie, sie schrumpft, wo
+eine Upstream-Regel ohnehin angefasst wird.
 
 ## Etappen
 
@@ -91,11 +98,11 @@ Wie bei Relay; jede Etappe ein PR auf `claude/…`.
 | # | Etappe | Inhalt | Upstream-Last |
 |---|---|---|---|
 | 0 | **Bestandsaufnahme** | `scripts/ci/bestand.py`, `docs/ci/BESTAND.md`, dieser Plan | keine |
-| 1 | **Token** | Token-Block wörtlich in `wings.css`; Brücke in `style.css` (E2); Dunkel: CI schaltet `html.dunkel`, Wings `.dark` — an den Stellen, die das Thema setzen (Inline-Skripte in `index.html` und `share.html`, `boot.js`), wird zusätzlich `dunkel` gesetzt (E3); feste Hex-Werte in Wings' eigenen Dateien raus; Kontrast hell und dunkel nachrechnen. Ziel: `app-abgleich.py` meldet für den Block nichts mehr | klein: eine Stelle in `style.css`, drei Zeilen Theme-Code |
-| 2 | **Regeln** | Sie-Form und „AI“ im deutschen Text (R3, Wache wie Relays `wording`); Knöpfe: eine Hauptaktion je Ansicht, Rot nur für Löschen mit Objekt (R1, G2); Schatten nur für Schwebendes (R6); Bewegung auf die drei CI-Dauern und `--am-kurve` (T6); Modell- und Bausteinnamen aus dem Fließtext (wie IN-R4/RL-R4); Name der Anwendung in der Oberfläche (E5) | mittel: `i18n.js` `de` ist Wings' eigene Pflege (`UPSTREAM_SYNC.md`: i18n-Batches werden nicht übernommen); CSS-Regeln einzeln |
-| 3 | **Zeichen** | `static/icons.js` wird aus `ci/marke/icons/ui/` erzeugt; die Aufrufe `li('lucide-name')` bleiben über eine Namenstafel, damit Upstream-Ports nicht brechen; die Zeichen, die dem Set fehlen, kommen per CI-PR über `icons-erzeugen.py`; Inline-`<svg>` und Emoji als Zeichen raus (R2, G4); Größen 16/20/24/40, Strich 1,5; Favicon und App-Icon mit der **Feder** (R5, G7 — schon entschieden) | `icons.js` klein; Inline-SVG in `index.html` und JS mittel |
-| 4 | **Kennungen + Bausteine** | eigene Vorsilbe in `bauteile.py` (CI-PR, E1); jeder Abschnitt in `wings.css` mit Kennung; getragene `AM-`/`HB-`-Bausteine wörtlich; Upstream-Oberflächen, die wie ein CI-Baustein aussehen sollen, bekommen einen eigenen Abschnitt, der die Upstream-Selektoren mit CI-Werten zeichnet (E4); Wings' Eigenes (Stimm-Modus, Aktivitätszeile, Einfach/Erweitert, Markenzeile) unter der eigenen Kennung; was andere Apps brauchen könnten, als Vorschlag `CI ← App` | keine in `style.css`, wenn E4 wie empfohlen |
-| 5 | **CI-Kopie + Wachen** | `ci/` mit `stand.json`, `scripts/ci-holen.mjs`; pytest-Wachen für Kopie, Token-Block, Bausteine, Kennungen, Zeichen; Zeile in `werkzeug/apps.json` mit `css: static/wings.css` und eigenem Geheimnis (wie `RELAY_TOKEN`, weil `bayerhazard/*`) — CI-PR; Workflow auf `main`, der die Wachen fährt (E6); Regel in `AGENTS.md` | keine |
+| 1 | **Token** | Token-Block wörtlich in `wings.css`; Brücke in `style.css` (WG-T2); Dunkel: CI schaltet `html.dunkel`, Wings `.dark` — an den drei Stellen, die das Thema setzen (Inline-Skripte in `index.html` und `share.html`, `boot.js`), wird zusätzlich `dunkel` gesetzt, eine Wache prüft den Gleichlauf (WG-T3); feste Hex-Werte in Wings' eigenen Dateien raus; Kontrast hell und dunkel nachrechnen. Ziel: `app-abgleich.py` meldet für den Block nichts mehr | klein: eine Stelle in `style.css`, drei Zeilen Theme-Code |
+| 2 | **Regeln** | Sie-Form und „AI“ im deutschen Text (R3, Wache wie Relays `wording`); Knöpfe: eine Hauptaktion je Ansicht, Rot nur für Löschen mit Objekt (R1, G2); Schatten nur für Schwebendes (R6); Bewegung auf die drei CI-Dauern und `--am-kurve` (T6); englische Reste im Block `de` übersetzt (WG-R3); Name: die App heißt „Wings“, der Agent wird umschrieben, technische Namen bleiben „Hermes“ (WG-R4) | mittel: `i18n.js` `de` ist Wings' eigene Pflege (`UPSTREAM_SYNC.md`: i18n-Batches werden nicht übernommen); CSS-Regeln einzeln |
+| 3 | **Zeichen** | `static/icons.js` wird aus `ci/marke/icons/ui/` erzeugt; die Aufrufe `li('lucide-name')` bleiben über eine Namenstafel, damit Upstream-Ports nicht brechen; für die Zeichen, die dem Set fehlen, wird je Zeichen geprüft, ob eines des Sets dieselbe Bedeutung trägt, sonst kommen sie per CI-PR über `icons-erzeugen.py` (WG-Z1, offen); Inline-`<svg>` und Emoji als Zeichen raus (R2, G4); Größen 16/20/24/40, Strich 1,5; Favicon und App-Icon mit der **Feder** (R5, G7 — schon entschieden) | `icons.js` klein; Inline-SVG in `index.html` und JS mittel |
+| 4 | **Kennungen + Bausteine** | Vorsilbe `WG-` in `bauteile.py` (CI-PR, WG-K); jeder Abschnitt in `wings.css` mit Kennung; getragene `AM-`/`HB-`-Bausteine wörtlich; Upstream-Oberflächen, die wie ein CI-Baustein aussehen sollen, bekommen einen `WG-`-Abschnitt, der die Upstream-Selektoren nur aus `--am-*` zeichnet; die Zuordnung „Upstream-Klasse → CI-Baustein“ kommt als Tabelle in die CI-`ABGLEICH.md` (WG-B1); Wings' Eigenes (Stimm-Modus, Aktivitätszeile, Einfach/Erweitert, Markenzeile) unter der eigenen Kennung; was andere Apps brauchen könnten, als Vorschlag `CI ← App` (WG-B2, offen) | keine in `style.css` |
+| 5 | **CI-Kopie + Wachen** | `ci/` mit `stand.json`, `scripts/ci-holen.mjs`; pytest-Wachen für Kopie, Token-Block, Bausteine, Kennungen, Zeichen; Zeile in `werkzeug/apps.json` mit `css: static/wings.css` und eigenem Geheimnis (wie `RELAY_TOKEN`, weil `bayerhazard/*`) — CI-PR (WG-V2, offen: wer legt das Token an); eigener Workflow auf `main`, der nur die Wachen fährt (WG-V1); Regel in `AGENTS.md` | keine |
 | 6 | **Grundgerüst** | G1–G8 für Wings: Spalte 240, Kopfecke mit Wortmarke und Name (R4, HB-MARKE), Kopfleiste und Profil (HB-KONTO) statt Fuß in der Navigation, Seitentitel 28, Tab-Titel „Seite · Wings“, Handy mit unterer Leiste (G5); Einfach/Erweitert und die Rail einordnen | hoch: Hülle und Navigation sind Upstream-Markup — eigener Abgleich vor der Etappe |
 | 7 | **Rundgang im Browser** | jede Seite hell und dunkel, Desktop und Handy, mit Lageprüfung wie bei Relay; Grundlage `tests/browser_smoke.py` (startet `server.py` ohne Agent). Ob axe mitprüft, ist eine Abhängigkeitsfrage (`AGENTS.md`: keine neuen Abhängigkeiten ohne Begründung) | keine |
 
@@ -103,16 +110,24 @@ Die Stimm-Pipeline (`AGENTS.md`, „Fallstricke“) bleibt in jeder Etappe
 unberührt; wo eine Etappe `boot.js` oder `ui.js` anfasst, läuft die
 Prüfung der Barge-in- und TTS-Logs mit.
 
-## Zu entscheiden (Kai)
+## Entschieden (Kai, 09.10.2026)
 
-| # | Frage | Vorschlag |
+| # | Frage | Entscheidung | CI |
+|---|---|---|---|
+| E1 | Kennung für Wings' Eigenes | **`WG-`** | WG-K |
+| E2 | Upstream-Namen und CI-Token | **Weg C:** ein Brückenblock in `style.css` gibt den Upstream-Namen ihre Werte aus `--am-*`; Neues und Wings-Eigenes liest nur `--am-*`, eine Wache prüft das | WG-T2 |
+| E3 | Dunkelmodus | **`dark` und `dunkel` zugleich** an den drei Stellen, die das Thema setzen; eine Wache prüft den Gleichlauf | WG-T3 |
+| E4 | Upstream-Oberflächen | **CI-Optik auf Upstream-Selektoren** in `WG-`-Abschnitten, nur aus `--am-*`; CI-Klassen nur in eigenem Markup | WG-B1 |
+| E5 | Name in der Oberfläche | **App „Wings“, Agent umschrieben, technische Namen „Hermes“** | WG-R4 |
+| E6 | Prüfungen in GitHub | **eigener Workflow für die CI-Wachen auf `main`**; die rote Testsuite wird getrennt gesichtet (eigene Aufgabe); erst wenn sie grün ist, hören die Upstream-Workflows auf `main` | WG-V1 |
+
+## Noch offen
+
+| CI | Frage | Wann |
 |---|---|---|
-| E1 | Kennung für Wings' Eigenes | **`WG-`** (Wings), zwei Buchstaben wie `RK-`, `IN-`, `RL-`. Alternative `WI-` |
-| E2 | Brücke von den Upstream-Namen auf `--am-*` (gegen T2) | **beide**: ein Brückenblock in `style.css` als dokumentierte Ausnahme für den Fork, mit Zuordnungstabelle in `medien/app.md`; neue Wings-Regeln lesen nur `--am-*`. Eintrag `WG-T2` im CI |
-| E3 | Dunkelmodus: `.dark` (Upstream) neben `dunkel` (CI) | beide Klassen an den drei Stellen setzen, die das Thema bestimmen; kein Umbenennen der Upstream-Regeln |
-| E4 | Upstream-Oberflächen (Knöpfe, Dialoge, Felder): CI-Klassen ins Markup oder CI-Optik auf Upstream-Selektoren | **CI-Optik auf Upstream-Selektoren** in eigenen `WG-`-Abschnitten; CI-Klassen nur in Wings' eigenem Markup. Eintrag im CI, weil diese Abschnitte nicht wörtlich `bauteile/` sind |
-| E5 | Name in der Oberfläche: „Hermes“ steht im deutschen Text oft, „Wings“ kaum (`BESTAND.md` §3a); R4 verlangt Wortmarke + Name der Anwendung | „Wings“ für die Anwendung, „Hermes“ nur, wo der Agent gemeint ist — in Etappe 2 |
-| E6 | Workflows hören auf `master` | eigener Workflow für die CI-Wachen auf `main` (Etappe 5); die rote Testsuite ist ein eigenes Thema außerhalb dieses Anschlusses — Vorschlag: getrennt sichten |
+| WG-Z1 | die Zeichen, die dem Set fehlen (`BESTAND.md` §5a) | vor Etappe 3 |
+| WG-B2 | Stimm-Modus, Aktivitätszeile, Einfach/Erweitert als CI-Bausteine | nach Etappe 4 |
+| Paket 5 | Grundgerüst für Wings | eigener Abgleich vor Etappe 6 |
+| WG-V2 | wer das Token für die Action `stand` anlegt | vor Etappe 5 |
 
-Nach den Entscheidungen entsteht der Abschnitt „Wings“ in der CI-`ABGLEICH.md`
-(Befund, Empfehlung, Entscheidung je Eintrag, wie bei Relay) als erster CI-PR.
+Der Abschnitt „Wings“ steht im CI-PR `ska1walker/aimighty-ci#33`.
