@@ -42,7 +42,12 @@ def _render_profile_concept_help_body():
 
 
 def test_i18n_keys_are_english_fallback_owned():
-    """Profile concept keys live in English and fall back from every other locale."""
+    """Profile concept keys live in English; other locales fall back to it.
+
+    Wings (CI ABGLEICH WG-R3): the German block is complete, so German carries
+    its own text for these keys too (tests/test_ci_wortlaut.py); the fallback
+    still covers every other locale.
+    """
     locale_blocks = _locale_blocks()
     en_block = locale_blocks["en"]
     for key in PROFILE_CONCEPT_KEYS:
@@ -50,12 +55,16 @@ def test_i18n_keys_are_english_fallback_owned():
             f"missing key {key!r} in en locale block"
         )
     for locale, block in locale_blocks.items():
-        if locale == "en":
+        if locale in ("en", "de"):
             continue
         for key in PROFILE_CONCEPT_KEYS:
             assert not re.search(rf"\b{re.escape(key)}:\s*'", block), (
                 f"key {key!r} must be absent from non-English locale {locale!r}"
             )
+    for key in PROFILE_CONCEPT_KEYS:
+        m = re.search(rf"\b{re.escape(key)}:\s*'([^']*)'", locale_blocks["de"])
+        en = re.search(rf"\b{re.escape(key)}:\s*'([^']*)'", en_block)
+        assert m and m.group(1) != en.group(1), f"{key!r} needs its own German text"
     assert "_locale[key] ?? LOCALES.en[key]" in I18N_JS
 
 

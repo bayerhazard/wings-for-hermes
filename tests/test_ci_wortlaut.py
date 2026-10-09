@@ -30,7 +30,7 @@ pytestmark = pytest.mark.skipif(not NODE, reason="node not installed")
 # Same word in German and English — names, loanwords, the agent's own terms.
 GLEICH_ERLAUBT = {
     "mcp_field_url", "terminal_title", "settings_aux_task_mcp", "tab_chat", "tab_skills",
-    "tab_workspaces", "tab_kanban", "kanban_board", "kanban_status_triage", "kanban_status_todo",
+    "tab_kanban", "kanban_board", "kanban_status_triage", "kanban_status_todo",
     "kanban_status_ready", "kanban_status_running", "kanban_status_blocked", "kanban_status_done",
     "kanban_status", "kanban_workspace_scratch", "kanban_workspace_worktree", "kanban_skills",
     "kanban_board_name", "tab_todos", "export_session_json", "export_session_html",

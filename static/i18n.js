@@ -2366,7 +2366,7 @@ const LOCALES = {
     tab_tasks: 'Aufgaben',
     tab_skills: 'Skills',
     tab_memory: 'Gedächtnis',
-    tab_workspaces: 'Spaces',
+    tab_workspaces: 'Arbeitsbereiche',
     tab_profiles: 'Profile',
     tab_kanban: 'Kanban',
     kanban_board: 'Board',
