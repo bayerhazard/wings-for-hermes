@@ -120,6 +120,8 @@ Prüfung der Barge-in- und TTS-Logs mit.
 | E4 | Upstream-Oberflächen | **CI-Optik auf Upstream-Selektoren** in `WG-`-Abschnitten, nur aus `--am-*`; CI-Klassen nur in eigenem Markup | WG-B1 |
 | E5 | Name in der Oberfläche | **App „Wings“, Agent umschrieben, technische Namen „Hermes“** | WG-R4 |
 | E6 | Prüfungen in GitHub | **eigener Workflow für die CI-Wachen auf `main`**; die rote Testsuite wird getrennt gesichtet (eigene Aufgabe); erst wenn sie grün ist, hören die Upstream-Workflows auf `main` | WG-V1 |
+| F1–F4 | Zuordnung der Brücke (vor Etappe 1) | Bedienränder `--am-rand-betont-farbe`, Auswahl `--am-auswahl-flaeche`, Dichte 1,1 wie das CI, Eingabefeld des Chats `--am-radius-gross` | WG-T2 |
+| F5 | Grundgrad | **16 px fest**; die Schriftgrößen-Einstellung ändert nur die Lesetexte über ihre Variablen | WG-T4 |
 
 ## Noch offen
 

@@ -784,14 +784,16 @@ class TestToolCardDesignTokens:
             assert token in css_min, f"Base dark palette token missing: {token}"
 
     def test_base_light_palette_restores_upstream_gold_tokens(self):
+        # Wings (CI ABGLEICH WG-T2): the base palette is the bridge onto the
+        # AImighty CI tokens; the CI's values live in wings.css.
         css_min = re.sub(r"\s+", "", CSS)
         expected_tokens = (
-            "--bg:#F5F5F7",
-            "--text:#2D3748",
-            "--muted:#6B7280",
-            "--accent:#002f56",
-            "--gold:#caa960",
-            "--gold-text:#8c6c1f",
+            "--bg:var(--am-seite)",
+            "--text:var(--am-text-primaer)",
+            "--muted:var(--am-text-gedaempft)",
+            "--accent:var(--am-handlung-ruhend)",
+            "--gold:var(--am-gold-500)",
+            "--gold-text:var(--am-gold-beschriftung)",
         )
         for token in expected_tokens:
             assert token in css_min, f"Base light palette token missing: {token}"

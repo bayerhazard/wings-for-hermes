@@ -130,11 +130,17 @@ class TestStyleCssBgVarPresent:
     static prefers-color-scheme defaults.
     """
 
+    # Wings (CI ABGLEICH WG-T2/WG-T3): --bg is bridged to the CI token
+    # --am-seite, which the token block in wings.css sets for light (:root)
+    # and dark (html.dunkel, toggled together with .dark).
+
     def test_root_light_defines_bg(self):
         src = STYLE.read_text(encoding="utf-8")
-        # :root (light default) at the top of the file defines --bg.
-        assert "--bg:#F5F5F7" in src or "--bg: #F5F5F7" in src
+        assert "--bg:var(--am-seite)" in src
+        wings = (STYLE.parent / "wings.css").read_text(encoding="utf-8")
+        assert "--am-seite: #ffffff;" in wings
 
     def test_root_dark_defines_bg(self):
-        src = STYLE.read_text(encoding="utf-8")
-        assert "--bg:#051729" in src or "--bg: #051729" in src
+        wings = (STYLE.parent / "wings.css").read_text(encoding="utf-8")
+        dunkel = wings.split("html.dunkel {", 1)[1].split("}", 1)[0]
+        assert "--am-seite: var(--am-blau-900);" in dunkel

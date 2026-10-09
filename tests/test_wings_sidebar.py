@@ -29,13 +29,16 @@ def _folder_block():
 
 
 def test_missing_am_tokens_were_added():
-    """Beacon's rule is written in --am-* vocabulary; style.css only has raum-4+."""
+    """Beacon's rule is written in --am-* vocabulary; the CI token block at the
+    top of wings.css (CI ABGLEICH WG-T1) carries every step it needs."""
     for token in ("--am-raum-1:", "--am-raum-2:", "--am-raum-3:"):
         assert token in WINGS_CSS, f"{token} missing — the folder rule needs it"
-    # 40px absolute, NOT 2.5rem: Wings' root is 15px, so 2.5rem would be 37.5px
-    # and a tap target must not shrink with the reader's font-size choice.
-    assert "--am-ziel-zeiger:40px;" in WINGS_CSS
-    assert "--am-radius-klein:4px;" in WINGS_CSS
+    # 2.5rem is 40px only because the root stays at 16px for every reading
+    # size: a tap target must not shrink with the reader's font-size choice.
+    assert "--am-ziel-zeiger: 2.5rem;" in WINGS_CSS
+    assert "--am-radius-klein: 0.25rem;" in WINGS_CSS
+    style = (STATIC / "style.css").read_text(encoding="utf-8")
+    assert "font-family:var(--font-ui);font-size:16px;" in style
 
 
 def test_folder_row_adopts_beacon_nav_item_metrics():
@@ -46,7 +49,7 @@ def test_folder_row_adopts_beacon_nav_item_metrics():
     assert "gap:var(--am-raum-3)" in rule
     assert "min-height:var(--am-ziel-zeiger)" in rule
     assert "border-radius:var(--am-radius-klein)" in rule
-    assert "color:var(--muted)" in rule
+    assert "color:var(--am-text-gedaempft)" in rule
     assert "cursor:pointer" in rule, "the row is now operable"
 
 
@@ -54,9 +57,9 @@ def test_folder_icon_and_count_are_part_of_the_row():
     assert ".session-folder-header svg{width:var(--wings-nav-icon);height:var(--wings-nav-icon);stroke-width:1.75;flex-shrink:0;}" in WINGS_CSS
     assert "--wings-nav-icon:18px;" in WINGS_CSS, "one source for the icon column"
     assert ".session-folder-header .session-folder-count{" in WINGS_CSS
-    assert "font-family:var(--font-mono)" in WINGS_CSS, "numbers read in mono, like Beacon"
+    assert "font-family:var(--am-schrift-mono)" in WINGS_CSS, "numbers read in mono, like Beacon"
     assert "margin-left:auto" in WINGS_CSS
-    assert ".session-folder-header.folder-aktiv{color:var(--accent-text);font-weight:400;}" in WINGS_CSS, (
+    assert ".session-folder-header.folder-aktiv{color:var(--am-handlung-ruhend);font-weight:400;}" in WINGS_CSS, (
         "the active folder is marked by colour alone — nothing in the tree is bold"
     )
 
@@ -142,11 +145,12 @@ def test_unassigned_folder_label_is_translated():
 
 
 def test_mobile_surfaces_use_the_sidebar_tone():
-    """Nav bar and input field carry --sidebar on phones, the band stays chat-bg."""
-    idx = WINGS_CSS.find("background:var(--sidebar);border-bottom:1px solid var(--border);")
+    """Nav bar and input field carry the sidebar tone (CI Fläche 1) on phones,
+    the band stays on the page."""
+    idx = WINGS_CSS.find("background:var(--am-flaeche-1);border-bottom:1px solid var(--am-trennlinie);")
     assert idx != -1, "mobile nav bar must take the sidebar tone"
-    # :root prefix is required: `:root.dark .composer-box` weighs (0,3,0).
-    assert ":root[data-mode=\"basic\"] .composer-box{background:var(--sidebar);}" in WINGS_CSS
+    # :root prefix is required: `:root.dunkel .composer-box` weighs (0,3,0).
+    assert ":root[data-mode=\"basic\"] .composer-box{background:var(--am-flaeche-1);}" in WINGS_CSS
     assert 'content="#f4f7fa"' in HTML and 'content="#0a2238"' in HTML
     assert '"theme_color": "#0a2238"' in MANIFEST
     # The launch background stays the canvas tone so the splash flows into the chat.

@@ -31,12 +31,17 @@ class TestFontSizeCssModifiers:
 
     def test_small_large_and_xlarge_scale_from_default(self):
         css = _read("static/style.css")
-        # Match both compact {font-size:12px} and spaced { font-size: 12px; } formats
-        m_small = re.search(r':root\[data-font-size="small"\][^{]*\{[^}]*font-size:\s*(\d+)px', css)
-        m_large = re.search(r':root\[data-font-size="large"\][^{]*\{[^}]*font-size:\s*(\d+)px', css)
-        m_xlarge = re.search(r':root\[data-font-size="xlarge"\][^{]*\{[^}]*font-size:\s*(\d+)px', css)
+        # Wings (CI ABGLEICH, Grundgrad 16 px): the preference scales the
+        # reading text through --message-body-font-size; the root stays 16 px
+        # so the CI's rem-based spacing and touch targets never shrink.
+        m_small = re.search(r':root\[data-font-size="small"\]\{[^}]*--message-body-font-size:\s*(\d+)px', css)
+        m_large = re.search(r':root\[data-font-size="large"\]\{[^}]*--message-body-font-size:\s*(\d+)px', css)
+        m_xlarge = re.search(r':root\[data-font-size="xlarge"\]\{[^}]*--message-body-font-size:\s*(\d+)px', css)
         assert m_small and m_large and m_xlarge, (
             "Small, large, and extra-large font-size rules must set px values"
+        )
+        assert not re.search(r':root\[data-font-size="[a-z]+"\]\s*\{\s*font-size:', css), (
+            "the font-size preference must not change the root size"
         )
         assert int(m_small.group(1)) < 14, "Small font size must be < 14px (default)"
         assert int(m_large.group(1)) > 14, "Large font size must be > 14px (default)"

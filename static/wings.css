@@ -7,6 +7,304 @@
    LÄDT NACH style.css (index.html). Upstream-Syncs dürfen diese Datei
    nicht anfassen — sie existiert upstream nicht. */
 
+/* ═══════════════════════════════════════════════════════════════════════
+   AImighty-CI — Quelle der Werte [AM-TOKEN]
+   Dieser Block ist eine unveränderte Kopie von tokens/app.css aus dem CI
+   (ska1walker/aimighty-ci), Stand ci-26.10.17. Das CI ist die Quelle
+   (ABGLEICH T1, WG-T1): ein Wert ändert sich dort, dann wird er hierher
+   kopiert. Prüfen mit
+   `python3 werkzeug/app-abgleich.py …/static/wings.css`.
+
+   Die Schriften lädt style.css (@font-face) und reicht sie unten als
+   --font-geist-* herein [WG-SCHRIFT]. Die Namen des Upstream bekommen
+   ihre Werte in style.css aus diesem Block [WG-BRUECKE].
+   ═══════════════════════════════════════════════════════════════════════ */
+
+:root {
+  /* ── Schrift ─────────────────────────────────────────────────────── */
+  --am-schrift-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --am-schrift-mono: var(--font-geist-mono), ui-monospace, "SF Mono", monospace;
+
+  /* ── Dichte — ein Hebel, keine zweite Wertetabelle ──────────────────
+     weit (Vorgabe) 1,1 · normal 1,0 · kompakt 0,9.
+     Auf Berührung greift automatisch `normal`. */
+  --am-skalierung: 1.1;
+  --am-einheit: 0.25rem; /* 4px */
+
+  /* ── Abstandsstufen — 4·8·12·16·24·32·48·64, an die Dichte gebunden ─ */
+  --am-raum-1: calc(var(--am-einheit) * 1 * var(--am-skalierung));
+  --am-raum-2: calc(var(--am-einheit) * 2 * var(--am-skalierung));
+  --am-raum-3: calc(var(--am-einheit) * 3 * var(--am-skalierung));
+  --am-raum-4: calc(var(--am-einheit) * 4 * var(--am-skalierung));
+  --am-raum-6: calc(var(--am-einheit) * 6 * var(--am-skalierung));
+  --am-raum-8: calc(var(--am-einheit) * 8 * var(--am-skalierung));
+  --am-raum-12: calc(var(--am-einheit) * 12 * var(--am-skalierung));
+  --am-raum-16: calc(var(--am-einheit) * 16 * var(--am-skalierung));
+
+  /* ── Lesespalte — App-Profil, hergeleitet, nicht gesetzt ──────────── */
+  --am-spur-inhalt: 27.75rem; /* 444px — 60 Zeichen bei 16px Grundgrad */
+
+  /* ── Zielgrößen ──────────────────────────────────────────────────── */
+  --am-ziel-zeiger: 2.5rem;      /* 40px */
+  --am-ziel-beruehrung: 2.75rem; /* 44px, ohne Ausnahme */
+  --am-ziel-abstand: 0.5rem;
+  --am-ziel-abstand-beruehrung: 0.75rem;
+
+  /* ── Zeilenhöhe Tabellen, an Dichte gebunden: 56·48·40 ────────────── */
+  --am-zeile-tabelle: 3.5rem;
+
+  /* Die Höhe der Kopfzeile — **beide Spalten teilen sie sich**. Links
+     endet darauf die Linie unter der Wortmarke, rechts die unter dem
+     Seitentitel. Vorher rechnete jede Seite ihre Höhe aus ihrem Inhalt
+     aus, und die beiden Linien lagen 27 px auseinander: ein Versatz, den
+     man nicht benennen kann und trotzdem sieht. Wer hier etwas ändert,
+     verschiebt beide Linien gemeinsam — das ist der Zweck. */
+  --am-kopfhoehe: 5rem;
+  --am-leistenhoehe: 3.5rem;
+  /* Breite der Navigation am Desktop — für alle Anwendungen gleich, damit
+     die Kante beim Wechsel zwischen ihnen nicht springt (ABGLEICH R9). */
+  --am-navigation-breite: 15rem; /* 240px */
+  /* Lesespalte: Formulare, Einstellungen und Ansichten mit einer Hauptsache
+     stehen höchstens so breit, mittig oder links im Inhalt. Listen, Board,
+     Post und Kalender bleiben fließend (ABGLEICH G1). */
+  --am-lesespalte: 45rem; /* 720px */
+  /* Seitentitel in jeder Anwendung gleich groß: 22 px war kaum mehr als ein
+     Abschnittstitel, 40 px kostet in Listen eine Zeile (ABGLEICH G1). */
+  --am-seitentitel: 1.75rem; /* 28px */
+
+  /* ── Ebenen — wer über wem liegt (ABGLEICH R9) ────────────────────── */
+  --am-ebene-tabellenkopf: 10;
+  --am-ebene-seitenkopf: 20;
+  --am-ebene-navigation: 40;
+  --am-ebene-kopfleiste: 50;
+  --am-ebene-menue: 60;
+  --am-ebene-suche: 70;
+  --am-ebene-assistent: 90;
+  --am-ebene-dialog: 100;
+  --am-ebene-ueber-dialog: 200; /* Palette, Klappliste in einem Dialog */
+
+  /* ── Radien — Vorschlag, siehe Paket-README "Was noch fehlt" ──────── */
+  --am-radius-klein: 0.25rem;
+  --am-radius-mittel: 0.5rem;
+  --am-radius-gross: 0.75rem;
+  --am-radius-voll: 999px;
+
+  /* ── Randstärken ─────────────────────────────────────────────────── */
+  --am-rand-ruhend: 1px;
+  --am-rand-betont: 2px;
+
+  /* ── Bewegung — nur die dokumentierten Ausnahmen ──────────────────── */
+  /* Dieselbe Leiter und Kurve wie im Auftritt (kern/bewegung.md,
+     ABGLEICH T6, Kai 01.10.2026). Bis dahin trug die App --am-dauer-kurz
+     und --am-dauer-lang; sie entfallen. */
+  --am-dauer-schnell: 120ms;  /* Hover, Fokus, Farbwechsel */
+  --am-dauer-mittel: 200ms;   /* Aufklappen, Einblenden */
+  --am-dauer-langsam: 320ms;  /* Menü, Overlay */
+  --am-kurve: cubic-bezier(0.2, 0, 0, 1); /* kein Federn, kein Überschwingen */
+
+  /* ── Hanseatenblau — Flächenleiter, Farbton 249,9 ─────────────────── */
+  --am-blau-25: #f5f9fc;
+  --am-blau-50: #eff4f9;
+  --am-blau-100: #e3eaf3;
+  --am-blau-200: #cfdbe7;
+  --am-blau-300: #afc0d2;
+  --am-blau-400: #819bb7;
+  --am-blau-500: #587898; /* Wendepunkt — als Text in beiden Modi lesbar */
+  --am-blau-600: #335578;
+  --am-blau-700: #142e47;
+  --am-blau-800: #0a2238;
+  --am-blau-900: #051729; /* Grundfläche */
+  --am-blau-950: #010c1a;
+
+  /* ── Gold — Auszeichnung, Farbton 85,7 ────────────────────────────── */
+  --am-gold-200: #ebddbd;
+  --am-gold-300: #dfc896;
+  --am-gold-400: #d7ba7b;
+  --am-gold-500: #caa960; /* das eine Markengold */
+  --am-gold-600: #b7974e;
+  --am-gold-700: #a4843a;
+  --am-gold-800: #8c6c1f; /* Gold als Text auf Weiß, 4,91:1 — derselbe Wert
+                              wie --am-gold-text im Auftritt (ABGLEICH T3) */
+  --am-gold-900: #71560f;
+
+  /* ── Zustandsfarben — Text und Rand, keine Fläche außer im Formular ─ */
+  --am-erfolg: #007e46;
+  --am-hinweis: #066bb8;
+  --am-achtung: #9f5100;
+  --am-fehler: #ad3f38;
+  --am-erfolg-flaeche: #e7f6eb;
+  --am-erfolg-rand: #b5dcc1;
+  --am-hinweis-flaeche: #e8f3ff;
+  --am-hinweis-rand: #b6d5f4;
+  --am-achtung-flaeche: #feeee4;
+  --am-achtung-rand: #eec8af;
+  --am-fehler-flaeche: #ffedeb;
+  --am-fehler-rand: #f3c4be;
+  /* Lösch-Knopf beim Überfahren — heller wie die Handlung, nicht dunkler
+     (ABGLEICH R1). Weiß darauf 4,59:1; weiter aufhellen hieße durchfallen. */
+  --am-fehler-hover: #b9584f;
+
+  /* ── Halbsemantische Ebene, Hellmodus (Vorgabe) ───────────────────── */
+  --am-seite: #ffffff;
+  --am-flaeche-1: var(--am-blau-25);   /* Karte, Tafel */
+  --am-flaeche-2: var(--am-blau-50);   /* Menü, Aufklapper */
+  --am-flaeche-3: var(--am-blau-100);  /* Dialog, Popover */
+  --am-trennlinie: var(--am-blau-200);
+  --am-rand: var(--am-blau-200);
+  /* Der Rand, an dem man ein Bedienelement erkennt (sekundärer Knopf,
+     offenes Auswahlfeld) — WCAG 1.4.11 verlangt 3:1. Blau 300 kam auf
+     1,86:1 (ABGLEICH T9). Blau 500, der Wendepunkt: Weiß 4,61 ·
+     Fläche 1 4,36 · Fläche 3 3,80:1. */
+  --am-rand-betont-farbe: var(--am-blau-500);
+
+  --am-text-primaer: var(--am-blau-900);
+  --am-text-sekundaer: var(--am-blau-600);
+  /* Eine eigene Rolle, keine Leiterstufe (ABGLEICH T9, Kai 01.10.2026).
+     #4f6c8a trägt auf jeder hellen Fläche: Weiß 5,46 · Fläche 1 5,16 ·
+     Fläche 2 4,94 · Fläche 3 4,51:1. Fläche 2 ist jede Zeile unter dem
+     Zeiger — dort fiel #567595 auf 4,34:1, im Dialog auf 3,96:1.
+     Blau 500 bleibt, wie es ist: Es ist der Wendepunkt für Zeichen, die in
+     beiden Modi tragen müssen (Pfeil im Auswahlfeld, Balken). */
+  --am-text-gedaempft: #4f6c8a;
+  --am-text-deaktiviert: var(--am-blau-400);
+
+  --am-handlung-ruhend: #002f56;
+  --am-handlung-hover: #104472;
+  --am-handlung-aktiv: #002140;
+  --am-handlung-text: #ffffff;
+
+  /* Der eine Schatten: nur für das, was schwebt — Klappmenü, Suchtreffer,
+     Popover, Dialog, Assistent —, immer zusammen mit dem betonten Rand.
+     Karten, Tafeln, Spalten und Knöpfe tragen nie einen (ABGLEICH R6,
+     Kai 01.10.2026). */
+  --am-schatten-1: 0 8px 24px rgb(5 23 41 / 12%), 0 1px 2px rgb(5 23 41 / 8%);
+  /* Das schwebende Schild des Assistenten unten rechts. */
+  --am-schatten-schild: 0 6px 16px rgb(5 23 41 / 28%);
+
+  /* Schrift auf einer satten Fläche, die in beiden Modi dunkel bleibt
+     (Blau 600/900, Fehlerrot) — dort ist Weiß richtig, auch im Dunkeln.
+     Auf der Handlungsfläche gilt dagegen --am-handlung-text. */
+  --am-text-auf-farbe: #ffffff;
+  /* Trennlinie innerhalb eines Handlungsknopfs (Knopfmenü). */
+  --am-trenner-auf-handlung: rgb(255 255 255 / 0.25);
+
+  --am-gold-auszeichnung: var(--am-gold-500);
+  --am-fokus-ring: #002f56;
+  --am-deckschicht: rgb(5 23 41 / 60%);
+
+  /* Gold als Beschriftung — Sprecher-Namen, aktiver Navigationseintrag,
+     Aufnahme-Pille. Eigene Stufe, weil --am-gold-800 laut Paket für Text
+     *auf Weiß* gerechnet ist: auf der dunklen Fläche kommt es nur auf
+     3,3:1 und fällt damit unter die Lesbarkeitsschwelle. Der Dunkelmodus
+     setzt darum weiter unten den helleren Ton. */
+  --am-gold-beschriftung: var(--am-gold-800);
+
+  /* Fläche eines ausgewählten Eintrags (Vorlage, Sprache, Sprecher).
+     Im Hellmodus trägt die goldene Tönung die Auszeichnung. Im
+     Dunkelmodus wäre dieselbe helle Fläche ein Loch, auf dem der helle
+     Text verschwindet — dort hebt eine dunklere Blaustufe den Eintrag,
+     und die Auszeichnung übernimmt der goldene Rand. */
+  --am-auswahl-flaeche: var(--am-gold-200);
+
+  /* ── Kalender — sechs Töne, nach Reihenfolge vergeben (ABGLEICH RL-R5,
+     Kai 06.10.2026) ────────────────────────────────────────────────────
+     Nur aus Blau- und Goldleiter: Grün und Rot sind Zustandsfarben, eine
+     dritte Familie gibt es nicht. Getragen werden sie als Grafik — Punkt,
+     Rand eines Termins —, nie als Schrift; der Name daneben bleibt Text.
+     Jeder Ton hält 3:1 (WCAG 1.4.11) auf Seite, Fläche 1 und Fläche 2:
+     Gold 700 3,19 · Blau 500 4,17 · Gold 900 6,24 · Blau 800 14,6 ·
+     Gold 800 4,43 · Blau 600 7,00. Gold und Blau wechseln sich ab. */
+  --am-kalender-1: var(--am-gold-700);
+  --am-kalender-2: var(--am-blau-500);
+  --am-kalender-3: var(--am-gold-900);
+  --am-kalender-4: var(--am-blau-800);
+  --am-kalender-5: var(--am-gold-800);
+  --am-kalender-6: var(--am-blau-600);
+}
+
+/* ── Dunkelmodus — Gold handelt, Blau trägt die Fläche ────────────────
+   Die dokumentierte Ausnahme: Blau auf Blau trägt nicht. */
+html.dunkel {
+  --am-seite: var(--am-blau-900);
+  --am-flaeche-1: var(--am-blau-800);
+  --am-flaeche-2: var(--am-blau-700);
+  --am-flaeche-3: var(--am-blau-700);
+  /* Blau 600 kam im Dunkeln auf 2,34:1 (ABGLEICH T9). Blau 400: Seite
+     6,29 · Fläche 3 4,83:1. */
+  --am-rand-betont-farbe: var(--am-blau-400);
+  --am-trennlinie: var(--am-blau-700);
+  --am-rand: var(--am-blau-700);
+
+  /* Gebrochenes Weiß wie im Auftritt: reines Weiß überstrahlt auf
+     Hanseatenblau beim langen Lesen. 16,08:1 auf der Seite, 12,35:1 auf
+     Fläche 3 (ABGLEICH T3, Kai 01.10.2026). Weiß bleibt nur auf satten
+     Flächen: --am-text-auf-farbe. */
+  --am-text-primaer: #eef2f6;
+  --am-text-sekundaer: var(--am-blau-200);
+  --am-text-gedaempft: var(--am-blau-300);
+  --am-text-deaktiviert: var(--am-blau-400);
+
+  --am-handlung-ruhend: var(--am-gold-500);
+  --am-handlung-hover: var(--am-gold-400);
+  --am-handlung-aktiv: var(--am-gold-600);
+  --am-handlung-text: var(--am-blau-900);
+  --am-schatten-1: 0 8px 24px rgb(0 0 0 / 40%), 0 1px 2px rgb(0 0 0 / 30%);
+  --am-schatten-schild: 0 6px 16px rgb(0 0 0 / 45%);
+
+  --am-erfolg: #55c483;
+  --am-hinweis: #60b0ff;
+  --am-achtung: #ed914c;
+  --am-fehler: #f6857a;
+  --am-erfolg-flaeche: #102a1a;
+  --am-erfolg-rand: #1f4d31;
+  --am-hinweis-flaeche: #122539;
+  --am-hinweis-rand: #234566;
+  --am-achtung-flaeche: #351e0d;
+  --am-achtung-rand: #5f371a;
+  --am-fehler-flaeche: #371b18;
+  --am-fehler-rand: #62332e;
+  --am-fehler-hover: #f9948a; /* Blau 900 darauf 8,30:1 */
+
+  /* Der Ring folgt der Handlung wie im Auftritt (kern/schaltflaechen.md):
+     Gold 500, 8,06:1 auf der Seite, 6,19:1 auf Fläche 3. Gold 900 kam
+     auf 2,62:1 (ABGLEICH T9). */
+  --am-fokus-ring: var(--am-gold-500);
+
+  /* Auf Hanseatenblau trägt das Markengold: 7,2:1 auf der Navigationsfläche,
+     8,1:1 auf der Grundfläche. Es ist zugleich die Handlungsfarbe im
+     Dunkelmodus, also bleibt die Sprache geschlossen. */
+  --am-gold-beschriftung: var(--am-gold-500);
+  --am-auswahl-flaeche: var(--am-blau-700);
+
+  /* Kalender im Dunkeln, 3:1 auf Seite, Fläche 1 und 2: Gold 500 6,19 ·
+     Blau 400 4,83 · Gold 300 8,49 · Blau 200 9,88 · Gold 700 3,93 ·
+     Blau 300 7,47. */
+  --am-kalender-1: var(--am-gold-500);
+  --am-kalender-2: var(--am-blau-400);
+  --am-kalender-3: var(--am-gold-300);
+  --am-kalender-4: var(--am-blau-200);
+  --am-kalender-5: var(--am-gold-700);
+  --am-kalender-6: var(--am-blau-300);
+}
+
+/* ── Dichte — Zeiger vs. Berührung ─────────────────────────────────── */
+@media (pointer: coarse) {
+  :root {
+    --am-skalierung: 1; /* normal — die Ziele stehen ohnehin auf 44px */
+  }
+}
+
+/* Dichte-Hebel für die spätere Einstellung am <html data-dichte="…"> */
+html[data-dichte="normal"] { --am-skalierung: 1; }
+html[data-dichte="kompakt"] { --am-skalierung: 0.9; }
+
+/* ── Schrift [WG-SCHRIFT] ─────────────────────────────────────────────── */
+:root {
+  --font-geist-sans: "Geist";
+  --font-geist-mono: "Geist Mono";
+}
+
+
 /* ── Interface mode (Basic / Advanced) ─────────────────────────────────────
    Basic is chat-first: just the sessions sidebar, the composer and quiet
    footer access to memory, insights and settings. Advanced reveals the full
@@ -34,13 +332,13 @@
 /* Basic-mode sidebar footer: three quiet icons (memory, insights, settings)
    that open the matching main views. Hidden in Advanced, where the rail
    covers the same destinations. */
-.sidebar-footer{display:none;flex-shrink:0;align-items:center;gap:4px;padding:10px 12px;padding-bottom:max(10px,env(safe-area-inset-bottom,0));border-top:1px solid var(--border);}
+.sidebar-footer{display:none;flex-shrink:0;align-items:center;gap:4px;padding:10px 12px;padding-bottom:max(10px,env(safe-area-inset-bottom,0));border-top:1px solid var(--am-trennlinie);}
 [data-mode="basic"] .sidebar-footer{display:flex;}
 .sidebar-footer-spacer{flex:1;}
-.sidebar-footer-btn{width:36px;height:36px;border-radius:8px;background:none;border:none;color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;-webkit-tap-highlight-color:transparent;transition:background-color var(--dur) var(--ease),color var(--dur) var(--ease);}
-.sidebar-footer-btn:hover{background:var(--hover-bg);color:var(--text);}
-.sidebar-footer-btn.active{background:var(--accent-bg);color:var(--accent-text);}
-.sidebar-footer-btn:focus-visible{outline:2px solid var(--focus-ring);outline-offset:1px;}
+.sidebar-footer-btn{width:36px;height:36px;border-radius:8px;background:none;border:none;color:var(--am-text-gedaempft);cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;-webkit-tap-highlight-color:transparent;transition:background-color var(--am-dauer-mittel) var(--am-kurve),color var(--am-dauer-mittel) var(--am-kurve);}
+.sidebar-footer-btn:hover{background:var(--am-flaeche-2);color:var(--am-text-primaer);}
+.sidebar-footer-btn.active{background:var(--am-auswahl-flaeche);color:var(--am-handlung-ruhend);}
+.sidebar-footer-btn:focus-visible{outline:2px solid var(--am-fokus-ring);outline-offset:1px;}
 
 /* Segmented control for the mode switch (Preferences → Interface mode).
    Uses the shared accent tokens so every skin renders it consistently. */
@@ -48,36 +346,36 @@
   display: inline-flex;
   gap: 2px;
   padding: 2px;
-  background: var(--code-bg);
-  border: 1px solid var(--border2);
-  border-radius: var(--radius-md);
+  background: var(--am-flaeche-2);
+  border: 1px solid var(--am-rand-betont-farbe);
+  border-radius: var(--am-radius-mittel);
 }
 .mode-switch-btn {
   padding: 6px 16px;
   font-size: var(--font-size-sm);
   font-weight: 600;
   font-family: inherit;
-  color: var(--muted);
+  color: var(--am-text-gedaempft);
   background: transparent;
   border: none;
   border-radius: 6px;
   cursor: pointer;
   transition: color .15s ease, background .15s ease;
 }
-.mode-switch-btn:hover { color: var(--text); }
+.mode-switch-btn:hover { color: var(--am-text-primaer); }
 .mode-switch-btn.active {
-  color: var(--accent-text);
-  background: var(--accent-bg-strong);
+  color: var(--am-handlung-ruhend);
+  background: var(--am-auswahl-flaeche);
 }
 .mode-switch-btn:focus-visible {
-  outline: 2px solid var(--focus-ring);
+  outline: 2px solid var(--am-fokus-ring);
   outline-offset: 1px;
 }
 .mode-switch-btn:disabled {
   opacity: .45;
   cursor: not-allowed;
 }
-.mode-switch-btn:disabled:hover { color: var(--muted); }
+.mode-switch-btn:disabled:hover { color: var(--am-text-gedaempft); }
 
 /* ── Wings Activity Line ───────────────────────────────────────────────────
    One calm line per assistant turn replacing per-event rows (tool calls as
@@ -96,16 +394,16 @@
   border-radius: 8px;
   font-size: 12.5px;
   line-height: 1.5;
-  color: var(--muted);
+  color: var(--am-text-gedaempft);
   cursor: pointer;
   user-select: none;
   -webkit-user-select: none;
-  transition: background var(--dur) var(--ease);
+  transition: background var(--am-dauer-mittel) var(--am-kurve);
 }
-.wings-aline:hover { background: var(--hover-bg); }
+.wings-aline:hover { background: var(--am-flaeche-2); }
 .wings-aline:hover .wings-aline-verb,
-.wings-aline:hover .wings-aline-preview { color: var(--text); }
-.wings-aline:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 1px; }
+.wings-aline:hover .wings-aline-preview { color: var(--am-text-primaer); }
+.wings-aline:focus-visible { outline: 2px solid var(--am-fokus-ring); outline-offset: 1px; }
 
 .wings-aline-dot {
   width: 6px;
@@ -113,8 +411,8 @@
   border-radius: 50%;
   flex-shrink: 0;
   margin: 0 2px;
-  background: var(--accent);
-  box-shadow: 0 0 0 3px var(--accent-bg);
+  background: var(--am-handlung-ruhend);
+  box-shadow: 0 0 0 3px var(--am-auswahl-flaeche);
   animation: wings-aline-pulse 1.6s ease-in-out infinite;
 }
 @keyframes wings-aline-pulse {
@@ -127,25 +425,25 @@
 .wings-aline-verb {
   flex-shrink: 0;
   font-weight: 500;
-  color: var(--text);
-  transition: opacity .14s ease, transform .14s ease, color var(--dur) var(--ease);
+  color: var(--am-text-primaer);
+  transition: opacity .14s ease, transform .14s ease, color var(--am-dauer-mittel) var(--am-kurve);
 }
 .wings-aline-preview {
   flex: 1 1 auto;
   min-width: 0;
   overflow: hidden;
   white-space: nowrap;
-  color: var(--muted);
+  color: var(--am-text-gedaempft);
   -webkit-mask-image: linear-gradient(90deg, #000 78%, transparent);
   mask-image: linear-gradient(90deg, #000 78%, transparent);
-  transition: opacity .14s ease, transform .14s ease, color var(--dur) var(--ease);
+  transition: opacity .14s ease, transform .14s ease, color var(--am-dauer-mittel) var(--am-kurve);
 }
 .wings-aline-verb.wings-aline-swap,
 .wings-aline-preview.wings-aline-swap { opacity: 0; transform: translateY(2px); }
 
 /* Thinking: a quiet shimmer sweeping the verb — alive but never loud */
 .wings-aline[data-state="thinking"] .wings-aline-verb {
-  background: linear-gradient(90deg, var(--muted) 20%, var(--text) 50%, var(--muted) 80%);
+  background: linear-gradient(90deg, var(--am-text-gedaempft) 20%, var(--am-text-primaer) 50%, var(--am-text-gedaempft) 80%);
   background-size: 220% 100%;
   -webkit-background-clip: text;
   background-clip: text;
@@ -167,18 +465,18 @@
   margin-left: auto;
   padding: 2px 9px;
   border-radius: 999px;
-  border: 1px solid var(--border);
+  border: 1px solid var(--am-trennlinie);
   font-size: 11.5px;
   font-weight: 500;
-  color: var(--muted);
+  color: var(--am-text-gedaempft);
   text-decoration: none;
   cursor: pointer;
-  transition: color var(--dur) var(--ease), border-color var(--dur) var(--ease), background-color var(--dur) var(--ease);
+  transition: color var(--am-dauer-mittel) var(--am-kurve), border-color var(--am-dauer-mittel) var(--am-kurve), background-color var(--am-dauer-mittel) var(--am-kurve);
 }
 .wings-aline-files:hover {
-  color: var(--accent-text);
-  border-color: var(--accent-bg-strong);
-  background: var(--accent-bg);
+  color: var(--am-handlung-ruhend);
+  border-color: var(--am-auswahl-flaeche);
+  background: var(--am-auswahl-flaeche);
 }
 
 /* Row visibility, driven purely by turn state. Un-managed turns (no activity
@@ -191,7 +489,7 @@
 }
 /* Expanded trace reads as one quiet timeline: a hairline rail links the rows */
 .assistant-turn.wings-aline-open .transparent-event-row {
-  border-left: 1px solid var(--border);
+  border-left: 1px solid var(--am-trennlinie);
   border-radius: 0 6px 6px 0;
   margin-left: calc(var(--msg-rail) + 3px);
 }
@@ -217,7 +515,7 @@
     animation: none;
     background: none;
     -webkit-text-fill-color: currentColor;
-    color: var(--muted);
+    color: var(--am-text-gedaempft);
   }
   .wings-aline-verb, .wings-aline-preview { transition: none; }
   .assistant-turn.wings-aline-open .transparent-event-row { animation: none; }
@@ -274,34 +572,22 @@
    (web/src/styles/global.css + routes/+page.svelte). Alle Regeln hier sind
    Wings-only und überleben Upstream-Syncs; style.css bleibt unangetastet. */
 
-/* ── Brand-Rampe + Gold (identisch Relay) ── */
+/* ── Maße und Einsätze nur für Wings [WG-MASSE] ──
+   Keine Farben: die kommen aus dem Token-Block oben (CI ABGLEICH WG-T2).
+   Die frühere Relay-Rampe (--b-*, --gold-hell, --active-wash) ist in
+   --am-* aufgegangen. */
 :root{
-  --b-100:#051729;--b-150:#0a2238;--b-200:#142e47;
-  --b-300:#294766;--b-400:#3f6082;--b-500:#6683a2;
-  --b-600:#8ca1b7;--b-700:#b2bfcd;--b-800:#d3dae1;--b-900:#ebeff3;
-  --gold:#caa960;--gold-hell:#d8bd7d;--gold-tief:#8c6c1f;
-  /* Header-Höhe aller Spalten — Trennlinien auf gleicher Y (Relay --am-header-h) */
-  --am-header-h:calc(var(--am-einheit)*15*var(--am-skalierung)); /* 60px */
-  /* Relay-Typokala (rem, root 16px) */
+  /* Höhe der Kopfzeile aller Spalten — Trennlinien auf gleicher Y.
+     Bleibt Wings-eigen bis zum Grundgerüst (Etappe 6, CI --am-kopfhoehe). */
+  --wings-header-h:calc(var(--am-einheit)*15*var(--am-skalierung));
+  /* Schriftgrade aus dem Relay-Port (rem, Grundgrad 16 px) — das CI hat
+     für Text keine Token. */
   --fs-xs:0.75rem;--fs-sm:0.8125rem;--fs-base:0.875rem;
   --fs-md:1rem;--fs-lg:1.125rem;--fs-xl:1.25rem;
-  --am-radius-s:3px;--am-radius-m:8px;--am-radius-l:12px;
-  /* Kleine Raumstufen + Zeigerziel: style.css kennt erst --am-raum-4 aufwärts.
-     Der Ordnerkopf (Beacon-Port) braucht 1/2/3 und 40px als Zielgröße. */
-  --am-raum-1:calc(var(--am-einheit)*1*var(--am-skalierung));
-  --am-raum-2:calc(var(--am-einheit)*2*var(--am-skalierung));
-  --am-raum-3:calc(var(--am-einheit)*3*var(--am-skalierung));
-  /* Zeigerziel = echte 40px, absolut. Bewusst nicht in rem: Wings' Basis ist
-     --am-einheit 0.25rem bei 15px-Root, also 3,75px je Einheit — „10 Einheiten"
-     ergäben 37,5px, und mit der Textgröße würde das Ziel mitschrumpfen. Ein
-     Klickziel darf sich nicht mit der Schriftgröße ändern. */
-  --am-ziel-zeiger:40px;
-  --am-radius-klein:4px;
   /* Breite der führenden Icon-Spalte im Ordnerkopf. Eine Quelle für zwei
      Verbraucher: das Symbol selbst und der Einzug der Chats darunter, damit
      Chat-Titel und Ordnername auf derselben Flucht stehen. */
   --wings-nav-icon:18px;
-  --active-wash:var(--b-900);--unread-wash:rgba(63,96,130,.10);
   /* ── iOS-Safe-Area (nur mit viewport-fit=cover überhaupt ≠ 0) ──
      Alle Wings-Mobile-Regeln lesen diese Variablen, nie env() direkt, damit
      der iOS-26.1-Fallback (--wings-safe-top-fallback, per JS gesetzt) greift. */
@@ -314,27 +600,9 @@
   /* Mobile Navbar (M2): 44px Inhaltszeile + Safe-Top */
   --wings-mnav-h:44px;
 }
-/* Helles Theme — Relay-Oberflächen (sidebar #f4f7fa, list/preview #fff) */
-:root:not(.dark){
-  color-scheme:light;
-  --bg:#ffffff;--sidebar:#f4f7fa;--surface:#ffffff;--chat-bg:#ffffff;
-  --border:var(--b-800);--border2:var(--b-700);
-  --text:var(--b-150);--muted:var(--b-500);
-  --accent:var(--b-150);--accent-hover:var(--b-200);--accent-text:var(--b-150);
-  --topbar-bg:rgba(255,255,255,.98);--main-bg:rgba(255,255,255,.5);
-}
-/* Dunkles Theme — Umbau 26.9.3: links das hellere Blau (b-150, ehemaliges
-   Eingabefeld), rechts einheitlich das dunklere (b-100). --surface bleibt
-   b-150 für Dropdowns/Cards (Kontrast auf der dunklen rechten Seite). */
-:root.dark{
-  color-scheme:dark;
-  --bg:var(--b-100);--sidebar:var(--b-150);--surface:var(--b-150);--chat-bg:var(--b-100);
-  --border:var(--b-300);--border2:var(--b-400);
-  --text:var(--b-800);--muted:var(--b-500);
-  --accent:var(--gold);--accent-hover:var(--gold-hell);--accent-text:var(--gold);
-  --topbar-bg:rgba(5,23,41,.98);
-  --active-wash:rgba(202,169,96,.10);--unread-wash:rgba(202,169,96,.07);
-}
+/* Formularelemente und Rollbalken des Browsers folgen dem Modus. */
+:root{color-scheme:light;}
+html.dunkel{color-scheme:dark;}
 
 /* ── Basic-Shell: Sidebar-Breite wie Relay (220px) ── */
 [data-mode="basic"] .sidebar{width:calc(220px*var(--am-skalierung));}
@@ -343,24 +611,24 @@
 }
 
 /* ── Logo-Block oben links (Relay sidebar-header + ModuleLogo) ──
-   Höhe var(--am-header-h), padding 0 16px, border-bottom, margin-bottom 16px;
-   Wortmarke 102,4px breit, Button radius 12, Hover active-wash. Klick → Settings
+   Höhe var(--wings-header-h), padding 0 16px, border-bottom, margin-bottom 16px;
+   Wortmarke 102,4px breit, Button radius 12, Hover Fläche 2. Klick → Settings
    (Relay: to="/settings"). Nur Basic-Mode; Advanced behält Rail + panel-head. */
 .wings-brand{display:none;}
 [data-mode="basic"] .wings-brand{
   display:flex;align-items:center;gap:8px;
-  height:calc(var(--am-header-h) + var(--wings-inset-top));
+  height:calc(var(--wings-header-h) + var(--wings-inset-top));
   padding:var(--wings-inset-top) 16px 0;box-sizing:border-box;flex-shrink:0;
-  border-bottom:1px solid var(--border);margin-bottom:16px;
+  border-bottom:1px solid var(--am-trennlinie);margin-bottom:16px;
 }
 .wings-brand-btn{
   display:flex;align-items:center;justify-content:center;width:100%;
   padding:8px;background:none;border:none;border-radius:12px;cursor:pointer;
-  color:var(--text);transition:background .15s ease-in-out;
+  color:var(--am-text-primaer);transition:background .15s ease-in-out;
 }
-.wings-brand-btn:hover{background:var(--active-wash);}
+.wings-brand-btn:hover{background:var(--am-flaeche-2);}
 .wings-brand-logo{display:block;width:102.4px;height:auto;}
-.wings-brand-btn:focus-visible{outline:2px solid var(--accent);outline-offset:3px;}
+.wings-brand-btn:focus-visible{outline:2px solid var(--am-handlung-ruhend);outline-offset:3px;}
 /* panel-head (Gauge + New-Chat) im Basic-Mode ausgetauscht gegen Logo-Block */
 [data-mode="basic"] #panelChat .panel-head{display:none;}
 
@@ -374,26 +642,26 @@
 [data-mode="basic"] .sidebar-footer{
   flex-direction:column;align-items:stretch;gap:0;
   padding:12px;padding-bottom:calc(12px + var(--wings-inset-bottom));
-  border-top:1px solid var(--border);
+  border-top:1px solid var(--am-trennlinie);
 }
 .wings-footer-row{display:flex;align-items:center;justify-content:center;gap:8px;}
 .wings-footer-row + .wings-footer-row{margin-top:8px;}
 /* Such-Pille wie Relay SidebarSearch: H 34px, r 8, fs 14, bg surface, border */
 [data-mode="basic"] .sidebar-footer-search{
   flex:1;max-width:none;height:34px;padding:0 12px;gap:8px;
-  border-radius:var(--am-radius-m);border:1px solid var(--border);
-  background:var(--surface);transition:border-color .15s ease-in-out;
+  border-radius:var(--am-radius-mittel);border:1px solid var(--am-trennlinie);
+  background:var(--am-flaeche-1);transition:border-color .15s ease-in-out;
 }
 [data-mode="basic"] .sidebar-footer-search-icon{width:14px;height:14px;opacity:.6;}
 [data-mode="basic"] .sidebar-footer-search-input{font-size:var(--fs-base);}
 [data-mode="basic"] .sidebar-footer-search-clear svg{width:14px;height:14px;}
 /* Modul-Icons wie Relay mi-btn: 32×32, r 8, muted → hover wash/text */
 [data-mode="basic"] .sidebar-footer-btn{
-  width:32px;height:32px;border-radius:var(--am-radius-m);
-  color:var(--muted);transition:background .15s ease-in-out,color .15s ease-in-out;
+  width:32px;height:32px;border-radius:var(--am-radius-mittel);
+  color:var(--am-text-gedaempft);transition:background .15s ease-in-out,color .15s ease-in-out;
 }
-[data-mode="basic"] .sidebar-footer-btn:hover{background:var(--active-wash);color:var(--text);}
-[data-mode="basic"] .sidebar-footer-btn.active{background:var(--active-wash);color:var(--accent-text);}
+[data-mode="basic"] .sidebar-footer-btn:hover{background:var(--am-flaeche-2);color:var(--am-text-primaer);}
+[data-mode="basic"] .sidebar-footer-btn.active{background:var(--am-auswahl-flaeche);color:var(--am-handlung-ruhend);}
 [data-mode="basic"] .sidebar-footer-btn svg{width:16px;height:16px;stroke-width:1.5;}
 [data-mode="basic"] .sidebar-footer-spacer{display:none;}
 
@@ -401,13 +669,13 @@
    pad 10/12, mb 4, r 8, fs 14/500, secondary-Farbe;
    active: wash + accent + 600 (Relay .folder-item.active). */
 [data-mode="basic"] .session-item{
-  padding:10px 12px;margin-bottom:4px;border-radius:var(--am-radius-m);
-  font-size:var(--fs-base);font-weight:400;color:var(--muted);
+  padding:10px 12px;margin-bottom:4px;border-radius:var(--am-radius-mittel);
+  font-size:var(--fs-base);font-weight:400;color:var(--am-text-gedaempft);
   transition:background .15s ease-in-out,color .15s ease-in-out;
 }
-[data-mode="basic"] .session-item:hover{background:var(--active-wash);color:var(--text);}
-[data-mode="basic"] .session-item.active{background:var(--active-wash)!important;color:var(--accent-text)!important;font-weight:400;}
-[data-mode="basic"] .session-item.active .session-title{color:var(--accent-text)!important;}
+[data-mode="basic"] .session-item:hover{background:var(--am-flaeche-2);color:var(--am-text-primaer);}
+[data-mode="basic"] .session-item.active{background:var(--am-auswahl-flaeche)!important;color:var(--am-handlung-ruhend)!important;font-weight:400;}
+[data-mode="basic"] .session-item.active .session-title{color:var(--am-handlung-ruhend)!important;}
 
 /* ══ Projektordner nach Beacon-Vorbild ════════════════════════════════════
    Quelle: beacon/frontend/app/globals.css, `.huelle-nav-item` ab 1024px
@@ -424,10 +692,10 @@
   margin:2px 0;
   border-radius:var(--am-radius-klein);
   font-size:var(--fs-base);font-weight:400;letter-spacing:0;text-transform:none;
-  color:var(--muted);cursor:pointer;
+  color:var(--am-text-gedaempft);cursor:pointer;
   transition:background .15s ease-in-out,color .15s ease-in-out;
 }
-.session-folder-header:hover{background:var(--active-wash);color:var(--text);}
+.session-folder-header:hover{background:var(--am-flaeche-2);color:var(--am-text-primaer);}
 .session-folder-header svg{width:var(--wings-nav-icon);height:var(--wings-nav-icon);stroke-width:1.75;flex-shrink:0;}
 .session-folder-header .session-folder-name{
   min-width:0;color:inherit;
@@ -437,13 +705,13 @@
    Zahlen in Mono, wie Beacons technische Werte (.mono). */
 .session-folder-header .session-folder-count{
   margin-left:auto;flex-shrink:0;
-  font-family:var(--font-mono);font-size:11px;line-height:1;
-  color:var(--muted);font-variant-numeric:tabular-nums;
+  font-family:var(--am-schrift-mono);font-size:11px;line-height:1;
+  color:var(--am-text-gedaempft);font-variant-numeric:tabular-nums;
 }
 /* Der Ordner, in dem die offene Sitzung liegt (Beacons .aktiv).
    Auszeichnung nur über Farbe und Fläche — im Ordnerbaum ist nichts fett. */
-.session-folder-header.folder-aktiv{color:var(--accent-text);font-weight:400;}
-.session-folder-header.folder-aktiv .session-folder-count{color:var(--accent-text);}
+.session-folder-header.folder-aktiv{color:var(--am-handlung-ruhend);font-weight:400;}
+.session-folder-header.folder-aktiv .session-folder-count{color:var(--am-handlung-ruhend);}
 /* Chat-Titel auf der Flucht des Ordnernamens: der Name beginnt hinter der
    Icon-Spalte (2 x --am-raum-3 + --wings-nav-icon), also muss der Chat dorthin.
    style.css:493 rückte ihn nur 4px ein, dadurch stand er 25px links vom Namen.
@@ -465,10 +733,10 @@
 }
 
 /* ── Technische Werte in Geist Mono (Relay .mono) ── */
-.mono,.ctx-gauge-tokens{font-family:var(--font-mono);}
+.mono,.ctx-gauge-tokens{font-family:var(--am-schrift-mono);}
 
 /* ── Fokus wie Relay: 2px Accent-Ring, 3px Offset ── */
-[data-mode="basic"] .sidebar :focus-visible{outline:2px solid var(--accent);outline-offset:3px;}
+[data-mode="basic"] .sidebar :focus-visible{outline:2px solid var(--am-handlung-ruhend);outline-offset:3px;}
 
 
 
@@ -477,11 +745,12 @@
 
 /* Composer-Band: Relay führt list/preview durchgehend in einer Fläche —
    kein dritter Chrome-Streifen unterhalb des Chats.
-   Spezifizität: :root-Präfix schlägt style.css `:root:not(.dark) .composer-wrap` */
+   Spezifizität: :root-Präfix schlägt style.css `:root:not(.dark) .composer-wrap`;
+   `dark` und `dunkel` sind immer gleich gesetzt (CI ABGLEICH WG-T3). */
 [data-mode="basic"] .composer-wrap,
 :root[data-mode="basic"] .composer-wrap::before,
-:root[data-mode="basic"]:not(.dark) .composer-wrap,
-:root[data-mode="basic"]:not(.dark) .composer-wrap::before{background:var(--chat-bg);}
+:root[data-mode="basic"]:not(.dunkel) .composer-wrap,
+:root[data-mode="basic"]:not(.dunkel) .composer-wrap::before{background:var(--am-seite);}
 
 /* ══ Composer-Cluster (Basic-Mode): Gauge-Karte = Mitte, Plus = rechts ══
    HubSpot-Logik: links Eingabe-Werkzeuge, Mitte ein stiller Status-Cluster
@@ -512,8 +781,8 @@
 [data-mode="basic"] .composer-center .ctx-gauge-model{
   font-size:0;display:inline-flex;align-items:center;gap:0;
   height:28px;padding:0 11px;flex-shrink:1;min-width:0;
-  border:1px solid var(--border);border-radius:999px;background:transparent;
-  color:var(--text);font-weight:500;white-space:nowrap;cursor:pointer;
+  border:1px solid var(--am-trennlinie);border-radius:999px;background:transparent;
+  color:var(--am-text-primaer);font-weight:500;white-space:nowrap;cursor:pointer;
   transition:border-color .15s ease-in-out,background .15s ease-in-out;
 }
 [data-mode="basic"] .composer-center #composerModelLabel{
@@ -528,23 +797,23 @@
 }
 [data-mode="basic"] .composer-center .ctx-gauge-model:hover,
 [data-mode="basic"] .composer-center .ctx-gauge-model.active{
-  border-color:var(--accent);background:var(--active-wash);
+  border-color:var(--am-handlung-ruhend);background:var(--am-flaeche-2);
 }
 /* Token-Wert: Mono, dezent */
 [data-mode="basic"] .composer-center .ctx-gauge-tokens{
-  font-size:11px;color:var(--muted);line-height:1;
+  font-size:11px;color:var(--am-text-gedaempft);line-height:1;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;
 }
 /* New-Chat-Plus: erstes Icon der Modul-Reihe unten links — identischer
    Ghost-Stil wie die Nachbarn (Send bleibt die einzige Primäraktion) */
 [data-mode="basic"] .sidebar-footer .ctx-gauge-new-chat{
-  width:32px;height:32px;padding:0;gap:0;border-radius:var(--am-radius-m);
-  background:none;border:none;color:var(--muted);cursor:pointer;
+  width:32px;height:32px;padding:0;gap:0;border-radius:var(--am-radius-mittel);
+  background:none;border:none;color:var(--am-text-gedaempft);cursor:pointer;
   display:flex;align-items:center;justify-content:center;
   transition:background .15s ease-in-out,color .15s ease-in-out;
 }
 [data-mode="basic"] .sidebar-footer .ctx-gauge-new-chat:hover{
-  background:var(--active-wash);color:var(--text);
+  background:var(--am-flaeche-2);color:var(--am-text-primaer);
 }
 [data-mode="basic"] .sidebar-footer .ctx-gauge-new-chat svg{width:16px;height:16px;stroke-width:1.5;}
 /* Dropdown vom Composer aus nach oben; Spezifität schlägt den Inline-Block */
@@ -578,7 +847,7 @@
   [data-mode="basic"] .composer-center .ctx-gauge-svg{width:20px;height:20px;}
   /* Modell-Pille auf 44px Touch-Ziel (war 28px), linkes Padding = Ringplatz */
   [data-mode="basic"] .composer-center .ctx-gauge-model{
-    height:44px;padding:0 14px 0 38px;background:var(--surface);
+    height:44px;padding:0 14px 0 38px;background:var(--am-flaeche-1);
   }
   [data-mode="basic"] .composer-center #composerModelLabel{font-size:14px;max-width:18ch;}
   [data-mode="basic"] .composer-center .ctx-gauge-tokens{font-size:11.5px;}
@@ -589,12 +858,12 @@
   [data-mode="basic"] .composer-center #composerModelLabel{max-width:12ch;}
 }
 
-/* ── Dark-Flächen (26.9.3): rechtes Feld = einheitlich b-100 ──
-   composer-box nutzt Basis --surface (b-150) -> auf b-100; Border b-400
-   hält die Feld-Lesbarkeit. Such-Pille war --surface -> b-100 (vertieftes
-   Einhorn auf der aufgehellen Sidebar b-150). */
-:root.dark .composer-box{background:var(--b-100);}
-:root.dark [data-mode="basic"] .sidebar-footer-search{background:var(--b-100);}
+/* ── Dark-Flächen (26.9.3): rechtes Feld einheitlich auf der Seite ──
+   composer-box nutzt sonst Fläche 1 (Blau 800) -> auf die Seite (Blau 900);
+   der betonte Rand hält die Feld-Lesbarkeit. Such-Pille ebenso, vertieft
+   auf der helleren Seitenleiste (Fläche 1). */
+:root.dunkel .composer-box{background:var(--am-seite);}
+:root.dunkel [data-mode="basic"] .sidebar-footer-search{background:var(--am-seite);}
 
 /* ══ Mobile / iOS-PWA (ab 26.9.4) ═════════════════════════════════════════
    Ziel: iPhone 15 Pro als installierte PWA. Grundlage ist viewport-fit=cover
@@ -615,11 +884,11 @@
      sich damit vom Chatgrund ab — im Dunkeln fiel es vorher mit b-100 auf
      b-100 zusammen und war nur noch an der Border zu erkennen. Das Band bleibt
      --chat-bg, damit das Feld als erhabene Fläche liest. Überschreibt bewusst
-     das modusweite `:root.dark .composer-box{b-100}` (26.9.3) für Phone.
-     Das `:root`-Präfix ist nötig: `:root.dark .composer-box` wiegt (0,3,0),
+     das modusweite `:root.dunkel .composer-box{Seite}` (26.9.3) für Phone.
+     Das `:root`-Präfix ist nötig: `:root.dunkel .composer-box` wiegt (0,3,0),
      `[data-mode="basic"] .composer-box` nur (0,2,0) — gleiche Spezifität,
      spätere Datei gewinnt. */
-  :root[data-mode="basic"] .composer-box{background:var(--sidebar);}
+  :root[data-mode="basic"] .composer-box{background:var(--am-flaeche-1);}
 }
 
 /* ── M1b: Edge-Swipe-Zone unter der Mobile-Navbar statt unter der (in Wings
@@ -650,46 +919,46 @@
 }
 .wings-sheet-scrim{
   position:fixed;inset:0;z-index:1400;display:flex;align-items:flex-end;
-  background:rgba(0,0,0,.42);
+  background:var(--am-deckschicht);
   animation:wings-sheet-fade .2s ease;
 }
 @keyframes wings-sheet-fade{from{opacity:0;}to{opacity:1;}}
 .wings-sheet{
   width:100%;box-sizing:border-box;
-  background:var(--surface);
-  border-top:1px solid var(--border);
+  background:var(--am-flaeche-1);
+  border-top:1px solid var(--am-trennlinie);
   border-radius:16px 16px 0 0;
   padding:8px 0 calc(8px + var(--wings-inset-bottom));
   animation:wings-sheet-up .26s cubic-bezier(.2,.8,.25,1);
 }
 @keyframes wings-sheet-up{from{transform:translateY(16px);opacity:.6;}to{transform:none;opacity:1;}}
 .wings-sheet-grab{
-  width:36px;height:4px;border-radius:999px;background:var(--border2);
+  width:36px;height:4px;border-radius:999px;background:var(--am-rand-betont-farbe);
   margin:2px auto 10px;
 }
 .wings-sheet-head{
   padding:0 20px 8px;margin-bottom:6px;
-  border-bottom:1px solid var(--border);
-  font-size:12px;font-weight:600;color:var(--muted);
+  border-bottom:1px solid var(--am-trennlinie);
+  font-size:12px;font-weight:600;color:var(--am-text-gedaempft);
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
 }
 .wings-sheet-item{
   display:flex;align-items:center;gap:12px;width:100%;box-sizing:border-box;
   min-height:52px;padding:0 20px;
-  background:none;border:none;color:var(--text);
+  background:none;border:none;color:var(--am-text-primaer);
   font-size:16px;font-weight:500;text-align:left;
   font-family:inherit;cursor:pointer;
 }
-.wings-sheet-item:active{background:var(--active-wash);}
-.wings-sheet-item svg{width:20px;height:20px;stroke-width:1.7;color:var(--muted);flex-shrink:0;}
+.wings-sheet-item:active{background:var(--am-flaeche-2);}
+.wings-sheet-item svg{width:20px;height:20px;stroke-width:1.7;color:var(--am-text-gedaempft);flex-shrink:0;}
 .wings-sheet-cancel{
   display:flex;align-items:center;justify-content:center;
   width:calc(100% - 24px);box-sizing:border-box;
   min-height:52px;margin:6px 12px 0;padding:0;
-  background:var(--chat-bg);border:1px solid var(--border);border-radius:13px;
-  color:var(--text);font-size:16px;font-weight:600;font-family:inherit;cursor:pointer;
+  background:var(--am-seite);border:1px solid var(--am-trennlinie);border-radius:13px;
+  color:var(--am-text-primaer);font-size:16px;font-weight:600;font-family:inherit;cursor:pointer;
 }
-.wings-sheet-cancel:active{background:var(--active-wash);}
+.wings-sheet-cancel:active{background:var(--am-flaeche-2);}
 @media (prefers-reduced-motion:reduce){
   .wings-sheet-scrim,.wings-sheet{animation:none;}
   .wings-msg-pressing{transform:none;opacity:1;transition:none;}
@@ -729,17 +998,17 @@
    (gewählte Session, aktives Modul) bleiben unberührt. */
 @media (hover:none){
   [data-mode="basic"] .session-item:not(.active):hover{
-    background:none;color:var(--muted);
+    background:none;color:var(--am-text-gedaempft);
   }
   [data-mode="basic"] .sidebar-footer-btn:not(.active):hover,
   [data-mode="basic"] .sidebar-footer .ctx-gauge-new-chat:hover{
-    background:none;color:var(--muted);
+    background:none;color:var(--am-text-gedaempft);
   }
   .wings-brand-btn:hover{background:none;}
   [data-mode="basic"] .session-item:not(.active):active,
   [data-mode="basic"] .sidebar-footer-btn:not(.active):active,
   [data-mode="basic"] .sidebar-footer .ctx-gauge-new-chat:active,
-  .wings-brand-btn:active{background:var(--active-wash);}
+  .wings-brand-btn:active{background:var(--am-flaeche-2);}
 }
 
 /* ── M1c: Standalone-Höhe (WebKit-Bug 254868) ──
@@ -767,7 +1036,7 @@
     padding:var(--wings-inset-top) max(8px,var(--wings-inset-right)) 0 max(8px,var(--wings-inset-left));
     box-sizing:border-box;
     align-items:center;justify-content:space-between;
-    background:var(--sidebar);border-bottom:1px solid var(--border);
+    background:var(--am-flaeche-1);border-bottom:1px solid var(--am-trennlinie);
     font-size:var(--fs-base);
   }
   /* Symmetrie + Reduktion auf drei Elemente */
@@ -783,29 +1052,29 @@
   .app-titlebar-hamburger,
   .app-titlebar-new-chat{
     display:flex;align-items:center;justify-content:center;
-    width:44px;height:44px;min-width:44px;border-radius:var(--am-radius-m);
-    color:var(--text);flex-shrink:0;
+    width:44px;height:44px;min-width:44px;border-radius:var(--am-radius-mittel);
+    color:var(--am-text-primaer);flex-shrink:0;
   }
   .app-titlebar-hamburger svg,
   .app-titlebar-new-chat svg{width:22px;height:22px;stroke-width:1.8;}
   .app-titlebar-hamburger:active,
-  .app-titlebar-new-chat:active{background:var(--active-wash);}
+  .app-titlebar-new-chat:active{background:var(--am-flaeche-2);}
   .app-titlebar-hamburger:hover,
-  .app-titlebar-new-chat:hover{background:none;color:var(--text);}
+  .app-titlebar-new-chat:hover{background:none;color:var(--am-text-primaer);}
   /* Titel exakt mittig in der verbleibenden 44px-Symmetrie.
      display:flex muss style.css `@media(max-width:900px){.app-titlebar-inner{display:none}}`
      überschreiben (gleiche Spezifität, spätere Datei). */
   .app-titlebar-inner{display:flex;flex:1 1 auto;min-width:0;justify-content:center;gap:0;}
   .app-titlebar-title{
     font-size:17px;font-weight:600;letter-spacing:-.02em;line-height:1.1;
-    color:var(--text);max-width:100%;text-align:center;
+    color:var(--am-text-primaer);max-width:100%;text-align:center;
   }
 
   /* Sidebar-Schließen (X) auf dieselbe optische Linie wie die Wortmarke:
      style.css zentriert es mit -2px auf die 41px-Upstream-Kopfzeile; Wings'
-     Markenblock ist aber --am-header-h hoch und um das Safe-Top abgesenkt.
+     Markenblock ist aber --wings-header-h hoch und um das Safe-Top abgesenkt.
      Formel = Safe-Top + (Markenhöhe - 44) / 2. */
   [data-mode="basic"] .panel-head-btn.mobile-sidebar-close{
-    top:calc(var(--wings-inset-top) + (var(--am-header-h) - 44px) / 2);
+    top:calc(var(--wings-inset-top) + (var(--wings-header-h) - 44px) / 2);
   }
 }

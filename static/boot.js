@@ -3486,6 +3486,9 @@ function _setResolvedTheme(isDark){
   _resolvedThemeBaseDark=!!isDark;
   const effectiveDark=_effectiveThemeDark(_resolvedThemeBaseDark);
   document.documentElement.classList.toggle('dark',effectiveDark);
+  // The AImighty CI token block switches on `dunkel` (CI ABGLEICH WG-T3);
+  // upstream rules keep reading `dark`. Both always carry the same state.
+  document.documentElement.classList.toggle('dunkel',effectiveDark);
   const link=document.getElementById('prism-theme');
   if(!link){ _syncThemeColorMeta(); return; }
   const want=effectiveDark
