@@ -123,7 +123,7 @@ class TestTtsSettings:
 
     def test_tts_engine_includes_openai_option(self):
         src = _read('index.html')
-        assert '<option value="openai">OpenAI TTS (server)</option>' in src, \
+        assert re.search(r'<option value="openai"(?: data-i18n="wg_\w+")?>OpenAI\ TTS\ \(server\)</option>', src), \
             "settingsTtsEngine must expose the OpenAI server TTS option"
 
     def test_tts_rate_slider(self):

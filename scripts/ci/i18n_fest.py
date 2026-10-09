@@ -41,6 +41,7 @@ ERLAUBT = {
     "WebUI: —": "Platzhalter, JS setzt die Version",
     "Passkeys": "gleiches Wort im Deutschen",
     "http://127.0.0.1:9119": "Beispieladresse",
+    "Show workspace panel": "zustandsabhängig, syncWorkspacePanelUI setzt Titel und aria-label",
     "Switch workspace": "Platzhalter, JS setzt Titel und aria-label mit dem Arbeitsbereich",
 }
 

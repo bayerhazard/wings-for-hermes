@@ -1,5 +1,6 @@
 """Keyboard contract for the Shift+Enter send-key preference."""
 
+import re
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
@@ -25,7 +26,7 @@ def _listener_body() -> str:
 
 
 def test_settings_expose_shift_enter_send_key_option():
-    assert '<option value="shift+enter">Shift+Enter (Enter for newline)</option>' in INDEX_HTML
+    assert re.search(r'<option value="shift\+enter"(?: data-i18n="wg_\w+")?>Shift\+Enter\ \(Enter\ for\ newline\)</option>', INDEX_HTML)
     assert '"send_key": {"enter", "ctrl+enter", "shift+enter"}' in CONFIG_PY
 
 
