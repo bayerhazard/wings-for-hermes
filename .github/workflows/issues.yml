@@ -1,0 +1,70 @@
+name: issues
+
+# Before every release the open issues are looked at (Kai, 9.10.2026): each
+# one goes into this release, is moved to a later one (label "später", with
+# a reason in the issue) or waits for Kai. A release PR — one that raises
+# the version in OlaresManifest.yaml — carries the section
+# "## Offene Issues geprüft" in its description, with every open issue
+# named there (#n). This check fails while one is missing. It runs again
+# when the description is edited, so a fix needs no new commit.
+
+env:
+  # Where this app's version stands (the first "version:" line).
+  VERSIONSDATEI: OlaresManifest.yaml
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+permissions:
+  contents: read
+  issues: read
+  pull-requests: read
+
+jobs:
+  geprueft:
+    name: Offene Issues geprüft
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Release-PR?
+        id: art
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+        run: |
+          wert() { grep -E '^[[:space:]]*version:' | head -1 | awk '{print $2}' | tr -d "\"'"; }
+          neu=$(wert < "$VERSIONSDATEI")
+          alt=$(git show "$BASE:$VERSIONSDATEI" | wert)
+          if [ "$neu" != "$alt" ]; then
+            echo "release=1" >> "$GITHUB_OUTPUT"
+            echo "Release-PR: $alt → $neu"
+          else
+            echo "Kein Release-PR (Version $neu bleibt) — nichts zu prüfen."
+          fi
+      - name: Jedes offene Issue genannt
+        if: steps.art.outputs.release == '1'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TEXT: ${{ github.event.pull_request.body }}
+        run: |
+          # The section: from its heading to the next "## " heading.
+          abschnitt=$(printf '%s\n' "$TEXT" | tr -d '\r' | awk '
+            /^## Offene Issues geprüft/ { drin = 1; next }
+            /^## / { drin = 0 }
+            drin')
+          if ! printf '%s\n' "$TEXT" | tr -d '\r' | grep -q '^## Offene Issues geprüft'; then
+            echo "::error::Der Release-PR braucht den Abschnitt „## Offene Issues geprüft“ (AGENTS.md)."
+            exit 1
+          fi
+          offen=$(gh issue list -R "$GITHUB_REPOSITORY" --state open --limit 200 --json number --jq '.[].number')
+          fehlt=""
+          for n in $offen; do
+            printf '%s\n' "$abschnitt" | grep -Eq "#$n([^0-9]|$)" || fehlt="$fehlt #$n"
+          done
+          if [ -n "$fehlt" ]; then
+            echo "::error::Im Abschnitt „Offene Issues geprüft“ fehlt:$fehlt — je Issue: mit rein, später (Grund) oder Kai fragen."
+            exit 1
+          fi
+          echo "Alle offenen Issues eingeordnet: $(echo $offen | tr '\n' ' ')"

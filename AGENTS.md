@@ -107,6 +107,18 @@ Show the work in the PR body: the siblings you found, proof the test failed befo
 verification run, before/after images for visible changes, and an explicit list of what you could
 not verify.
 
+## Before every release — the open issues
+
+Kai, 9.10.2026: before a release PR is made, look at every open issue at
+`https://github.com/bayerhazard/wings-for-hermes/issues` — only then can one
+still go in. Sort each one: **in this release** (small, fits, low risk, or a
+bug that hits users now), **later** (label `später` and one sentence why in
+the issue) or **ask Kai**. The PR description carries the section
+`## Offene Issues geprüft` with one line per issue (`- #12 mit rein`,
+`- #13 später: …`). The action `issues.yml` fails a release PR — one that
+raises `metadata.version` in `OlaresManifest.yaml` — while an open issue is
+missing there.
+
 ## Local state and secrets
 
 Hermes WebUI can read and write real agent state, sessions, workspaces,
