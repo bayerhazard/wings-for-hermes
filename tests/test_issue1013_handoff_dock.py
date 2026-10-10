@@ -6,6 +6,7 @@ import sqlite3
 from pathlib import Path
 import sys
 import types
+from tests.wings_i18n import en  # Wings: UI text via t() (CI ABGLEICH WG-R3)
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -95,7 +96,8 @@ def test_handoff_dock_width_aligns_with_existing_slide_up_panels():
 def test_handoff_summary_fallback_displays_clear_user_note():
     assert "const isFallback=!!state.fallback;" in UI_JS
     assert "class=\"handoff-summary-fallback-note\"" in UI_JS
-    assert "Fallback summary generated from recent turns; no model-based rewrite was used." in UI_JS
+    assert "t('wg_handoff_fallback_note')" in UI_JS
+    assert en("wg_handoff_fallback_note") == "Fallback summary generated from recent turns; no model-based rewrite was used."
 
 
 def test_handoff_delete_clears_local_storage_markers():

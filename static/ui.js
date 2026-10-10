@@ -399,7 +399,7 @@ function _statusCardHtml(card){
   const shortSessionId=sessionId.length>22?`${sessionId.slice(0,10)}…${sessionId.slice(-8)}`:sessionId;
   const copyIcon=(typeof li==='function')?li('copy',13):'Copy';
   const copyBtn=sessionId
-    ? `<button class="status-card-session-copy" type="button" data-copy-status-session="${esc(card.sessionId||'')}" title="${esc(t('copy'))}" onclick="copyStatusSessionId(this);event.stopPropagation()"><span>${esc(shortSessionId)}</span>${copyIcon}</button>`
+    ? `<button class="status-card-session-copy" type="button" data-copy-status-session="${esc(card.sessionId||'')}" title="${t('copy')}" onclick="copyStatusSessionId(this);event.stopPropagation()"><span>${esc(shortSessionId)}</span>${copyIcon}</button>`
     : '';
   const rowHtml=rows.map(row=>`
     <div class="status-card-row">
@@ -3733,13 +3733,13 @@ function _mountSearchableModelSelect(opts={}){
   root.innerHTML=
     `<div class="model-search-row">`+
       `<input class="model-search-input" type="text" placeholder="${esc(t('model_search_placeholder')||'Search models…')}" spellcheck="false" autocomplete="off">`+
-      `<button class="model-search-clear" title="${esc(t('wg_clear_search'))}">${li('x',10)}</button>`+
+      `<button class="model-search-clear" title="${t('wg_clear_search')}">${li('x',10)}</button>`+
     `</div>`+
     `<select ${selectId?`id="${esc(selectId)}"`:''}></select>`+
     `<div class="model-group model-custom-sep">${esc(t('model_custom_label')||'Custom model ID')}</div>`+
     `<div class="model-custom-row">`+
       `<input ${customInputId?`id="${esc(customInputId)}"`:''} class="model-custom-input" type="text" placeholder="${esc(t('model_custom_placeholder')||'e.g. openai/gpt-5.4')}" spellcheck="false" autocomplete="off">`+
-      `<button class="model-custom-btn" title="${esc(t('wg_use_this_model'))}">${li('plus',12)}</button>`+
+      `<button class="model-custom-btn" title="${t('wg_use_this_model')}">${li('plus',12)}</button>`+
     `</div>`;
   const searchInput=root.querySelector('.model-search-input');
   const clearButton=root.querySelector('.model-search-clear');
@@ -3954,7 +3954,7 @@ function renderModelDropdown(){
   _scopeNote.textContent=opts.scopeNoteText||(t('model_scope_advisory')||'Applies to this conversation from your next message.');
   const _searchRow=document.createElement('div');
   _searchRow.className='model-search-row';
-  _searchRow.innerHTML=`<input class="model-search-input" type="text" placeholder="${esc(t('model_search_placeholder')||'Search models…')}" spellcheck="false" autocomplete="off"><button class="model-search-clear" title="${esc(t('wg_clear_search'))}">${li('x',10)}</button>`;
+  _searchRow.innerHTML=`<input class="model-search-input" type="text" placeholder="${esc(t('model_search_placeholder')||'Search models…')}" spellcheck="false" autocomplete="off"><button class="model-search-clear" title="${t('wg_clear_search')}">${li('x',10)}</button>`;
   const _si=_searchRow.querySelector('.model-search-input');
   const _sc=_searchRow.querySelector('.model-search-clear');
   // Create custom model section elements
@@ -3963,7 +3963,7 @@ function renderModelDropdown(){
   _custSep.textContent=t('model_custom_label')||'Custom model ID';
   const _custRow=document.createElement('div');
   _custRow.className='model-custom-row';
-  _custRow.innerHTML=`<input class="model-custom-input" type="text" placeholder="${esc(t('model_custom_placeholder')||'e.g. openai/gpt-5.4')}" spellcheck="false" autocomplete="off"><button class="model-custom-btn" title="${esc(t('wg_use_this_model'))}">${li('plus',12)}</button>`;
+  _custRow.innerHTML=`<input class="model-custom-input" type="text" placeholder="${esc(t('model_custom_placeholder')||'e.g. openai/gpt-5.4')}" spellcheck="false" autocomplete="off"><button class="model-custom-btn" title="${t('wg_use_this_model')}">${li('plus',12)}</button>`;
   const _ci=_custRow.querySelector('.model-custom-input');
   const _cb=_custRow.querySelector('.model-custom-btn');
   const _configuredRank=(badge)=>{
@@ -7896,7 +7896,7 @@ function showToast(msg,ms,type){
   const duration=(ms==null)?(t==='error'?TOAST_ERROR_DEFAULT_MS:TOAST_DEFAULT_MS):ms;
   el.className='toast show '+t;
   el.dataset.toastMessage=s;
-  if(t==='error') el.innerHTML=`<span class="toast-message">${esc(s)}</span><button class="toast-copy" type="button" data-toast-copy="1" onclick="copyToastText(this);event.stopPropagation()">${esc(t('copy'))}</button><button class="toast-dismiss" type="button" aria-label="${esc(t('wg_dismiss_error_toast'))}" data-toast-dismiss="1" onclick="dismissToast(this);event.stopPropagation()">${esc(t('wg_close_notice'))}</button>`;
+  /* Wings: t is the toast type here, the translation is globalThis.t (WG-R3) */ if(t==='error') el.innerHTML=`<span class="toast-message">${esc(s)}</span><button class="toast-copy" type="button" data-toast-copy="1" onclick="copyToastText(this);event.stopPropagation()">${globalThis.t('copy')}</button><button class="toast-dismiss" type="button" aria-label="${globalThis.t('wg_dismiss_error_toast')}" data-toast-dismiss="1" onclick="dismissToast(this);event.stopPropagation()">${globalThis.t('wg_close_notice')}</button>`;
   else el.textContent=s;
   el.onmouseenter=()=>clearToastDismissTimer(el);
   el.onmouseleave=()=>setToastDismissTimer(el,duration);
@@ -11041,7 +11041,7 @@ function _materializeTransparentToolDetail(row){
       const modes=document.createElement('div');
       modes.className='transparent-detail-modes';
       modes.setAttribute('role','tablist');
-      modes.innerHTML=`<span class="transparent-detail-mode active" role="tab" tabindex="0" data-mode="full" onclick="_setTransparentDetailMode(this,'full')">${esc(t('wg_detail_full'))}</span><span class="transparent-detail-mode" role="tab" tabindex="0" data-mode="output" onclick="_setTransparentDetailMode(this,'output')">${esc(t('wg_detail_output'))}</span>`;
+      modes.innerHTML=`<span class="transparent-detail-mode active" role="tab" tabindex="0" data-mode="full" onclick="_setTransparentDetailMode(this,'full')">${t('wg_detail_full')}</span><span class="transparent-detail-mode" role="tab" tabindex="0" data-mode="output" onclick="_setTransparentDetailMode(this,'output')">${t('wg_detail_output')}</span>`;
       const firstChild=detail.firstChild;
       if(firstChild&&firstChild.parentNode===detail) detail.insertBefore(modes, firstChild);
       else detail.appendChild(modes);
@@ -11120,7 +11120,7 @@ function _transparentToolDetailHtml(tc, status){
     if(typeof _redactToolTargetLabel==='function'){ try{ sv=_redactToolTargetLabel(sv); }catch(e){} }
     return `<div class="tool-arg-pair"><span class="tool-arg-key">${esc(String(k))}</span><span class="tool-arg-val">${esc(sv)}</span></div>`;
   }).join('');
-  return `<div class="tool-card-detail" data-transparent-detail-mode="full"><div class="transparent-detail-modes" role="tablist"><span class="transparent-detail-mode active" role="tab" tabindex="0" data-mode="full" onclick="_setTransparentDetailMode(this,'full')">${esc(t('wg_detail_full'))}</span><span class="transparent-detail-mode" role="tab" tabindex="0" data-mode="output" onclick="_setTransparentDetailMode(this,'output')">${esc(t('wg_detail_output'))}</span></div><div class="tool-card-args">${argHtml}</div>${preview?`<div class="tool-card-result"><pre>${esc(preview)}</pre></div>`:''}</div>`;
+  return `<div class="tool-card-detail" data-transparent-detail-mode="full"><div class="transparent-detail-modes" role="tablist"><span class="transparent-detail-mode active" role="tab" tabindex="0" data-mode="full" onclick="_setTransparentDetailMode(this,'full')">${t('wg_detail_full')}</span><span class="transparent-detail-mode" role="tab" tabindex="0" data-mode="output" onclick="_setTransparentDetailMode(this,'output')">${t('wg_detail_output')}</span></div><div class="tool-card-args">${argHtml}</div>${preview?`<div class="tool-card-result"><pre>${esc(preview)}</pre></div>`:''}</div>`;
 }
 function _syncTransparentEventControls(turn){
   if(!turn||!isTransparentStream()) return;
@@ -11355,7 +11355,7 @@ function _decorateTransparentEventRow(row, opts){
         const modes=document.createElement('div');
         modes.className='transparent-detail-modes';
         modes.setAttribute('role','tablist');
-        modes.innerHTML=`<span class="transparent-detail-mode active" role="tab" tabindex="0" data-mode="full" onclick="_setTransparentDetailMode(this,'full')">${esc(t('wg_detail_full'))}</span><span class="transparent-detail-mode" role="tab" tabindex="0" data-mode="output" onclick="_setTransparentDetailMode(this,'output')">${esc(t('wg_detail_output'))}</span>`;
+        modes.innerHTML=`<span class="transparent-detail-mode active" role="tab" tabindex="0" data-mode="full" onclick="_setTransparentDetailMode(this,'full')">${t('wg_detail_full')}</span><span class="transparent-detail-mode" role="tab" tabindex="0" data-mode="output" onclick="_setTransparentDetailMode(this,'output')">${t('wg_detail_output')}</span>`;
         // Guard: firstChild may be orphaned from a prior DOM rebuild.
         const firstChild=detail.firstChild;
         if(firstChild&&firstChild.parentNode===detail) detail.insertBefore(modes, firstChild);
@@ -13468,7 +13468,7 @@ function ensureActivityGroup(inner, opts){
     if(burstId) group.setAttribute('data-activity-burst-id',burstId);
     if(segmentSeq) group.setAttribute('data-live-segment-seq',segmentSeq);
     group.classList.toggle('open',!collapsed);
-    group.innerHTML=`<button type="button" class="tool-call-group-summary tool-worklog-summary activity-summary" aria-expanded="${collapsed?'false':'true'}" onclick="_toggleActivityGroup(this)"><span class="as-dot"></span><span class="tool-call-group-label tool-worklog-label as-text">${esc(t('wg_running'))}</span><span class="tool-call-group-duration"></span><span class="tool-call-group-chevron as-caret">${li('chevron-right',12)}</span></button><div class="tool-call-group-body tool-worklog-body activity-body"><div class="worklog"><div class="tool-worklog-list"></div></div></div>`;
+    group.innerHTML=`<button type="button" class="tool-call-group-summary tool-worklog-summary activity-summary" aria-expanded="${collapsed?'false':'true'}" onclick="_toggleActivityGroup(this)"><span class="as-dot"></span><span class="tool-call-group-label tool-worklog-label as-text">${t('wg_running')}</span><span class="tool-call-group-duration"></span><span class="tool-call-group-chevron as-caret">${li('chevron-right',12)}</span></button><div class="tool-call-group-body tool-worklog-body activity-body"><div class="worklog"><div class="tool-worklog-list"></div></div></div>`;
     const anchor=opts.anchor||null;
     if(anchor&&anchor.parentElement===inner){
       if(opts.beforeAnchor) inner.insertBefore(group, anchor);
@@ -13547,7 +13547,7 @@ function ensureRunActivityGroup(inner, opts){
     group.setAttribute('data-tool-call-group','1');
     group.setAttribute('data-agent-activity-group','1');
     group.setAttribute('data-run-activity-group','1');
-    group.innerHTML=`<button type="button" class="tool-call-group-summary" aria-expanded="${collapsed?'false':'true'}" onclick="_toggleActivityGroup(this)"><span class="tool-call-group-chevron">${li('chevron-right',12)}</span><span class="tool-call-group-label">${esc(t('wg_running'))}</span><span class="tool-call-group-duration"></span></button><div class="tool-call-group-body"></div>`;
+    group.innerHTML=`<button type="button" class="tool-call-group-summary" aria-expanded="${collapsed?'false':'true'}" onclick="_toggleActivityGroup(this)"><span class="tool-call-group-chevron">${li('chevron-right',12)}</span><span class="tool-call-group-label">${t('wg_running')}</span><span class="tool-call-group-duration"></span></button><div class="tool-call-group-body"></div>`;
     if(inner.firstChild) inner.insertBefore(group, inner.firstChild);
     else inner.appendChild(group);
   }
@@ -13615,7 +13615,7 @@ function _renderLiveRunStatusContent(el,startedAt){
   const elapsed=startedAt?Math.max(0,now-startedAt):0;
   const timeStr=_formatRunElapsed(elapsed);
   const tokens=_liveRunStatusTokens;
-  el.innerHTML=`<span class="live-run-status-dot tool-card-running-dot"></span><span class="live-run-status-text lf-time">${timeStr}</span>${tokens?`<span class="lf-sep">·</span><span class="lf-tokens">${esc(t('wg_tokens_count',_fmtTokens(tokens)))}</span>`:''}<span class="lf-sep">·</span><span class="lf-status">${esc(t('wg_running'))}</span>`;
+  el.innerHTML=`<span class="live-run-status-dot tool-card-running-dot"></span><span class="live-run-status-text lf-time">${timeStr}</span>${tokens?`<span class="lf-sep">·</span><span class="lf-tokens">${t('wg_tokens_count',_fmtTokens(tokens))}</span>`:''}<span class="lf-sep">·</span><span class="lf-status">${t('wg_running')}</span>`;
 }
 function updateLiveRunStatus(opts){
   if(opts&&opts.sessionId&&_liveRunStatusSessionId&&opts.sessionId!==_liveRunStatusSessionId) return;
@@ -14221,7 +14221,7 @@ function _handoffCardsHtml(state){
     ? (
       `${renderMd(detail)}${
         isFallback
-          ? '<p class="handoff-summary-fallback-note">'+esc(t('wg_handoff_fallback_note'))+'</p>'
+          ? '<p class="handoff-summary-fallback-note">'+t('wg_handoff_fallback_note')+'</p>'
           : ''
       }`
     )
@@ -15606,7 +15606,7 @@ function renderMessages(options){
     const questionJumpBtn = (_qJumpTarget!==undefined&&_qJumpTarget!==null)
       ? _questionJumpButtonHtml(_qJumpTarget, assistantRawIdxByQuestionRawIdx.get(_qJumpTarget)??rawIdx)
       : '';
-    const assistantTpsHtml = (!isUser && isTpsDisplayEnabled() && m._turnTps) ? `<span class="msg-tps-inline" title="${esc(t('wg_tokens_per_second'))}">${_formatTurnTps(m._turnTps)}</span>` : '';
+    const assistantTpsHtml = (!isUser && isTpsDisplayEnabled() && m._turnTps) ? `<span class="msg-tps-inline" title="${t('wg_tokens_per_second')}">${_formatTurnTps(m._turnTps)}</span>` : '';
     const footHtml = `<div class="msg-foot">${timeHtml}${assistantTpsHtml}<span class="msg-actions">${copyBtn}${ttsBtn}${editBtn}${retryBtn}</span>${questionJumpBtn}</div>`;
 
     if(_isContextCompactionMessage(m)){
@@ -17763,7 +17763,7 @@ function editMessage(btn) {
   // Action bar below the textarea
   const bar = document.createElement('div');
   bar.className = 'msg-edit-bar';
-  bar.innerHTML = `<button class="msg-edit-send">${esc(t('wg_send_edit'))}</button><button class="msg-edit-cancel">${esc(t('cancel'))}</button>`;
+  bar.innerHTML = `<button class="msg-edit-send">${t('wg_send_edit')}</button><button class="msg-edit-cancel">${t('cancel')}</button>`;
   ta.after(bar);
 
   bar.querySelector('.msg-edit-send').onclick = async () => {

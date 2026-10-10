@@ -32,6 +32,7 @@ import re
 import subprocess
 
 import pytest
+from tests.wings_i18n import T_EN_MJS  # Wings: UI text via t() (CI ABGLEICH WG-R3)
 
 REPO = pathlib.Path(__file__).parent.parent
 BOOT_JS = (REPO / "static" / "boot.js").read_text(encoding="utf-8")
@@ -339,7 +340,7 @@ def _run_cancel_stream_scenarios() -> dict:
         "__CANCEL_STREAM_SRC__", CANCEL_STREAM_SRC
     )
     completed = subprocess.run(
-        ["node", "--input-type=module", "-e", script],
+        ["node", "--input-type=module", "-e", T_EN_MJS + script],
         cwd=str(REPO),
         text=True,
         capture_output=True,

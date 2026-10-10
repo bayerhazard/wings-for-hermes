@@ -8,6 +8,7 @@ import subprocess
 from pathlib import Path
 
 import pytest
+from tests.wings_i18n import T_EN_JS  # Wings: UI text via t() (CI ABGLEICH WG-R3)
 
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -451,7 +452,7 @@ def _px(value) -> int:
 @pytest.fixture(scope="module")
 def _driver_path(tmp_path_factory):
     path = tmp_path_factory.mktemp("mermaid_toolbar_driver") / "driver.js"
-    path.write_text(_DRIVER_SRC, encoding="utf-8")
+    path.write_text(T_EN_JS + _DRIVER_SRC, encoding="utf-8")
     return str(path)
 
 

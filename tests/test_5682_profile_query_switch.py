@@ -5,6 +5,7 @@ import subprocess
 from pathlib import Path
 
 import pytest
+from tests.wings_i18n import T_EN_JS  # Wings: UI text via t() (CI ABGLEICH WG-R3)
 
 REPO_ROOT = Path(__file__).parent.parent.resolve()
 SESSIONS_JS_PATH = REPO_ROOT / "static" / "sessions.js"
@@ -23,7 +24,7 @@ pytestmark = pytest.mark.skipif(NODE is None, reason="node not on PATH")
 def _run_node(source: str) -> str:
     result = subprocess.run(
         [NODE],
-        input=source,
+        input=T_EN_JS + source,
         cwd=str(REPO_ROOT),
         capture_output=True,
         encoding="utf-8",

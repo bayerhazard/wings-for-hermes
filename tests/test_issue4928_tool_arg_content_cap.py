@@ -24,6 +24,7 @@ from api.streaming import (
     _TOOL_ARG_CONTENT_KEYS,
     _truncate_tool_args,
 )
+from tests.wings_i18n import T_EN_JS  # Wings: UI text via t() (CI ABGLEICH WG-R3)
 
 REPO_ROOT = Path(__file__).parent.parent.resolve()
 UI_JS_PATH = REPO_ROOT / "static" / "ui.js"
@@ -98,7 +99,7 @@ def fe_driver(tmp_path_factory):
     if NODE is None:
         pytest.skip("node not on PATH")
     p = tmp_path_factory.mktemp("args_snapshot_driver") / "driver.js"
-    p.write_text(_FE_DRIVER, encoding="utf-8")
+    p.write_text(T_EN_JS + _FE_DRIVER, encoding="utf-8")
     return str(p)
 
 
@@ -164,7 +165,7 @@ def detail_driver(tmp_path_factory):
     if NODE is None:
         pytest.skip("node not on PATH")
     p = tmp_path_factory.mktemp("detail_driver") / "driver.js"
-    p.write_text(_DETAIL_DRIVER, encoding="utf-8")
+    p.write_text(T_EN_JS + _DETAIL_DRIVER, encoding="utf-8")
     return str(p)
 
 

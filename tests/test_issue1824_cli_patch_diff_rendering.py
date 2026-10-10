@@ -4,6 +4,7 @@ import sqlite3
 import subprocess
 import textwrap
 from pathlib import Path
+from tests.wings_i18n import T_EN_JS, en  # Wings: UI text via t() (CI ABGLEICH WG-R3)
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -36,8 +37,9 @@ def test_cli_tool_fallback_promotes_apply_patch_args_to_tool_card_snippet():
 
 
 def test_diff_tool_cards_use_show_diff_expander_label():
-    assert "const moreLabel=tc.is_diff?'Show diff':'Show more';" in UI_JS
-    assert "const lessLabel=tc.is_diff?'Hide diff':'Show less';" in UI_JS
+    assert "const moreLabel=tc.is_diff?t('wg_show_diff'):t('wg_show_more');" in UI_JS
+    assert "const lessLabel=tc.is_diff?t('wg_hide_diff'):t('wg_show_less');" in UI_JS
+    assert en("wg_show_diff") == "Show diff" and en("wg_hide_diff") == "Hide diff"
     assert 'data-more-label="${esc(moreLabel)}"' in UI_JS
 
 
@@ -164,7 +166,7 @@ def test_rendered_apply_patch_tool_card_html_contains_diff_lines():
         process.stdout.write(JSON.stringify({{html: row.innerHTML, errorSnippet}}));
         """
     )
-    proc = subprocess.run(["node", "-e", script], check=True, capture_output=True, text=True)
+    proc = subprocess.run(["node", "-e", T_EN_JS + script], check=True, capture_output=True, text=True)
     payload = json.loads(proc.stdout)
     html = payload["html"]
     assert "-old" in html

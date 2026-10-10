@@ -8,6 +8,7 @@ family.
 import pathlib
 import shutil
 import subprocess
+from tests.wings_i18n import T_EN_JS, en  # Wings: UI text via t() (CI ABGLEICH WG-R3)
 
 
 REPO = pathlib.Path(__file__).parent.parent
@@ -38,9 +39,9 @@ def test_run_activity_group_has_observable_baseline_events():
     assert "function _ensureLiveActivityBaseline(group)" in UI_JS
     assert "function ensureRunActivityGroup(inner, opts)" in UI_JS
     assert "data-run-activity-group" in UI_JS
-    assert "Run started" in UI_JS
-    assert "Observable activity will appear here as the agent works." in UI_JS
-    assert "Model: ${modelLabel}" in UI_JS
+    assert "label:t('wg_run_started'),detail:t('wg_run_started_detail')" in UI_JS
+    assert en("wg_run_started_detail") == "Observable activity will appear here as the agent works."
+    assert "label:t('wg_run_model',modelLabel)" in UI_JS
     assert "_ensureLiveActivityBaseline(group);" in UI_JS
     assert "ensureActivityGroup(inner, opts)" in UI_JS
 
@@ -70,7 +71,7 @@ def test_tool_activity_uses_tool_cards_and_run_activity_owns_timer():
     assert "_isActivityTimerGroup(group)" in UI_JS
     assert "opts.turnDuration" in UI_JS
     assert "data-turn-duration" in UI_JS
-    assert "durationText?` Done in ${durationText}`" in UI_JS
+    assert "durationText?' '+t('wg_done_in',durationText)" in UI_JS
     assert "return !!(group&&group.getAttribute('data-run-activity-group')==='1');" in UI_JS
     live_summary_fn = UI_JS.split("function _syncToolCallGroupSummary(group)", 1)[1].split("function _activityProgressLabelForToolName", 1)[0]
     assert "_activityLiveProgressLabel(group)" not in live_summary_fn
@@ -194,7 +195,7 @@ assert.strictEqual(_assistantToolAnchorIdxForMessage(messages, 3), 3);
 assert.strictEqual(_assistantToolAnchorIdxForMessage(messages, 4), 3);
 assert.strictEqual(_assistantToolAnchorIdxForMessage(messages, 5), 5);
 """
-    result = subprocess.run([NODE, "-e", script], capture_output=True, text=True, check=False)
+    result = subprocess.run([NODE, "-e", T_EN_JS + script], capture_output=True, text=True, check=False)
     assert result.returncode == 0, result.stderr
 
 
@@ -214,7 +215,7 @@ assert.strictEqual(merged[0].activityBurstId, 2);
 assert.strictEqual(merged[0].duration, 1.25);
 assert.strictEqual(merged[0].started_at, 123);
 """
-    result = subprocess.run([NODE, "-e", script], capture_output=True, text=True, check=False)
+    result = subprocess.run([NODE, "-e", T_EN_JS + script], capture_output=True, text=True, check=False)
     assert result.returncode == 0, result.stderr
 
 
@@ -386,7 +387,7 @@ assert.strictEqual(computeStart(false, {{activityBurstAnchors:[
 // Missing inflight entry -> 0
 assert.strictEqual(computeStart(true, undefined, 'hello'), 0);
 """
-    result = subprocess.run([NODE, "-e", script], capture_output=True, text=True, check=False)
+    result = subprocess.run([NODE, "-e", T_EN_JS + script], capture_output=True, text=True, check=False)
     assert result.returncode == 0, result.stderr
 
 

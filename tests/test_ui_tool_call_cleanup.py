@@ -467,8 +467,8 @@ class TestToolCallGroupingStatic:
             "The Worklog summary should own the processed-time anchor while the old "
             "duration slot stays empty."
         )
-        for label in ("Searching workspace", "Reading files", "Updating files", "Running command"):
-            assert label in progress_fn
+        for key in ("wg_prog_search", "wg_prog_read", "wg_prog_write", "wg_prog_shell"):
+            assert f"t('{key}')" in progress_fn
         assert "tool-card-running" in live_progress_fn, (
             "The live progress label should prefer the currently running tool over older completed tools."
         )

@@ -17,6 +17,7 @@ import subprocess
 from pathlib import Path
 
 import pytest
+from tests.wings_i18n import T_EN_JS  # Wings: UI text via t() (CI ABGLEICH WG-R3)
 
 REPO_ROOT = Path(__file__).parent.parent.resolve()
 UI_JS_PATH = REPO_ROOT / "static" / "ui.js"
@@ -155,7 +156,7 @@ process.stdout.write(JSON.stringify(result));
 @pytest.fixture(scope="module")
 def driver_path(tmp_path_factory):
     p = tmp_path_factory.mktemp("reasoning_storm_driver") / "driver.js"
-    p.write_text(_DRIVER_SRC, encoding="utf-8")
+    p.write_text(T_EN_JS + _DRIVER_SRC, encoding="utf-8")
     return str(p)
 
 

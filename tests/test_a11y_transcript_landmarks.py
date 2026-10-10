@@ -1,5 +1,6 @@
 import re
 from pathlib import Path
+from tests.wings_i18n import en  # Wings: UI text via t() (CI ABGLEICH WG-R3)
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -27,7 +28,7 @@ def test_conversation_transcript_is_not_a_named_region():
 
 def test_latest_assistant_landmark_helper_is_named_but_not_focusable():
     helper = _function_body(UI_JS, "_setLatestAssistantTurnLandmark")
-    assert "Latest Wings response" in helper
+    assert "t('wg_latest_response')" in helper and en("wg_latest_response") == "Latest Wings response"
     assert "setAttribute('role','region')" in helper
     assert "setAttribute('aria-label',label)" in helper
     assert "data-latest-assistant-response" in helper

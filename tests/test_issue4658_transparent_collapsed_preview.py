@@ -29,6 +29,7 @@ import subprocess
 from pathlib import Path
 
 import pytest
+from tests.wings_i18n import T_EN_JS  # Wings: UI text via t() (CI ABGLEICH WG-R3)
 
 REPO_ROOT = Path(__file__).parent.parent.resolve()
 UI_JS_PATH = REPO_ROOT / "static" / "ui.js"
@@ -155,7 +156,7 @@ function makeEl(tag){
 global.document = { createElement: (t)=>makeEl(t), querySelectorAll:()=>[], querySelector:()=>null, addEventListener:()=>{}, removeEventListener:()=>{} };
 global.window = { addEventListener:()=>{}, removeEventListener:()=>{} };
 global.CSS = { escape: s=>s };
-global.t = undefined;
+// Wings (WG-R3): t() comes from the en locale via T_EN_JS; upstream unset it here.
 global.li = () => '<svg></svg>';
 global.esc = s => String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 global.toolIcon = () => '<svg></svg>';
@@ -208,7 +209,7 @@ def results(tmp_path_factory):
     )
     driver_src = _DRIVER_TEMPLATE.replace("%%EXTRACTED_FUNCTIONS%%", extracted)
     driver = tmp_path_factory.mktemp("t4658") / "driver.js"
-    driver.write_text(driver_src, encoding="utf-8")
+    driver.write_text(T_EN_JS + driver_src, encoding="utf-8")
     proc = subprocess.run(
         [NODE, str(driver), json.dumps(CASES)],
         capture_output=True, text=True, timeout=30,
