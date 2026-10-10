@@ -14,6 +14,7 @@ Source-contract assertions (the project has no JS DOM-test runtime).
 """
 
 from pathlib import Path
+from tests.wings_i18n import en  # Wings: UI text via t() (CI ABGLEICH WG-R3)
 
 ROOT = Path(__file__).resolve().parents[1]
 STYLE_CSS = (ROOT / "static" / "style.css").read_text(encoding="utf-8")
@@ -57,7 +58,8 @@ def test_drop_hint_text_is_context_aware():
     block = PANELS_JS[idx:idx + 700]
     assert "application/ws-path" in block, "handler must distinguish the ws-path drag"
     assert "dropHintText" in block, "handler must update the #dropHintText label"
-    assert "workspace reference" in block, "ws-path drag hint must mention inserting a reference"
+    assert "t('wg_drop_to_insert_workspace_reference')" in block, "ws-path drag hint must mention inserting a reference"
+    assert "workspace reference" in en("wg_drop_to_insert_workspace_reference")
     assert "attach" in block, "OS-file drag hint must mention attaching"
 
 

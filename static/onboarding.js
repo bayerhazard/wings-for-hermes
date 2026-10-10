@@ -225,9 +225,9 @@ function _renderOnboardingProviderOAuthField(provider){
   return `<div class="onboarding-oauth-card onboarding-oauth-pending" style="margin-top:12px">
     <div class="onboarding-oauth-icon">🔑</div>
     <div style="flex:1">
-      <strong>Use Claude Code OAuth instead</strong>
-      <p style="margin-top:6px;color:var(--muted);font-size:13px"><strong>Claude Code subscription credentials are not the same as an Anthropic API key.</strong> Use this path only when you want Hermes to use Claude Code credentials already available on the server, or start a short polling flow while you complete <code>claude setup-token</code> on the host.</p>
-      <div style="margin-top:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap"><button class="sm-btn" id="anthropicOAuthBtn" onclick="startAnthropicOAuth()" type="button">Login with Claude Code</button></div>
+      <strong>${t('wg_ob_cc_title')}</strong>
+      <p style="margin-top:6px;color:var(--muted);font-size:13px"><strong>${t('wg_ob_cc_not_api_key')}</strong> ${t('wg_ob_cc_when','<code>claude setup-token</code>')}</p>
+      <div style="margin-top:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap"><button class="sm-btn" id="anthropicOAuthBtn" onclick="startAnthropicOAuth()" type="button">${t('wg_ob_cc_login')}</button></div>
       <div id="anthropicOAuthFlow" style="display:none;margin-top:12px"></div>
     </div>
   </div>`;
@@ -290,7 +290,7 @@ function _renderOnboardingBody(){
     const showBaseUrl=provider&&provider.requires_base_url;
     const keyHelp=provider
       ? (provider.id==='anthropic'
-        ? 'Anthropic API key path: paste an Anthropic Console API key here. This is separate from a Claude Code subscription; use the Claude Code OAuth card if you want subscription credentials instead.'
+        ? t('wg_ob_anthropic_key_help')
         : `${t('onboarding_api_key_help_prefix')} ${esc(provider.env_var)}.`)
       : '';
 
@@ -301,7 +301,7 @@ function _renderOnboardingBody(){
       const isReady=!!(ONBOARDING.status.system||{}).chat_ready;
       const providerLabel=esc(currentProviderName);
       const codexOauthPendingBody=currentProviderName==='openai-codex'
-        ? 'This instance is configured to use <strong>openai-codex</strong>, which uses OAuth rather than an API key. Use the button below to authenticate with ChatGPT, then continue once provider status refreshes.'
+        ? t('wg_ob_codex_pending')
         : t('onboarding_oauth_provider_not_ready_body').replace('{provider}',providerLabel);
       if(isReady){
         _setOnboardingNotice(t('onboarding_notice_setup_already_ready'),'success');
@@ -617,7 +617,7 @@ function _setCodexOAuthButton(enabled){
 async function copyCodexOAuthCode(code){
   try{
     await navigator.clipboard.writeText(code||'');
-    showToast('Code copied');
+    showToast(t('wg_ob_code_copied'));
   }catch(e){
     showToast(code||'');
   }
@@ -633,7 +633,7 @@ async function cancelCodexOAuth(){
   }
   _setCodexOAuthButton(true);
   if(flowDiv){
-    flowDiv.innerHTML=`<div class="onboarding-oauth-card"><div class="onboarding-oauth-icon">⏹</div><div><strong>OAuth login cancelled</strong><p style="margin-top:6px;color:var(--muted);font-size:13px">Start again whenever you're ready.</p></div></div>`;
+    flowDiv.innerHTML=`<div class="onboarding-oauth-card"><div class="onboarding-oauth-icon">⏹</div><div><strong>${t('wg_ob_oauth_cancelled')}</strong><p style="margin-top:6px;color:var(--muted);font-size:13px">${t('wg_ob_start_again')}</p></div></div>`;
   }
 }
 
@@ -642,7 +642,7 @@ function _renderCodexOAuthTerminal(status,message){
   if(!flowDiv)return;
   const ok=status==='success';
   const icon=ok?'✅':status==='expired'?'⌛':status==='cancelled'?'⏹':'❌';
-  const title=ok?t('oauth_codex_success'):(status==='expired'?t('oauth_codex_expired'):(status==='cancelled'?'OAuth login cancelled':t('oauth_codex_error')));
+  const title=ok?t('oauth_codex_success'):(status==='expired'?t('oauth_codex_expired'):(status==='cancelled'?t('wg_ob_oauth_cancelled'):t('oauth_codex_error')));
   flowDiv.innerHTML=`
     <div class="onboarding-oauth-card ${ok?'onboarding-oauth-ready':''}" ${ok?'':'style="border-color:var(--error,#e55)"'}>
       <div class="onboarding-oauth-icon">${icon}</div>
@@ -664,15 +664,15 @@ async function _pollCodexOAuth(){
     _codexOAuthFlowId=null;
     _setCodexOAuthButton(true);
     if(status==='success'){
-      _renderCodexOAuthTerminal('success','Credentials saved to the Hermes credential pool. Refreshing provider status…');
+      _renderCodexOAuthTerminal('success',t('wg_ob_codex_saved'));
       showToast(t('oauth_codex_success'));
       try{await loadOnboardingWizard();}catch(e){}
     }else if(status==='expired'){
-      _renderCodexOAuthTerminal('expired','The code expired. Start a new login flow to try again.');
+      _renderCodexOAuthTerminal('expired',t('wg_ob_code_expired'));
     }else if(status==='cancelled'){
-      _renderCodexOAuthTerminal('cancelled','The login flow was cancelled.');
+      _renderCodexOAuthTerminal('cancelled',t('wg_ob_flow_cancelled'));
     }else{
-      _renderCodexOAuthTerminal('error',(resp&&resp.error)||'OAuth login failed. Please try again.');
+      _renderCodexOAuthTerminal('error',(resp&&resp.error)||t('wg_ob_oauth_failed'));
     }
   }catch(e){
     _clearCodexOAuthPoll();
@@ -689,7 +689,7 @@ async function startCodexOAuth(){
   _codexOAuthFlowId=null;
   _setCodexOAuthButton(false);
   flowDiv.style.display='block';
-  flowDiv.innerHTML=`<div class="onboarding-oauth-card onboarding-oauth-pending"><div class="onboarding-oauth-icon">⏳</div><div><strong>${t('oauth_codex_polling')}</strong><p>Starting device-code flow…</p></div></div>`;
+  flowDiv.innerHTML=`<div class="onboarding-oauth-card onboarding-oauth-pending"><div class="onboarding-oauth-icon">⏳</div><div><strong>${t('oauth_codex_polling')}</strong><p>${t('wg_ob_device_flow')}</p></div></div>`;
   try{
     const resp=await api('/api/onboarding/oauth/start',{method:'POST',body:JSON.stringify({provider:'openai-codex'})});
     if(resp.error) throw new Error(resp.error);
@@ -705,8 +705,8 @@ async function startCodexOAuth(){
           <p style="margin-top:8px"><strong>${t('oauth_codex_step2')}</strong></p>
           <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:4px">
             <code style="display:inline-block;font-size:18px;letter-spacing:0.1em;background:rgba(255,255,255,.08);padding:6px 14px;border-radius:8px;user-select:all">${esc(user_code)}</code>
-            <button class="sm-btn" type="button" onclick="copyCodexOAuthCode('${esc(user_code)}')">Copy code</button>
-            <button class="sm-btn" type="button" onclick="cancelCodexOAuth()">Cancel</button>
+            <button class="sm-btn" type="button" onclick="copyCodexOAuthCode('${esc(user_code)}')">${t('wg_ob_copy_code')}</button>
+            <button class="sm-btn" type="button" onclick="cancelCodexOAuth()">${t('cancel')}</button>
           </div>
           <p style="margin-top:8px;color:var(--muted);font-size:13px">${t('oauth_codex_polling')}</p>
         </div>
@@ -730,7 +730,7 @@ function _clearAnthropicOAuthPoll(){
 
 function _setAnthropicOAuthButton(enabled){
   const btn=$('anthropicOAuthBtn');
-  if(btn){btn.disabled=!enabled;btn.textContent=enabled?'Login with Claude Code':'...';}
+  if(btn){btn.disabled=!enabled;btn.textContent=enabled?t('wg_ob_cc_login'):'...';}
 }
 
 async function cancelAnthropicOAuth(){
@@ -743,7 +743,7 @@ async function cancelAnthropicOAuth(){
   }
   _setAnthropicOAuthButton(true);
   if(flowDiv){
-    flowDiv.innerHTML=`<div class="onboarding-oauth-card"><div class="onboarding-oauth-icon">⏹</div><div><strong>Claude Code OAuth cancelled</strong><p style="margin-top:6px;color:var(--muted);font-size:13px">Start again whenever you're ready.</p></div></div>`;
+    flowDiv.innerHTML=`<div class="onboarding-oauth-card"><div class="onboarding-oauth-icon">⏹</div><div><strong>${t('wg_ob_cc_cancelled')}</strong><p style="margin-top:6px;color:var(--muted);font-size:13px">${t('wg_ob_start_again')}</p></div></div>`;
   }
 }
 
@@ -752,7 +752,7 @@ function _renderAnthropicOAuthTerminal(status,message){
   if(!flowDiv)return;
   const ok=status==='success';
   const icon=ok?'✅':status==='expired'?'⌛':status==='cancelled'?'⏹':'❌';
-  const title=ok?'Claude Code OAuth linked':(status==='expired'?'Claude Code polling expired':(status==='cancelled'?'Claude Code OAuth cancelled':'Claude Code OAuth failed'));
+  const title=ok?t('wg_ob_cc_linked'):(status==='expired'?t('wg_ob_cc_expired'):(status==='cancelled'?t('wg_ob_cc_cancelled'):t('wg_ob_cc_failed')));
   flowDiv.style.display='block';
   flowDiv.innerHTML=`
     <div class="onboarding-oauth-card ${ok?'onboarding-oauth-ready':''}" ${ok?'':'style="border-color:var(--error,#e55)"'}>
@@ -775,15 +775,15 @@ async function _pollAnthropicOAuth(){
     _anthropicOAuthFlowId=null;
     _setAnthropicOAuthButton(true);
     if(status==='success'){
-      _renderAnthropicOAuthTerminal('success','Hermes is now linked to Claude Code credentials. Refreshing provider status…');
-      showToast('Claude Code OAuth linked');
+      _renderAnthropicOAuthTerminal('success',t('wg_ob_cc_now_linked'));
+      showToast(t('wg_ob_cc_linked'));
       try{await loadOnboardingWizard();}catch(e){}
     }else if(status==='expired'){
-      _renderAnthropicOAuthTerminal('expired','Claude Code credentials were not detected before this flow expired. Start a new flow to try again.');
+      _renderAnthropicOAuthTerminal('expired',t('wg_ob_cc_not_detected'));
     }else if(status==='cancelled'){
-      _renderAnthropicOAuthTerminal('cancelled','The login flow was cancelled.');
+      _renderAnthropicOAuthTerminal('cancelled',t('wg_ob_flow_cancelled'));
     }else{
-      _renderAnthropicOAuthTerminal('error',(resp&&resp.error)||'Claude Code OAuth linking failed. Please try again.');
+      _renderAnthropicOAuthTerminal('error',(resp&&resp.error)||t('wg_ob_cc_link_failed'));
     }
   }catch(e){
     _clearAnthropicOAuthPoll();
@@ -800,7 +800,7 @@ async function startAnthropicOAuth(){
   _anthropicOAuthFlowId=null;
   _setAnthropicOAuthButton(false);
   flowDiv.style.display='block';
-  flowDiv.innerHTML=`<div class="onboarding-oauth-card onboarding-oauth-pending"><div class="onboarding-oauth-icon">⏳</div><div><strong>Checking Claude Code credentials…</strong><p>Hermes is checking for existing Claude Code OAuth credentials on this server.</p></div></div>`;
+  flowDiv.innerHTML=`<div class="onboarding-oauth-card onboarding-oauth-pending"><div class="onboarding-oauth-icon">⏳</div><div><strong>${t('wg_ob_cc_checking')}</strong><p>${t('wg_ob_cc_checking_detail')}</p></div></div>`;
   try{
     const resp=await api('/api/onboarding/oauth/start',{method:'POST',body:JSON.stringify({provider:'anthropic'})});
     if(resp.error) throw new Error(resp.error);
@@ -811,8 +811,8 @@ async function startAnthropicOAuth(){
       _clearAnthropicOAuthPoll();
       _anthropicOAuthFlowId=null;
       _setAnthropicOAuthButton(true);
-      _renderAnthropicOAuthTerminal('success','Hermes is now linked to Claude Code credentials. Refreshing provider status…');
-      showToast('Claude Code OAuth linked');
+      _renderAnthropicOAuthTerminal('success',t('wg_ob_cc_now_linked'));
+      showToast(t('wg_ob_cc_linked'));
       try{await loadOnboardingWizard();}catch(e){}
       return;
     }
@@ -820,13 +820,13 @@ async function startAnthropicOAuth(){
       <div class="onboarding-oauth-card onboarding-oauth-pending">
         <div class="onboarding-oauth-icon">🖥️</div>
         <div style="flex:1">
-          <strong>Complete Claude Code login on this host</strong>
-          <p style="margin-top:6px">${esc(action_required||"Run 'claude setup-token' on the server, then return here. Hermes will detect the credential automatically.")}</p>
+          <strong>${t('wg_ob_cc_complete')}</strong>
+          <p style="margin-top:6px">${esc(action_required||t('wg_ob_cc_run_setup'))}</p>
           <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px">
             <code style="display:inline-block;background:rgba(255,255,255,.08);padding:6px 10px;border-radius:8px;user-select:all">claude setup-token</code>
-            <button class="sm-btn" type="button" onclick="cancelAnthropicOAuth()">Cancel</button>
+            <button class="sm-btn" type="button" onclick="cancelAnthropicOAuth()">${t('cancel')}</button>
           </div>
-          <p style="margin-top:8px;color:var(--muted);font-size:13px">Waiting for Claude Code credentials...</p>
+          <p style="margin-top:8px;color:var(--muted);font-size:13px">${t('wg_ob_cc_waiting')}</p>
         </div>
       </div>`;
     _anthropicOAuthPollTimer=setTimeout(_pollAnthropicOAuth,Math.max(1000,Number(resp.poll_interval_seconds||3)*1000));

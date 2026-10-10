@@ -4,6 +4,7 @@ from api.streaming import (
     _extract_inline_thinking_from_content,
     _split_thinking_from_content,
 )
+from tests.wings_i18n import en  # Wings: UI text via t() (CI ABGLEICH WG-R3)
 
 
 REPO = Path(__file__).resolve().parents[1]
@@ -189,5 +190,5 @@ def test_streaming_partial_opener_tail_respects_code_context():
 
 
 def test_timeout_wrapper_remains_out_of_scope():
-    assert "Request timed out. Please try again." in WORKSPACE_JS
+    assert "t('wg_request_timed_out_please_try_again')" in WORKSPACE_JS and en("wg_request_timed_out_please_try_again") == "Request timed out. Please try again."
     assert "AbortController" in WORKSPACE_JS

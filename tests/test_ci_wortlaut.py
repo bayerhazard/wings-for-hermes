@@ -43,6 +43,8 @@ GLEICH_ERLAUBT = {
     "cron_mode_agent", "media_audio_label", "media_video_label", "insights_model_tokens",
     "insights_model_cache", "insights_skill_usage_col_skill", "insights_skill_usage_col_patches",
     "insights_tokens", "slash_skill_badge", "wg_reasoning_minimal",
+    "wg_status", "wg_name", "wg_gateway", "wg_skills", "wg_agent_0", "wg_proxy",
+    "wg_stylesheets", "wg_optional", "wg_role_system",
 }
 
 # Where "Hermes" names a thing the user finds under that name (WG-R4, group 3).

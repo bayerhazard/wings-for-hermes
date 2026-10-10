@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from tests.wings_i18n import en  # Wings: UI text via t() (CI ABGLEICH WG-R3)
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -24,7 +25,7 @@ def test_provider_cost_chart_ui_guards_are_present():
     assert "provider-cost-chart-wrap" in style_css
 
     # monthly pace projection annotation
-    assert "Monthly pace" in panels_js
+    assert "t('wg_monthly_pace'" in panels_js and en("wg_monthly_pace", "x").startswith("Monthly pace")
 
     # null delta guard for the oldest snapshot
     assert "s.delta!=null" in panels_js

@@ -9,6 +9,7 @@ from types import SimpleNamespace
 from urllib.parse import urlparse
 
 from api import routes
+from tests.wings_i18n import en  # Wings: UI text via t() (CI ABGLEICH WG-R3)
 
 ROOT = __import__("pathlib").Path(__file__).resolve().parents[1]
 PANELS = (ROOT / "static" / "panels.js").read_text(encoding="utf-8")
@@ -62,7 +63,7 @@ def test_kanban_stale_client_error_renders_hard_refresh_escape_hatch():
     assert "err.status === 404" in PANELS
     assert "msg.includes('unknown kanban endpoint')" in PANELS
     assert "msg.includes('stale cached bundle')" in PANELS
-    assert "Kanban needs a hard refresh" in PANELS
+    assert "t('wg_kanban_needs_a_hard_refresh')" in PANELS and en("wg_kanban_needs_a_hard_refresh") == "Kanban needs a hard refresh"
     assert "Hard refresh now" in PANELS
     assert "navigator.serviceWorker.getRegistrations()" in PANELS
     assert "caches.keys()" in PANELS

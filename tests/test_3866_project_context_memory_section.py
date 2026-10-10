@@ -8,6 +8,7 @@ from urllib.parse import urlencode
 import api.profiles
 import api.routes as routes
 import pytest
+from tests.wings_i18n import T_EN_JS  # Wings: UI text via t() (CI ABGLEICH WG-R3)
 
 
 REPO_ROOT = pathlib.Path(__file__).parent.parent.resolve()
@@ -214,7 +215,7 @@ console.log(JSON.stringify({memoryHtml, userHtml, soulHtml, projectHtml, memoryM
 """
     )
     completed = subprocess.run(
-        [NODE, "-e", script],
+        [NODE, "-e", T_EN_JS + script],
         capture_output=True,
         text=True,
         encoding="utf-8",
@@ -298,7 +299,7 @@ console.log(JSON.stringify(buttons));
 """
     )
     completed = subprocess.run(
-        [NODE, "-e", script],
+        [NODE, "-e", T_EN_JS + script],
         capture_output=True,
         text=True,
         encoding="utf-8",

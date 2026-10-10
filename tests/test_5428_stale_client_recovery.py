@@ -11,6 +11,7 @@ import textwrap
 from pathlib import Path
 
 import pytest
+from tests.wings_i18n import T_EN_JS  # Wings: UI text via t() (CI ABGLEICH WG-R3)
 
 ROOT = Path(__file__).parent.parent
 INDEX_HTML = ROOT / "static" / "index.html"
@@ -126,7 +127,7 @@ def _run_harness(stub: str, helpers: str, action: str) -> dict:
         + "\n}).catch((err) => { console.error(err && err.stack || err); process.exit(1); });"
     )
     proc = subprocess.run(
-        ["node", "-e", script],
+        ["node", "-e", T_EN_JS + script],
         capture_output=True, text=True, timeout=15,
     )
     assert proc.returncode == 0, f"node exit {proc.returncode}: {proc.stderr[:500]}"

@@ -14,16 +14,16 @@ function _shareEscapeHtml(text){
 }
 
 function _shareRoleLabel(role){
-  if(role==='user') return 'User';
-  if(role==='assistant') return 'Assistant';
-  return 'System';
+  if(role==='user') return t('wg_role_user');
+  if(role==='assistant') return t('wg_role_assistant');
+  return t('wg_role_system');
 }
 
 function _shareRenderMessages(messages){
   const wrap=$('shareTranscript');
   if(!wrap) return;
   if(!Array.isArray(messages)||!messages.length){
-    wrap.innerHTML='<div class="share-empty">This shared conversation has no visible messages.</div>';
+    wrap.innerHTML='<div class="share-empty">'+t('wg_this_shared_conversation_has_no_visible')+'</div>';
     return;
   }
   wrap.innerHTML='';
@@ -32,7 +32,8 @@ function _shareRenderMessages(messages){
     row.className='share-message';
     row.dataset.role=String(msg.role||'assistant');
     const bodyHtml=(typeof renderMd==='function')
-      ? renderMd(String(msg.content||''))
+      // Wings: notices in the transcript are translated when shown (CI ABGLEICH WG-R3)
+      ? renderMd(msg.role!=='user'&&typeof wgHinweis==='function'?wgHinweis(String(msg.content||'')):String(msg.content||''))
       : `<p>${_shareEscapeHtml(msg.content||'')}</p>`;
     row.innerHTML=
       `<div class="share-role"><span class="share-role-badge">${_shareEscapeHtml(_shareRoleLabel(msg.role))}</span></div>`+
@@ -46,21 +47,21 @@ function _shareSetError(message){
   const title=$('shareTitle');
   const meta=$('shareMeta');
   const wrap=$('shareTranscript');
-  if(title) title.textContent='Share unavailable';
-  if(meta) meta.textContent='This public snapshot could not be loaded.';
-  if(wrap) wrap.innerHTML=`<div class="share-error"><strong>Could not open this share.</strong><div style="margin-top:8px">${_shareEscapeHtml(message||'The link may have expired or been revoked.')}</div></div>`;
+  if(title) title.textContent=t('wg_share_unavailable');
+  if(meta) meta.textContent=t('wg_this_public_snapshot_could_not_be');
+  if(wrap) wrap.innerHTML=`<div class="share-error"><strong>${t('wg_could_not_open_this_share')}</strong><div style="margin-top:8px">${_shareEscapeHtml(message||'The link may have expired or been revoked.')}</div></div>`;
 }
 
 async function _shareLoad(){
   const token=_shareTokenFromPath();
   if(!token){
-    _shareSetError('Missing share token.');
+    _shareSetError(t('wg_missing_share_token'));
     return;
   }
   try{
     const data=await fetch(new URL(`/api/share/${encodeURIComponent(token)}`,window.location.origin).href,{credentials:'same-origin',cache:'no-store'});
     if(!data.ok){
-      let message='The link may have expired or been revoked.';
+      let message=t('wg_the_link_may_have_expired_or');
       try{
         const payload=await data.json();
         if(payload&&payload.error) message=payload.error;
@@ -71,7 +72,7 @@ async function _shareLoad(){
     const payload=await data.json();
     const share=payload&&payload.share;
     if(!share||!Array.isArray(share.messages)){
-      _shareSetError('Malformed share payload.');
+      _shareSetError(t('wg_malformed_share_payload'));
       return;
     }
     const title=$('shareTitle');
@@ -79,11 +80,11 @@ async function _shareLoad(){
     if(title) title.textContent=share.title||'Untitled';
     if(meta){
       const count=Number(share.message_count||share.messages.length||0);
-      meta.textContent=`${count} message${count===1?'':'s'} - public read-only snapshot`;
+      meta.textContent=t('wg_share_meta', count);
     }
     _shareRenderMessages(share.messages);
   }catch(err){
-    _shareSetError(err&&err.message?err.message:String(err||'Failed to load share.'));
+    _shareSetError(err&&err.message?err.message:String(err||t('wg_failed_to_load_share')));
   }
 }
 
@@ -93,7 +94,7 @@ async function _shareCopyLink(){
   const done=()=>{
     if(btn){
       const original=btn.textContent;
-      btn.textContent='Copied!';
+      btn.textContent=t('copied');
       setTimeout(()=>{btn.textContent=original;},1200);
     }
   };

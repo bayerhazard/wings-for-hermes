@@ -6,6 +6,7 @@ settings controls are present in the WebUI codebase.
 """
 import os
 import re
+from tests.wings_i18n import en  # Wings: UI text via t() (CI ABGLEICH WG-R3)
 
 STATIC_DIR = os.path.join(os.path.dirname(__file__), '..', 'static')
 
@@ -154,7 +155,7 @@ class TestTtsSettings:
         src = _read('panels.js')
         assert "engine==='openai'" in src, \
             "panels.js must branch for the OpenAI TTS engine"
-        assert 'OpenAI voice (server-configured)' in src, \
+        assert "t('wg_openai_voice')" in src and en("wg_openai_voice") == 'OpenAI voice (server-configured)', \
             "OpenAI TTS must present a server-configured voice placeholder"
 
 

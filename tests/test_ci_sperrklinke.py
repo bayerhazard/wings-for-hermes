@@ -10,8 +10,9 @@ scripts/ci/i18n_fest.py, two rules:
 - JS is a ratchet: STAND holds the number of fixed texts per file. It may only
   go down; a file missing from STAND must stay at zero. 2c-2 brought the chat
   (sessions.js, messages.js, commands.js) to zero, 2c-3a ui.js and boot.js,
-  2c-3b lowers the rest. What
+  2c-3b the rest: STAND is empty, every JS file is at zero. What
   stays in JS is listed with a reason in i18n_fest.JS_ERLAUBT.
+- share.html (the public share page) loads i18n.js and has no text past it.
 - Notices that go into the transcript stay English there (server, session
   files and tests share one wording) and are translated when shown:
   wgHinweis() in i18n.js (CI ABGLEICH WG-R3, decision A).
@@ -41,16 +42,7 @@ HTML = (STATIC / "index.html").read_text(encoding="utf-8")
 NODE = shutil.which("node")
 
 # Fixed UI texts per JS file. Lower a number when a PR removes texts; never raise it.
-STAND = {
-    "assistant_turn_anchors.js": 14,
-    "login.js": 3,
-    "onboarding.js": 45,
-    "panels.js": 275,
-    "share.js": 12,
-    "terminal.js": 2,
-    "wings_mobile.js": 1,
-    "workspace.js": 14,
-}
+STAND = {}
 
 _LADEN = r"""
 const fs = require('fs'), vm = require('vm');
@@ -65,6 +57,13 @@ console.log(JSON.stringify({en: Object.keys(ctx.__L.en), de: Object.keys(ctx.__L
 def test_index_html_has_no_text_past_i18n():
     funde = i18n_fest.html_funde(HTML)
     assert funde == [], "\n".join(f"index.html:{z} {art}: {t}" for z, art, t in funde)
+
+
+def test_share_html_has_no_text_past_i18n():
+    share = (STATIC / "share.html").read_text(encoding="utf-8")
+    funde = i18n_fest.html_funde(share)
+    assert funde == [], "\n".join(f"share.html:{z} {art}: {t}" for z, art, t in funde)
+    assert '<script src="/static/i18n.js"></script>' in share
 
 
 def test_allowed_texts_still_exist():
@@ -165,7 +164,8 @@ def test_keys_named_in_index_html_exist():
                          capture_output=True, text=True, timeout=30)
     assert out.returncode == 0, out.stderr
     keys = json.loads(out.stdout)
-    genannt = set(re.findall(r'data-i18n(?:-title|-aria-label|-placeholder)?="([^"]+)"', HTML))
+    share = (STATIC / "share.html").read_text(encoding="utf-8")
+    genannt = set(re.findall(r'data-i18n(?:-title|-aria-label|-placeholder)?="([^"]+)"', HTML + share))
     assert genannt - set(keys["en"]) == set()
     assert genannt - set(keys["de"]) == set()
     wg = {k for k in keys["en"] if k.startswith("wg_")}

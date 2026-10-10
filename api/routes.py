@@ -9658,6 +9658,8 @@ _LOGIN_LOCALE = {
         "btn": "Sign in",
         "invalid_pw": "Invalid password",
         "conn_failed": "Connection failed",
+        # Wings (CI ABGLEICH WG-R3): offline hint; locales without it fall back to en
+        "wg_unreachable": "Cannot reach server \u2014 check your VPN / Tailscale connection.",
     },
     "fr": {
         "lang": "fr-FR",
@@ -9685,6 +9687,7 @@ _LOGIN_LOCALE = {
         "btn": "Anmelden",
         "invalid_pw": "Ung\u00fcltiges Passwort",
         "conn_failed": "Verbindung fehlgeschlagen",
+        "wg_unreachable": "Server nicht erreichbar \u2014 bitte die VPN- bzw. Tailscale-Verbindung pr\u00fcfen.",
     },
     "ru": {
         "lang": "ru-RU",
@@ -9856,7 +9859,7 @@ button:hover{background:rgba(124,185,255,.25)}
   <div class="logo">{{BOT_NAME_INITIAL}}</div>
   <h1>{{BOT_NAME}}</h1>
   <p class="sub">{{LOGIN_SUBTITLE}}</p>
-  <form id="login-form" data-invalid-pw="{{LOGIN_INVALID_PW}}" data-conn-failed="{{LOGIN_CONN_FAILED}}">
+  <form id="login-form" data-invalid-pw="{{LOGIN_INVALID_PW}}" data-conn-failed="{{LOGIN_CONN_FAILED}}" data-unreachable="{{LOGIN_UNREACHABLE}}">
     <input type="password" id="pw" placeholder="{{LOGIN_PLACEHOLDER}}" autofocus>
     <button type="submit">{{LOGIN_BTN}}</button>
     <button type="button" id="passkey-login" class="passkey-login" style="display:none">Sign in with passkey</button>
@@ -11853,6 +11856,10 @@ def handle_get(handler, parsed) -> bool:
             )
             .replace("{{LOGIN_BTN}}", _html.escape(_login_strings["btn"]))
             .replace("{{LOGIN_INVALID_PW}}", _html.escape(_login_strings["invalid_pw"]))
+            .replace(
+                "{{LOGIN_UNREACHABLE}}",
+                _html.escape(_login_strings.get("wg_unreachable", _LOGIN_LOCALE["en"]["wg_unreachable"])),
+            )
             .replace(
                 "{{LOGIN_CONN_FAILED}}", _html.escape(_login_strings["conn_failed"])
             )

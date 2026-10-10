@@ -261,7 +261,7 @@ function syncAppTitlebar() {
               body: JSON.stringify({ session_id: S.session.session_id, title: newTitle })
             });
           } catch (err) {
-            if (typeof setStatus === 'function') setStatus('Rename failed: ' + err.message);
+            if (typeof setStatus === 'function') setStatus(t('rename_failed') + err.message);
           }
         }
         inp.replaceWith(titleEl);
@@ -1014,7 +1014,7 @@ function _appendCronProfileToggle(parent){
   btn.className = 'sm-btn';
   btn.style.cssText = 'width:100%;justify-content:center';
   btn.textContent = _showAllCronProfiles
-    ? 'Show active profile only'
+    ? t('wg_show_active_profile_only_2')
     : `Show ${_cronOtherProfileCount} from other profiles`;
   btn.onclick = async () => {
     _showAllCronProfiles = !_showAllCronProfiles;
@@ -1092,22 +1092,22 @@ function _cronGatewayNoticeHtml(status) {
   const isRemoteUnreachable = reason === 'remote_gateway_unreachable';
   const notConfigured = !status.configured;
   const title = notConfigured
-    ? 'Gateway not configured'
+    ? t('gateway_not_configured')
     : isStaleMetadata
-      ? 'Gateway metadata stale'
+      ? t('gateway_metadata_stale')
       : isRemoteUnreachable
-        ? 'Gateway endpoint not reachable'
-        : 'Gateway not running';
+        ? t('gateway_endpoint_unreachable')
+        : t('gateway_not_running');
   const body = notConfigured
-    ? 'In Hermes WebUI, scheduled jobs require the Hermes gateway daemon. If this is a single-container Docker install, jobs can be created and run manually here, but scheduled ticks need a gateway container or `hermes gateway` running outside the WebUI.'
+    ? t('wg_cron_gw_not_configured')
     : isStaleMetadata
-      ? 'The gateway is marked as configured, but its health metadata has gone stale. In Docker, scheduled jobs require a live gateway daemon that refreshes runtime metadata while ticking cron.'
+      ? t('wg_cron_gw_stale')
       : isRemoteUnreachable
-        ? 'The gateway health endpoint is not reachable from WebUI. Verify the configured gateway URL env var (`GATEWAY_HEALTH_URL`, `HERMES_GATEWAY_HEALTH_URL`, `HERMES_API_URL`, or `HERMES_WEBUI_GATEWAY_BASE_URL`) points to a reachable gateway service and network path before relying on cron ticking.'
-        : 'In Hermes WebUI, scheduled jobs require the Hermes gateway daemon to be running. Start the gateway container or `hermes gateway` before relying on offline scheduled runs.';
+        ? t('wg_cron_gw_unreachable')
+        : t('wg_cron_gw_not_running');
   const docsHref = 'https://github.com/nesquena/hermes-webui/blob/master/docs/docker.md#scheduled-jobs-and-the-gateway-daemon';
   const helpLink = notConfigured || isRemoteUnreachable || isStaleMetadata
-    ? `<p><a href="${docsHref}" target="_blank" rel="noopener">How to enable scheduled jobs in Docker ↗</a></p>`
+    ? `<p><a href="${docsHref}" target="_blank" rel="noopener">${t('wg_how_to_enable_scheduled_jobs_in')}</a></p>`
     : '';
   return `
     <div class="detail-alert-title">${esc(title)}</div>
@@ -1174,14 +1174,14 @@ async function loadCrons(animate) {
       const isNewRun = !job.read_only && _cronNewJobIds.has(String(job.id));
       const isAgentMode = !job.no_agent;
       const ownerProfileLabel = _cronProfileLabel(_cronOwnerProfileName(job));
-      const ownerProfileTitle = `Owner profile: ${ownerProfileLabel}`;
+      const ownerProfileTitle = t('wg_owner_profile_0', ownerProfileLabel);
       const readOnlyBadge = job.read_only
-        ? '<span class="cron-status disabled" title="Read-only from another profile">Read-only</span>'
+        ? '<span class="cron-status disabled" title="'+t('wg_read_only_from_another_profile')+'">'+t('wg_read_only')+'</span>'
         : '';
       item.innerHTML = `
         <div class="cron-header">
-          ${isNewRun ? '<span class="cron-new-dot" title="New run"></span>' : ''}
-          ${isAgentMode ? '<span class="cron-agent-badge" title="Agent mode">🤖</span>' : `<span class="cron-script-badge" title="${esc(t('cron_script_badge_title') || 'Script job (no agent)')}">📜</span>`}
+          ${isNewRun ? '<span class="cron-new-dot" title="'+t('wg_new_run')+'"></span>' : ''}
+          ${isAgentMode ? '<span class="cron-agent-badge" title="'+t('wg_agent_mode')+'">🤖</span>' : `<span class="cron-script-badge" title="${esc(t('cron_script_badge_title') || 'Script job (no agent)')}">📜</span>`}
           <span class="cron-name" title="${esc(job.name)}">${esc(job.name)}</span>
           <span class="cron-profile-badge" title="${esc(ownerProfileTitle)}">${esc(ownerProfileLabel)}</span>
           <span class="cron-status ${status.listClass}">${esc(status.label)}</span>
@@ -1193,7 +1193,7 @@ async function loadCrons(animate) {
     };
     if (!_cronList.length) {
       const emptyText = (!_showAllCronProfiles && _cronOtherProfileCount > 0)
-        ? 'No cron jobs in the active profile.'
+        ? t('wg_no_cron_jobs_in_the_active')
         : (t('cron_no_jobs') || 'No jobs yet');
       box.innerHTML = `<div style="padding:16px;color:var(--muted);font-size:12px">${esc(emptyText)}</div>`;
       _appendCronProfileToggle(box);
@@ -1352,7 +1352,7 @@ function _renderCronDetail(job){
   const profileTitle = _cronProfileTitle(job.profile);
   const ownerProfileName = _cronOwnerProfileName(job);
   const ownerProfileLabel = _cronProfileLabel(ownerProfileName);
-  const ownerProfileTitle = `Owner profile: ${ownerProfileLabel}`;
+  const ownerProfileTitle = t('wg_owner_profile_0', ownerProfileLabel);
   const showOwnerRow = !!ownerProfileName && (isReadOnly || ownerProfileName !== _cronProfileName(job.profile));
   const lastError = job.last_error ? `<div class="detail-row"><div class="detail-row-label">${esc(t('error_prefix').replace(/:\s*$/,''))}</div><div class="detail-row-value" style="color:var(--accent-text)">${esc(job.last_error)}</div></div>` : '';
   const attention = status.state === 'needs_attention' || status.state === 'schedule_error';
@@ -1372,8 +1372,8 @@ function _renderCronDetail(job){
       </div>` : '';
   const readOnlyBanner = isReadOnly ? `
       <div class="detail-alert">
-        <div class="detail-alert-title">Read-only from another profile</div>
-        <p>Switch to ${esc(ownerProfileLabel)} to run, edit, or inspect live status and output for this cron job.</p>
+        <div class="detail-alert-title">${t('wg_read_only_from_another_profile')}</div>
+        <p>${t('wg_cron_switch_profile',esc(ownerProfileLabel))}</p>
       </div>` : '';
   const toastNotifications = job.toast_notifications !== false;
   const outputTitle = _cronOutputTitle(job);
@@ -1386,13 +1386,13 @@ function _renderCronDetail(job){
       ${isNoAgent ? _cronScriptJobBannerHtml() : ''}
       <div class="detail-card">
         <div class="detail-card-title">${esc(t('cron_status_active').replace(/./,c=>c.toUpperCase()))}</div>
-        <div class="detail-row"><div class="detail-row-label">Status</div><div class="detail-row-value"><span class="detail-badge ${status.detailClass}">${esc(status.label)}</span></div></div>
-        <div class="detail-row"><div class="detail-row-label">Schedule</div><div class="detail-row-value"><code>${esc(schedule)}</code></div></div>
+        <div class="detail-row"><div class="detail-row-label">${t('wg_status')}</div><div class="detail-row-value"><span class="detail-badge ${status.detailClass}">${esc(status.label)}</span></div></div>
+        <div class="detail-row"><div class="detail-row-label">${t('wg_schedule')}</div><div class="detail-row-value"><code>${esc(schedule)}</code></div></div>
         <div class="detail-row"><div class="detail-row-label">${esc(t('cron_next'))}</div><div class="detail-row-value">${esc(nextRun)}</div></div>
         <div class="detail-row"><div class="detail-row-label">${esc(t('cron_last'))}</div><div class="detail-row-value">${esc(lastRun)}</div></div>
-        <div class="detail-row"><div class="detail-row-label">Deliver</div><div class="detail-row-value">${esc(deliver)}</div></div>
+        <div class="detail-row"><div class="detail-row-label">${t('wg_deliver')}</div><div class="detail-row-value">${esc(deliver)}</div></div>
         <div class="detail-row"><div class="detail-row-label">${esc(t('cron_mode_label') || 'Mode')}</div><div class="detail-row-value"><span class="detail-badge cron-mode-badge ${isNoAgent ? 'script' : 'agent'}" id="cronJobMode">${esc(cronJobMode)}</span>${modelProvider ? ` <code>${modelProvider}</code>` : ''}</div></div>
-        ${showOwnerRow ? `<div class="detail-row"><div class="detail-row-label">Owner profile</div><div class="detail-row-value"><span class="detail-badge active" title="${esc(ownerProfileTitle)}">${esc(ownerProfileLabel)}</span></div></div>` : ''}
+        ${showOwnerRow ? `<div class="detail-row"><div class="detail-row-label">${t('wg_owner_profile')}</div><div class="detail-row-value"><span class="detail-badge active" title="${esc(ownerProfileTitle)}">${esc(ownerProfileLabel)}</span></div></div>` : ''}
         <div class="detail-row"><div class="detail-row-label">${esc(t('cron_profile_label') || 'Profile')}</div><div class="detail-row-value"><span class="detail-badge active" title="${esc(profileTitle)}">${esc(profileLabel)}</span></div></div>
         <div class="detail-row"><div class="detail-row-label">${esc(t('cron_toast_notifications_label') || 'Completion toasts')}</div><div class="detail-row-value"><span class="detail-badge ${toastNotifications ? 'active' : ''}">${esc(toastNotifications ? (t('cron_toast_notifications_enabled') || 'Enabled') : (t('cron_toast_notifications_disabled') || 'Disabled'))}</span></div></div>
         ${skillsRow}
@@ -1401,7 +1401,7 @@ function _renderCronDetail(job){
       ${instructionCard}
       <div class="detail-card ${!isReadOnly && _cronNewJobIds.has(String(job.id)) ? 'has-new-run' : ''}" id="cronDetailRuns">
         <div class="detail-card-title">${esc(outputTitle)}</div>
-        <div style="color:var(--muted);font-size:12px">${esc(isReadOnly ? 'Live output is available only when this profile is active here.' : (t('loading') || 'Loading'))}</div>
+        <div style="color:var(--muted);font-size:12px">${esc(isReadOnly ? t('wg_live_output_is_available_only_when') : (t('loading') || 'Loading'))}</div>
       </div>
     </div>`;
   body.style.display = '';
@@ -1559,7 +1559,7 @@ async function _loadRunContent(jobId, filename, runId){
       body.appendChild(btn);
     }
   } catch(e) {
-    body.textContent = 'Error: ' + e.message;
+    body.textContent = t('error_prefix') + e.message;
   }
 }
 
@@ -2735,8 +2735,8 @@ function _showStaleWebUIClientBanner(clientVersion,serverVersion){
   if(!banner) return;
   const msg=document.getElementById('staleClientMessage');
   const versions=document.getElementById('staleClientVersions');
-  if(msg) msg.textContent='This tab is running a different WebUI version. Hard refresh to restore full functionality.';
-  if(versions) versions.textContent='Running: '+clientVersion+' → Server: '+serverVersion;
+  if(msg) msg.textContent=t('wg_this_tab_is_running_a_different');
+  if(versions) versions.textContent=t('wg_running_2')+clientVersion+' → Server: '+serverVersion;
   banner.style.display='flex';
 }
 
@@ -2792,7 +2792,7 @@ function _kanbanLooksLikeStaleClientError(err){
 function _kanbanUnavailableHtml(err){
   const raw = String((err && err.message) || err || '');
   if (_kanbanLooksLikeStaleClientError(err)) {
-    return `<div class="main-view-empty"><div class="main-view-empty-title">Kanban needs a hard refresh</div><div class="main-view-empty-subtitle">The server rejected an obsolete Kanban endpoint. This usually means the browser or Mac app is still running a stale cached WebUI bundle after an update.</div><button class="btn primary" type="button" onclick="hardRefreshWebUIClient()">${esc(t('update_hard_refresh_now')||'Hard refresh now')}</button><div class="main-view-empty-subtitle">Original error: ${esc(raw || 'not found')}</div></div>`;
+    return `<div class="main-view-empty"><div class="main-view-empty-title">${t('wg_kanban_needs_a_hard_refresh')}</div><div class="main-view-empty-subtitle">${t('wg_kanban_stale_detail')}</div><button class="btn primary" type="button" onclick="hardRefreshWebUIClient()">${esc(t('update_hard_refresh_now')||'Hard refresh now')}</button><div class="main-view-empty-subtitle">${t('wg_original_error',esc(raw || 'not found'))}</div></div>`;
   }
   const msg = `${esc(t('kanban_unavailable'))}: ${esc(raw)}`;
   return `<div class="main-view-empty"><div class="main-view-empty-title">${msg}</div></div>`;
@@ -4292,7 +4292,7 @@ async function submitKanbanBoardModal(){
     }
   } else if (mode === 'rename') {
     const slug = document.getElementById('kanbanBoardModalSlug').value;
-    if (!slug) { errEl.textContent = 'Missing slug'; return; }
+    if (!slug) { errEl.textContent = t('wg_missing_slug'); return; }
     if (submitBtn) submitBtn.disabled = true;
     try {
       await api('/api/kanban/boards/' + encodeURIComponent(slug), {
@@ -4453,7 +4453,7 @@ function _renderLogs(data) {
   if (status) {
     const bytes = data && Number(data.total_bytes || 0);
     const when = data && data.mtime ? new Date(data.mtime * 1000).toLocaleString() : t('logs_no_mtime');
-    status.textContent = `${rawLines.length} / ${data.tail || _selectedLogsTail()} lines · ${bytes.toLocaleString()} bytes · ${when}`;
+    status.textContent = t('wg_0_1_lines_2_bytes_3', rawLines.length, data.tail || _selectedLogsTail(), bytes.toLocaleString(), when);
   }
 }
 
@@ -4493,10 +4493,10 @@ async function copyLogsAll() {
 
 // ── Insights panel ──
 const STATIC_MODEL_HEALTH_ROWS = [
-  {id:'openai/gpt-5.4-mini', provider:'OpenAI', inputCostPerM:0.25, outputCostPerM:2.00, replacement:'Default economical general-purpose model'},
-  {id:'openai/gpt-5.4', provider:'OpenAI', inputCostPerM:2.00, outputCostPerM:10.00, replacement:'Use for complex synthesis; fall back to Mini for routine turns'},
-  {id:'anthropic/claude-sonnet-4.5', provider:'Anthropic', inputCostPerM:3.00, outputCostPerM:15.00, replacement:'Strong coding and analysis option; use Mini for low-risk chat'},
-  {id:'google/gemini-2.5-pro', provider:'Google', inputCostPerM:1.25, outputCostPerM:10.00, replacement:'Long-context research option; use Flash for speed-sensitive work'},
+  {id:'openai/gpt-5.4-mini', provider:'OpenAI', inputCostPerM:0.25, outputCostPerM:2.00, replacement:t('wg_default_economical_general_purpose_model')},
+  {id:'openai/gpt-5.4', provider:'OpenAI', inputCostPerM:2.00, outputCostPerM:10.00, replacement:t('wg_use_for_complex_synthesis_fall_back')},
+  {id:'anthropic/claude-sonnet-4.5', provider:'Anthropic', inputCostPerM:3.00, outputCostPerM:15.00, replacement:t('wg_strong_coding_and_analysis_option_use')},
+  {id:'google/gemini-2.5-pro', provider:'Google', inputCostPerM:1.25, outputCostPerM:10.00, replacement:t('wg_long_context_research_option_use_flash')},
   {id:'google/gemini-2.5-flash', provider:'Google', inputCostPerM:0.30, outputCostPerM:2.50, replacement:'Low-latency replacement for lighter multimodal or research turns'},
 ];
 
@@ -4552,29 +4552,29 @@ function _formatLlmWikiTimestamp(value) {
 
 function _renderSystemHealthPanel() {
   return `
-    <section class="insights-card system-health-panel loading" id="systemHealthPanel" aria-label="Host resource health" aria-live="polite">
+    <section class="insights-card system-health-panel loading" id="systemHealthPanel" aria-label="${t('wg_host_resource_health')}" aria-live="polite">
       <div class="system-health-head">
         <div>
-          <div class="insights-card-title">System health</div>
-          <div class="system-health-sub">Current VPS resource usage</div>
+          <div class="insights-card-title">${t('wg_system_health')}</div>
+          <div class="system-health-sub">${t('wg_current_vps_resource_usage')}</div>
         </div>
-        <span class="system-health-status" id="systemHealthStatus"><span class="system-health-dot" aria-hidden="true"></span>Loading…</span>
+        <span class="system-health-status" id="systemHealthStatus"><span class="system-health-dot" aria-hidden="true"></span>${t('wg_loading_2')}</span>
       </div>
       <div class="system-health-metrics">
         <div class="system-health-metric" data-system-health-metric="cpu">
           <div class="system-health-label"><span>CPU</span><span class="system-health-value" data-system-health-value>—</span></div>
-          <div class="system-health-bar" role="progressbar" aria-label="CPU usage" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="system-health-bar-fill"></div></div>
+          <div class="system-health-bar" role="progressbar" aria-label="${t('wg_cpu_usage')}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="system-health-bar-fill"></div></div>
         </div>
         <div class="system-health-metric" data-system-health-metric="memory">
           <div class="system-health-label"><span>RAM</span><span class="system-health-value" data-system-health-value>—</span></div>
-          <div class="system-health-bar" role="progressbar" aria-label="RAM usage" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="system-health-bar-fill"></div></div>
+          <div class="system-health-bar" role="progressbar" aria-label="${t('wg_ram_usage')}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="system-health-bar-fill"></div></div>
         </div>
         <div class="system-health-metric" data-system-health-metric="disk">
-          <div class="system-health-label"><span>Disk</span><span class="system-health-value" data-system-health-value>—</span></div>
-          <div class="system-health-bar" role="progressbar" aria-label="Disk usage" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="system-health-bar-fill"></div></div>
+          <div class="system-health-label"><span>${t('wg_disk')}</span><span class="system-health-value" data-system-health-value>—</span></div>
+          <div class="system-health-bar" role="progressbar" aria-label="${t('wg_disk_usage')}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="system-health-bar-fill"></div></div>
         </div>
       </div>
-      <div class="system-health-foot">Live snapshot only; historical resource charts can build on this surface later.</div>
+      <div class="system-health-foot">${t('wg_health_live_only')}</div>
     </section>`;
 }
 
@@ -4590,38 +4590,38 @@ function _renderLlmWikiStatus(d) {
   // becomes config-driven. esc() HTML-escapes but doesn't validate URL scheme.
   const docsUrl = /^https?:\/\//i.test(rawDocsUrl) ? rawDocsUrl : '#';
   const toggleNote = status.toggle_available
-    ? 'Toggle available from configured Hermes Agent setting.'
-    : (status.toggle_reason || 'No stable LLM Wiki on/off config flag was detected, so this panel is read-only.');
+    ? t('wg_toggle_available_from_configured_hermes_agent')
+    : (status.toggle_reason || t('wg_no_stable_llm_wiki_on_off'));
   const statusNote = isReady
-    ? 'LLM Wiki is configured and page metadata is visible without exposing wiki content.'
+    ? t('wg_llm_wiki_is_configured_and_page')
     : isEmpty
-      ? 'LLM Wiki exists but has no entity, concept, comparison, or query pages yet.'
+      ? t('wg_llm_wiki_exists_but_has_no')
       : isError
-        ? `Unable to inspect LLM Wiki status${status.error ? ': ' + status.error : ''}.`
-        : 'No LLM Wiki directory was found. Set WIKI_PATH or skills.config.wiki.path to enable status visibility.';
+        ? t('wg_unable_to_inspect_llm_wiki_status', status.error ? ': ' + status.error : '')
+        : t('wg_no_llm_wiki_directory_was_found');
   return `
     <div class="insights-card wiki-status-card" id="llmWikiStatusCard">
       <div class="wiki-status-head">
         <div>
-          <div class="insights-card-title">LLM Wiki</div>
-          <div class="wiki-status-sub">Knowledge-base observability</div>
+          <div class="insights-card-title">${t('wg_llm_wiki')}</div>
+          <div class="wiki-status-sub">${t('wg_knowledge_base_observability')}</div>
         </div>
         <span class="wiki-status-badge ${badgeClass}">${esc(badgeText)}</span>
       </div>
       <div class="wiki-status-note">${esc(statusNote)}</div>
       <div class="wiki-status-grid">
-        <div><span>Enabled</span><strong>${status.enabled ? 'Yes' : 'No'}</strong></div>
-        <div><span>Entries</span><strong>${Number(status.entry_count || 0).toLocaleString()}</strong></div>
-        <div><span>Pages</span><strong>${Number(status.page_count || 0).toLocaleString()}</strong></div>
-        <div><span>raw/ files</span><strong>${Number(status.raw_source_count || 0).toLocaleString()}</strong></div>
-        <div><span>Last updated</span><strong>${esc(_formatLlmWikiTimestamp(status.last_updated))}</strong></div>
-        <div><span>Last writer</span><strong>${esc(status.last_writer || 'Not available')}</strong></div>
+        <div><span>${t('wg_enabled')}</span><strong>${status.enabled ? t('wg_yes') : t('wg_no')}</strong></div>
+        <div><span>${t('wg_entries')}</span><strong>${Number(status.entry_count || 0).toLocaleString()}</strong></div>
+        <div><span>${t('wg_pages')}</span><strong>${Number(status.page_count || 0).toLocaleString()}</strong></div>
+        <div><span>${t('wg_raw_files')}</span><strong>${Number(status.raw_source_count || 0).toLocaleString()}</strong></div>
+        <div><span>${t('wg_last_updated')}</span><strong>${esc(_formatLlmWikiTimestamp(status.last_updated))}</strong></div>
+        <div><span>${t('wg_last_writer')}</span><strong>${esc(status.last_writer || t('wg_not_available'))}</strong></div>
       </div>
       <div class="wiki-status-footer">
         <span>${esc(toggleNote)}</span>
         <div style="display:flex;align-items:center;gap:8px;">
           ${isReady || isEmpty ? `<button class="wiki-browse-btn" onclick="_openWikiBrowser()">${esc(t('wiki_browse'))}</button>` : ''}
-          <a href="${esc(docsUrl)}" target="_blank" rel="noopener noreferrer">Docs</a>
+          <a href="${esc(docsUrl)}" target="_blank" rel="noopener noreferrer">${t('wg_docs')}</a>
         </div>
       </div>
     </div>`;
@@ -4675,7 +4675,7 @@ async function _openWikiBrowser() {
   }
 
   window._wikiBrowserOpenPage = async function(path) {
-    contentEl.innerHTML = '<div style="padding:12px;color:var(--muted);font-size:13px;">Loading...</div>';
+    contentEl.innerHTML = '<div style="padding:12px;color:var(--muted);font-size:13px;">'+t('wg_loading_3')+'</div>';
     contentEl.style.display = 'block';
     listEl.style.display = 'none';
     try {
@@ -5323,7 +5323,7 @@ async function deleteCurrentSkill() {
   const name = _currentSkillDetail.name;
   const message = t('skill_delete_confirm')
     ? t('skill_delete_confirm').replace('{0}', name)
-    : `Delete skill "${name}"?`;
+    : t('wg_delete_skill_0', name);
   const ok = await showConfirmDialog({
     title: t('delete_title') || 'Delete',
     message,
@@ -5367,7 +5367,7 @@ const MEMORY_SECTIONS = [
   { key: 'memory', labelKey: 'my_notes', emptyKey: 'no_notes_yet', iconKey: 'brain' },
   { key: 'user',   labelKey: 'user_profile', emptyKey: 'no_profile_yet', iconKey: 'user' },
   { key: 'soul',   labelKey: 'agent_soul', emptyKey: 'no_soul_yet', iconKey: 'sparkles' },
-  { key: 'project_context', label: 'Project Context', empty: 'No project context file found for this workspace.', iconKey: 'file-text', readOnly: true },
+  { key: 'project_context', label: t('wg_project_context'), empty: 'No project context file found for this workspace.', iconKey: 'file-text', readOnly: true },
   { key: 'external_notes', labelKey: 'external_notes_sources', emptyKey: 'external_notes_empty', iconKey: 'book-open' },
 ];
 
@@ -5522,7 +5522,7 @@ function _renderMemoryDetail(section) {
     ? _memoryData.project_context_shadowed
     : [];
   const shadowedHtml = shadowed.length
-    ? `<div class="memory-detail-mtime">${esc(shadowed.map(item => `${item.name || 'Context file'} present, shadowed by ${item.shadowed_by || fileName || 'active context'}`).join('; '))}</div>`
+    ? `<div class="memory-detail-mtime">${esc(shadowed.map(item => `${item.name || t('wg_context_file')} present, shadowed by ${item.shadowed_by || fileName || 'active context'}`).join('; '))}</div>`
     : '';
   const inner = content
     ? `<div class="memory-content preview-md">${renderMd(content)}</div>`
@@ -5906,7 +5906,7 @@ function renderWorkspaceDropdownInto(dd, workspaces, currentWs){
   // ── Search row ──────────────────────────────────────────────────────────
   const searchRow=document.createElement('div');
   searchRow.className='ws-search-row';
-  searchRow.innerHTML=`<input class="ws-search-input" type="text" placeholder="${esc(t('ws_search_placeholder')||'Search workspaces…')}" spellcheck="false" autocomplete="off"><button class="ws-search-clear" title="Clear search">${li('x',10)}</button>`;
+  searchRow.innerHTML=`<input class="ws-search-input" type="text" placeholder="${esc(t('ws_search_placeholder')||'Search workspaces…')}" spellcheck="false" autocomplete="off"><button class="ws-search-clear" title="${t('wg_clear_search_2')}">${li('x',10)}</button>`;
   const si=searchRow.querySelector('.ws-search-input');
   const sc=searchRow.querySelector('.ws-search-clear');
   dd.appendChild(searchRow);
@@ -6171,15 +6171,15 @@ function _renderWorkspaceDetail(ws){
   const isDefault = !!ws.is_default;
   const statusBadge = isActive
     ? `<span class="detail-badge active">${esc(t('profile_active'))}</span>`
-    : `<span class="detail-badge">Inactive</span>`;
+    : `<span class="detail-badge">${t('wg_inactive')}</span>`;
   const defaultBadge = isDefault ? ` <span class="detail-badge">${esc(t('profile_default_label'))}</span>` : '';
   body.innerHTML = `
     <div class="main-view-content">
       <div class="detail-card">
-        <div class="detail-card-title">Space</div>
-        <div class="detail-row"><div class="detail-row-label">Name</div><div class="detail-row-value">${esc(ws.name || '')}</div></div>
-        <div class="detail-row"><div class="detail-row-label">Path</div><div class="detail-row-value"><code>${esc(ws.path)}</code></div></div>
-        <div class="detail-row"><div class="detail-row-label">Status</div><div class="detail-row-value">${statusBadge}${defaultBadge}</div></div>
+        <div class="detail-card-title">${t('wg_space')}</div>
+        <div class="detail-row"><div class="detail-row-label">${t('wg_name')}</div><div class="detail-row-value">${esc(ws.name || '')}</div></div>
+        <div class="detail-row"><div class="detail-row-label">${t('wg_path')}</div><div class="detail-row-value"><code>${esc(ws.path)}</code></div></div>
+        <div class="detail-row"><div class="detail-row-label">${t('wg_status')}</div><div class="detail-row-value">${statusBadge}${defaultBadge}</div></div>
       </div>
       <div class="detail-card" style="margin-top:12px">
         <div class="detail-card-title">${esc(t('checkpoint_title'))}</div>
@@ -6770,7 +6770,7 @@ async function loadProfilesPanel() {
       const isActive = p.name === activeName;
       const activeBadge = isActive ? `<span style="color:var(--link);font-size:10px;font-weight:600;margin-left:6px">${esc(t('profile_active'))}</span>` : '';
       const defaultBadge = p.is_default ? ` <span style="opacity:.5">${esc(t('profile_default_label'))}</span>` : '';
-      const hiddenBadge = p.visible === false ? ' <span class="detail-badge" title="Hidden from chat">Hidden from chat</span>' : '';
+      const hiddenBadge = p.visible === false ? ' <span class="detail-badge" title="'+t('wg_hidden_from_chat')+'">'+t('wg_hidden_from_chat')+'</span>' : '';
       card.innerHTML = `
         <div class="profile-card-header">
           <div style="min-width:0;flex:1">
@@ -6827,24 +6827,24 @@ function _renderProfileDetail(p, activeName){
   const isDefault = !!p.is_default;
   const statusBadge = isActive
     ? `<span class="detail-badge active">${esc(t('profile_active'))}</span>`
-    : `<span class="detail-badge">Inactive</span>`;
+    : `<span class="detail-badge">${t('wg_inactive')}</span>`;
   const defaultBadge = isDefault ? ` <span class="detail-badge">${esc(t('profile_default_label'))}</span>` : '';
   const gwBadge = p.gateway_running
     ? `<span class="detail-badge ok">${esc(t('profile_gateway_running'))}</span>`
     : `<span class="detail-badge">${esc(t('profile_gateway_stopped'))}</span>`;
   const rows = [];
-  rows.push(`<div class="detail-row"><div class="detail-row-label">Status</div><div class="detail-row-value">${statusBadge}${defaultBadge}</div></div>`);
-  rows.push(`<div class="detail-row"><div class="detail-row-label">Gateway</div><div class="detail-row-value">${gwBadge}</div></div>`);
-  if (p.model) rows.push(`<div class="detail-row"><div class="detail-row-label">Model</div><div class="detail-row-value"><code>${esc(p.model)}</code></div></div>`);
-  if (p.provider) rows.push(`<div class="detail-row"><div class="detail-row-label">Provider</div><div class="detail-row-value">${esc(p.provider)}</div></div>`);
-  if (p.base_url) rows.push(`<div class="detail-row"><div class="detail-row-label">Base URL</div><div class="detail-row-value"><code>${esc(p.base_url)}</code></div></div>`);
-  rows.push(`<div class="detail-row"><div class="detail-row-label">API key</div><div class="detail-row-value">${p.has_env ? esc(t('profile_api_keys_configured')) : '<span style="color:var(--muted)">Not configured</span>'}</div></div>`);
-  if (p.total_skills && p.total_skills > 0) rows.push(`<div class="detail-row"><div class="detail-row-label">Skills</div><div class="detail-row-value">${esc(t('profile_skill_count', p.total_skills).replace(String(p.total_skills), `${p.enabled_skills} / ${p.total_skills}`))}</div></div>`);
-  if (p.default_workspace) rows.push(`<div class="detail-row"><div class="detail-row-label">Default space</div><div class="detail-row-value"><code>${esc(p.default_workspace)}</code></div></div>`);
+  rows.push(`<div class="detail-row"><div class="detail-row-label">${t('wg_status')}</div><div class="detail-row-value">${statusBadge}${defaultBadge}</div></div>`);
+  rows.push(`<div class="detail-row"><div class="detail-row-label">${t('wg_gateway')}</div><div class="detail-row-value">${gwBadge}</div></div>`);
+  if (p.model) rows.push(`<div class="detail-row"><div class="detail-row-label">${t('wg_model')}</div><div class="detail-row-value"><code>${esc(p.model)}</code></div></div>`);
+  if (p.provider) rows.push(`<div class="detail-row"><div class="detail-row-label">${t('wg_provider')}</div><div class="detail-row-value">${esc(p.provider)}</div></div>`);
+  if (p.base_url) rows.push(`<div class="detail-row"><div class="detail-row-label">${t('wg_base_url')}</div><div class="detail-row-value"><code>${esc(p.base_url)}</code></div></div>`);
+  rows.push(`<div class="detail-row"><div class="detail-row-label">${t('wg_api_key')}</div><div class="detail-row-value">${p.has_env ? esc(t('profile_api_keys_configured')) : '<span style="color:var(--muted)">'+t('wg_not_configured')+'</span>'}</div></div>`);
+  if (p.total_skills && p.total_skills > 0) rows.push(`<div class="detail-row"><div class="detail-row-label">${t('wg_skills')}</div><div class="detail-row-value">${esc(t('profile_skill_count', p.total_skills).replace(String(p.total_skills), `${p.enabled_skills} / ${p.total_skills}`))}</div></div>`);
+  if (p.default_workspace) rows.push(`<div class="detail-row"><div class="detail-row-label">${t('wg_default_space')}</div><div class="detail-row-value"><code>${esc(p.default_workspace)}</code></div></div>`);
   body.innerHTML = `
     <div class="main-view-content">
       <div class="detail-card">
-        <div class="detail-card-title">Profile</div>
+        <div class="detail-card-title">${t('wg_profile')}</div>
         ${rows.join('')}
       </div>
     </div>`;
@@ -7563,7 +7563,7 @@ document.addEventListener('dragenter',e=>{e.preventDefault();
     // Context-aware hint: a workspace-file drag inserts an @path reference;
     // an OS-file drag attaches the file to the message.
     const hint=$('dropHintText');
-    if(hint) hint.textContent=isWsPath?'Drop to insert workspace reference':'Drop files to attach';
+    if(hint) hint.textContent=isWsPath?t('wg_drop_to_insert_workspace_reference'):t('wg_drop_files_to_attach');
     wrap.classList.add('drag-over');
   }
 });
@@ -8046,7 +8046,7 @@ function switchSettingsSection(name,opts){
   }
   const sidebarSearch=$('kanbanSearch');
   if(sidebarSearch){
-    sidebarSearch.placeholder=_currentPanel==='settings'?'Einstellungen durchsuchen':'Chats durchsuchen';
+    sidebarSearch.placeholder=_currentPanel==='settings'?t('wg_einstellungen_durchsuchen'):t('wg_chats_durchsuchen');
   }
   let section=(name==='appearance'||name==='preferences'||name==='providers'||name==='plugins'||name==='extensions'||name==='system'||name==='help')?name:'preferences';
   // Interface mode: advanced-only sections fall back to Conversation in Basic.
@@ -9117,7 +9117,7 @@ async function loadSettingsPanel(){
     const agentBadge = $('settings-agent-version-badge');
     if(agentBadge){
       const agentVersion = (settings.agent_version || 'not detected').toString().trim() || 'not detected';
-      agentBadge.textContent = `Agent: ${agentVersion}`;
+      agentBadge.textContent = t('wg_agent_0', agentVersion);
     }
     // Hydrate appearance controls first so a slow /api/models request
     // cannot overwrite an in-progress theme selection.
@@ -9634,17 +9634,17 @@ async function loadSettingsPanel(){
       if(engine==='elevenlabs'){
         ttsVoiceSel.innerHTML='<option value="">Hermy — ElevenLabs (server-configured)</option>';
       } else if(engine==='openai'){
-        ttsVoiceSel.innerHTML='<option value="">OpenAI voice (server-configured)</option>';
+        ttsVoiceSel.innerHTML='<option value="">'+t('wg_openai_voice')+'</option>';
       } else if(engine==='edge'){
         const edgeVoices=[
-          {value:'zh-CN-XiaoxiaoNeural',label:'Xiaoxiao (Chinese, Female)'},
-          {value:'zh-CN-XiaoyiNeural',label:'Xiaoyi (Chinese, Female)'},
-          {value:'zh-CN-YunxiNeural',label:'Yunxi (Chinese, Male)'},
-          {value:'zh-CN-YunjianNeural',label:'Yunjian (Chinese, Male)'},
-          {value:'zh-CN-YunyangNeural',label:'Yunyang (Chinese, Male)'},
-          {value:'en-US-AriaNeural',label:'Aria (English, Female)'},
-          {value:'en-US-GuyNeural',label:'Guy (English, Male)'},
-          {value:'id-ID-GadisNeural',label:'Gadis (Indonesian, Female)'},
+          {value:'zh-CN-XiaoxiaoNeural',label:t('wg_xiaoxiao_chinese_female')},
+          {value:'zh-CN-XiaoyiNeural',label:t('wg_xiaoyi_chinese_female')},
+          {value:'zh-CN-YunxiNeural',label:t('wg_yunxi_chinese_male')},
+          {value:'zh-CN-YunjianNeural',label:t('wg_yunjian_chinese_male')},
+          {value:'zh-CN-YunyangNeural',label:t('wg_yunyang_chinese_male')},
+          {value:'en-US-AriaNeural',label:t('wg_aria_english_female')},
+          {value:'en-US-GuyNeural',label:t('wg_guy_english_male')},
+          {value:'id-ID-GadisNeural',label:t('wg_gadis_indonesian_female')},
         ];
         ttsVoiceSel.innerHTML='<option value="">Default (Xiaoxiao)</option>';
         edgeVoices.forEach(v=>{
@@ -9655,11 +9655,11 @@ async function loadSettingsPanel(){
         });
       } else {
         if(!('speechSynthesis' in window)){
-          ttsVoiceSel.innerHTML='<option value="">Speech synthesis not available</option>';
+          ttsVoiceSel.innerHTML='<option value="">'+t('wg_speech_synthesis_not_available')+'</option>';
           return;
         }
         const voices=speechSynthesis.getVoices();
-        ttsVoiceSel.innerHTML='<option value="">Default system voice</option>';
+        ttsVoiceSel.innerHTML='<option value="">'+t('wg_default_system_voice')+'</option>';
         voices.forEach(v=>{
           const opt=document.createElement('option');
           opt.value=v.name;opt.textContent=v.name+(v.lang?' ('+v.lang+')':'');
@@ -9804,21 +9804,21 @@ function _extensionBooleanBadge(value){
 
 function _extensionAssetList(urls){
   if(!Array.isArray(urls)||urls.length===0){
-    return '<div class="extension-url-empty">None</div>';
+    return '<div class="extension-url-empty">'+t('wg_none')+'</div>';
   }
   return '<ul class="extension-url-list">'+urls.map(url=>`<li><code>${esc(url)}</code></li>`).join('')+'</ul>';
 }
 
 function _extensionWarningList(warnings){
   if(!Array.isArray(warnings)||warnings.length===0){
-    return '<div class="extension-url-empty">No warnings.</div>';
+    return '<div class="extension-url-empty">'+t('wg_no_warnings')+'</div>';
   }
   return '<ul class="extension-warning-list">'+warnings.map(item=>{
     const rawCode=(item&&item.code)||'unknown_warning';
     const code=esc(rawCode);
     const source=esc((item&&item.source)||'unknown');
     const hint=rawCode==='extension_state_unknown_ids'
-      ? '<span>Some saved disabled-extension overrides no longer match the current manifest; re-added extensions with the same id may stay disabled.</span>'
+      ? '<span>'+t('wg_ext_override_mismatch')+'</span>'
       : '';
     return `<li><code>${code}</code><span>${source}</span>${hint}</li>`;
   }).join('')+'</ul>';
@@ -9831,7 +9831,7 @@ function _extensionCountValue(counts,key,urls){
 
 function _extensionEntryStatusLabel(entry){
   const status=(entry&&entry.status)||'';
-  if(status==='manifest_disabled') return 'Disabled in manifest';
+  if(status==='manifest_disabled') return t('wg_disabled_in_manifest');
   if(status==='user_disabled') return 'Disabled';
   if(status==='enabled') return 'Enabled';
   return 'Unknown';
@@ -9877,29 +9877,29 @@ function _extensionSettingsControls(entry){
   const id=(entry&&entry.id)||'';
   const storageOwned=!!(entry&&entry.storage_owned);
   if(!storageOwned){
-    return '<div class="extension-settings-empty">No extension-owned browser storage permission.</div>';
+    return '<div class="extension-settings-empty">'+t('wg_no_extension_owned_browser_storage_permission')+'</div>';
   }
   const settingsApi=window.HermesExtensionSettings&&id?window.HermesExtensionSettings.settingsForExtension(id):null;
   if(!settingsApi||!settingsApi.trusted){
-    return '<div class="extension-settings-empty">Reload WebUI after enabling or installing this extension to edit browser-local settings.</div>';
+    return '<div class="extension-settings-empty">'+t('wg_reload_webui_after_enabling_or_installing')+'</div>';
   }
   const schema=Array.isArray(settingsApi&&settingsApi.schema)?settingsApi.schema:[];
   const values=settingsApi?settingsApi.values:{};
   const fields=schema.length
     ? schema.map(field=>_extensionSettingsFieldHtml(field,values[field.key])).join('')
-    : '<div class="extension-settings-empty">No configurable settings declared.</div>';
+    : '<div class="extension-settings-empty">'+t('wg_no_configurable_settings_declared')+'</div>';
   return `<div class="extension-settings-box">
     <div class="extension-settings-head">
       <div>
-        <div class="extension-settings-title">Browser-local extension settings</div>
-        <div class="extension-settings-note">Settings and extension-owned storage stay in this browser. Do not store secrets here.</div>
+        <div class="extension-settings-title">${t('wg_browser_local_extension_settings')}</div>
+        <div class="extension-settings-note">${t('wg_settings_and_extension_owned_storage_stay')}</div>
       </div>
     </div>
     <div class="extension-settings-fields">${fields}</div>
     <div class="extension-settings-actions">
-      <button class="sm-btn" type="button" data-extension-settings-save="${esc(id)}"${schema.length?'':' disabled aria-disabled="true"'}>Save settings</button>
-      <button class="sm-btn" type="button" data-extension-settings-reset="${esc(id)}"${schema.length?'':' disabled aria-disabled="true"'}>Reset settings</button>
-      <button class="sm-btn" type="button" data-extension-storage-clear="${esc(id)}">Clear extension storage</button>
+      <button class="sm-btn" type="button" data-extension-settings-save="${esc(id)}"${schema.length?'':' disabled aria-disabled="true"'}>${t('wg_save_settings')}</button>
+      <button class="sm-btn" type="button" data-extension-settings-reset="${esc(id)}"${schema.length?'':' disabled aria-disabled="true"'}>${t('wg_reset_settings')}</button>
+      <button class="sm-btn" type="button" data-extension-storage-clear="${esc(id)}">${t('wg_clear_extension_storage')}</button>
     </div>
   </div>`;
 }
@@ -9907,19 +9907,19 @@ function _extensionSettingsControls(entry){
 function _extensionInstalledList(extensions,extensionDirConfigured){
   const list=Array.isArray(extensions)?extensions:[];
   if(!list.length){
-    if(!extensionDirConfigured) return '<div class="extension-url-empty">No extension directory is configured.</div>';
-    return '<div class="extension-url-empty">No manifest extensions are installed in the configured bundle.</div>';
+    if(!extensionDirConfigured) return '<div class="extension-url-empty">'+t('wg_no_extension_directory_is_configured')+'</div>';
+    return '<div class="extension-url-empty">'+t('wg_no_manifest_extensions_are_installed_in')+'</div>';
   }
   return `<div class="extension-installed-list">${list.map(entry=>{
     const id=(entry&&entry.id)||'';
-    const name=(entry&&entry.name)||id||'Unnamed extension';
+    const name=(entry&&entry.name)||id||t('wg_unnamed_extension');
     const canToggle=!!(entry&&entry.can_toggle);
     const userEnabled=!!(entry&&entry.user_enabled);
     const disabledAttr=canToggle?'':' disabled aria-disabled="true"';
     const buttonText=userEnabled?'Disable':'Enable';
     const nextEnabled=userEnabled?'false':'true';
     const note=canToggle
-      ? 'Toggles the WebUI-managed override for the next app load.'
+      ? t('wg_toggles_the_webui_managed_override_for')
       : 'Manifest-disabled entries cannot be enabled from WebUI.';
     return `<div class="extension-installed-row" data-extension-id="${esc(id)}">
       <div class="extension-installed-main">
@@ -9990,15 +9990,15 @@ function _extensionRuntimeRows(runtime){
     rows.push(['Sidecar',_extensionRuntimeStatusLabel(runtime.sidecar)]);
   }
   if(Object.prototype.hasOwnProperty.call(runtime,'native_host')){
-    rows.push(['Native host',_extensionRuntimeStatusLabel(runtime.native_host)]);
+    rows.push([t('wg_native_host'),_extensionRuntimeStatusLabel(runtime.native_host)]);
   }
   if(Object.prototype.hasOwnProperty.call(runtime,'bridge')){
     rows.push(['Bridge',_extensionRuntimeStatusLabel(runtime.bridge)]);
   }
   const lastSeen=_extensionRuntimeLastSeen(runtime.last_seen_at);
-  if(lastSeen) rows.push(['Last update',lastSeen]);
+  if(lastSeen) rows.push([t('wg_last_update'),lastSeen]);
   const origin=_extensionRuntimeOrigin(runtime.webui_origin);
-  if(origin) rows.push(['WebUI origin',origin]);
+  if(origin) rows.push([t('wg_webui_origin'),origin]);
   return rows;
 }
 
@@ -10013,7 +10013,7 @@ function _extensionSidecarCard(sidecars){
   const body=list.length?`<div class="extension-sidecar-list">${list.map((sidecar,index)=>{
     const id=(sidecar&&sidecar.id)||'';
     const name=(sidecar&&sidecar.name)||'';
-    const title=name||id||'Unnamed extension';
+    const title=name||id||t('wg_unnamed_extension');
     const meta=(name&&id)?id:(sidecar&&sidecar.type)||'loopback';
     const origin=(sidecar&&sidecar.origin)||'';
     const healthPath=(sidecar&&sidecar.health_path)||'';
@@ -10041,22 +10041,22 @@ function _extensionSidecarCard(sidecars){
       </div>
       <div class="extension-sidecar-meta">${esc(meta)}</div>
       <div class="extension-sidecar-fields">
-        <div><span>Origin</span><code>${esc(origin)}</code></div>
-        <div><span>Health path</span><code>${esc(healthPath)}</code></div>
-        <div><span>Health URL</span><code>${esc(healthUrl)}</code></div>
-        <div><span>Proxy</span><code>${esc(proxyStatus)}</code></div>
-        <div><span>Proxy path</span><code>${esc(proxyPath)}</code></div>
+        <div><span>${t('wg_origin')}</span><code>${esc(origin)}</code></div>
+        <div><span>${t('wg_health_path')}</span><code>${esc(healthPath)}</code></div>
+        <div><span>${t('wg_health_url')}</span><code>${esc(healthUrl)}</code></div>
+        <div><span>${t('wg_proxy')}</span><code>${esc(proxyStatus)}</code></div>
+        <div><span>${t('wg_proxy_path')}</span><code>${esc(proxyPath)}</code></div>
       </div>
       <div class="extension-sidecar-actions">${proxyButton}</div>
       <div class="extension-sidecar-runtime" data-sidecar-runtime-index="${index}" hidden></div>
     </div>`;
-  }).join('')}</div>`:'<div class="extension-url-empty">No loopback sidecars declared.</div>';
+  }).join('')}</div>`:'<div class="extension-url-empty">'+t('wg_no_loopback_sidecars_declared')+'</div>';
   return `
     <div class="provider-card extension-sidecars-card">
       <div class="provider-card-header plugin-card-header">
         <div class="provider-card-info">
-          <div class="provider-card-name">Loopback sidecars</div>
-          <div class="provider-card-meta">Declared local companions; health is checked directly from this browser with WebUI credentials omitted.</div>
+          <div class="provider-card-name">${t('wg_loopback_sidecars')}</div>
+          <div class="provider-card-meta">${t('wg_sidecars_meta')}</div>
         </div>
       </div>
       <div class="provider-card-body extension-card-body">
@@ -10148,35 +10148,35 @@ function _renderExtensionsPanel(data,seq){
     <div class="provider-card extension-status-card ${statusClass}">
       <div class="provider-card-header plugin-card-header">
         <div class="provider-card-info">
-          <div class="provider-card-name">Extension runtime</div>
-          <div class="provider-card-meta">Status from /api/extensions/status; toggles persist a local override for installed manifest entries.</div>
+          <div class="provider-card-name">${t('wg_extension_runtime')}</div>
+          <div class="provider-card-meta">${t('wg_ext_runtime_meta')}</div>
         </div>
         <span class="provider-card-badge ${data&&data.enabled?'':'plugin-card-badge-disabled'}">${_extensionStatusLabel(!!(data&&data.enabled))}</span>
       </div>
       <div class="provider-card-body extension-card-body">
         <div class="extension-summary-grid">
-          <div><span>Extension dir configured</span>${_extensionBooleanBadge(!!(data&&data.extension_dir_configured))}</div>
-          <div><span>Extension dir valid</span>${_extensionBooleanBadge(!!(data&&data.extension_dir_valid))}</div>
-          <div><span>Manifest configured</span>${_extensionBooleanBadge(!!manifest.configured)}</div>
-          <div><span>Manifest loaded</span>${_extensionBooleanBadge(!!manifest.loaded)}</div>
-          <div><span>Manifest status</span><code>${esc(manifest.status||'unknown')}</code></div>
-          <div><span>Manifest entries inspected</span><code>${Number(manifest.entry_count)||0}</code></div>
-          <div><span>Manifest script count</span><code>${Number(manifest.script_count)||0}</code></div>
-          <div><span>Manifest stylesheet count</span><code>${Number(manifest.stylesheet_count)||0}</code></div>
-          <div><span>Manifest sidecar count</span><code>${Number(manifest.sidecar_count)||0}</code></div>
-          <div><span>Final script count</span><code>${scriptCount}</code></div>
-          <div><span>Final stylesheet count</span><code>${styleCount}</code></div>
-          <div><span>Loopback sidecar count</span><code>${sidecarCount}</code></div>
-          <div><span>Installed manifest extensions</span><code>${manifestExtensionCount}</code></div>
-          <div><span>User-disabled extensions</span><code>${userDisabledCount}</code></div>
+          <div><span>${t('wg_extension_dir_configured')}</span>${_extensionBooleanBadge(!!(data&&data.extension_dir_configured))}</div>
+          <div><span>${t('wg_extension_dir_valid')}</span>${_extensionBooleanBadge(!!(data&&data.extension_dir_valid))}</div>
+          <div><span>${t('wg_manifest_configured')}</span>${_extensionBooleanBadge(!!manifest.configured)}</div>
+          <div><span>${t('wg_manifest_loaded')}</span>${_extensionBooleanBadge(!!manifest.loaded)}</div>
+          <div><span>${t('wg_manifest_status')}</span><code>${esc(manifest.status||'unknown')}</code></div>
+          <div><span>${t('wg_manifest_entries_inspected')}</span><code>${Number(manifest.entry_count)||0}</code></div>
+          <div><span>${t('wg_manifest_script_count')}</span><code>${Number(manifest.script_count)||0}</code></div>
+          <div><span>${t('wg_manifest_stylesheet_count')}</span><code>${Number(manifest.stylesheet_count)||0}</code></div>
+          <div><span>${t('wg_manifest_sidecar_count')}</span><code>${Number(manifest.sidecar_count)||0}</code></div>
+          <div><span>${t('wg_final_script_count')}</span><code>${scriptCount}</code></div>
+          <div><span>${t('wg_final_stylesheet_count')}</span><code>${styleCount}</code></div>
+          <div><span>${t('wg_loopback_sidecar_count')}</span><code>${sidecarCount}</code></div>
+          <div><span>${t('wg_installed_manifest_extensions')}</span><code>${manifestExtensionCount}</code></div>
+          <div><span>${t('wg_user_disabled_extensions')}</span><code>${userDisabledCount}</code></div>
         </div>
       </div>
     </div>
     <div class="provider-card extension-installed-card">
       <div class="provider-card-header plugin-card-header">
         <div class="provider-card-info">
-          <div class="provider-card-name">Installed manifest extensions</div>
-          <div class="provider-card-meta">Enable or disable already-present local extensions. Reload WebUI to apply injected asset changes to this browser tab.</div>
+          <div class="provider-card-name">${t('wg_installed_manifest_extensions')}</div>
+          <div class="provider-card-meta">${t('wg_enable_or_disable_already_present_local')}</div>
         </div>
       </div>
       <div class="provider-card-body extension-card-body">
@@ -10186,14 +10186,14 @@ function _renderExtensionsPanel(data,seq){
     <div class="provider-card extension-assets-card">
       <div class="provider-card-header plugin-card-header">
         <div class="provider-card-info">
-          <div class="provider-card-name">Final public asset URLs</div>
-          <div class="provider-card-meta">Same-origin URLs that may be injected into the app shell.</div>
+          <div class="provider-card-name">${t('wg_final_public_asset_urls')}</div>
+          <div class="provider-card-meta">${t('wg_same_origin_urls_that_may_be')}</div>
         </div>
       </div>
       <div class="provider-card-body extension-card-body">
-        <div class="provider-card-label">Scripts</div>
+        <div class="provider-card-label">${t('wg_scripts')}</div>
         ${_extensionAssetList(scripts)}
-        <div class="provider-card-label extension-section-label">Stylesheets</div>
+        <div class="provider-card-label extension-section-label">${t('wg_stylesheets')}</div>
         ${_extensionAssetList(styles)}
       </div>
     </div>
@@ -10201,8 +10201,8 @@ function _renderExtensionsPanel(data,seq){
     <div class="provider-card extension-warnings-card">
       <div class="provider-card-header plugin-card-header">
         <div class="provider-card-info">
-          <div class="provider-card-name">Sanitized warnings</div>
-          <div class="provider-card-meta">Codes and coarse sources only; paths and rejected values are not shown.</div>
+          <div class="provider-card-name">${t('wg_sanitized_warnings')}</div>
+          <div class="provider-card-meta">${t('wg_ext_warnings_meta')}</div>
         </div>
       </div>
       <div class="provider-card-body extension-card-body">
@@ -10240,12 +10240,12 @@ async function handleExtensionToggle(btn){
   btn.textContent=enabled?'Enabling…':'Disabling…';
   try{
     const data=await api('/api/extensions/toggle',{method:'POST',body:JSON.stringify({id,enabled})});
-    showToast(enabled?'Extension enabled. Reload WebUI to apply changes.':'Extension disabled. Reload WebUI to apply changes.');
+    showToast(enabled?t('wg_extension_enabled_reload_webui_to_apply'):t('wg_extension_disabled_reload_webui_to_apply'));
     _renderExtensionsPanel(data,++_extensionsSidecarMonitorSeq);
   }catch(e){
     btn.disabled=false;
     btn.textContent=previousText;
-    showToast('Failed to update extension: '+(e&&e.message?e.message:String(e)));
+    showToast(t('wg_failed_to_update_extension')+(e&&e.message?e.message:String(e)));
   }
 }
 
@@ -10259,12 +10259,12 @@ async function handleExtensionSidecarProxyConsent(btn){
   btn.textContent=approved?'Approving…':'Revoking…';
   try{
     const data=await api('/api/extensions/sidecar-proxy-consent',{method:'POST',body:JSON.stringify({id,approved})});
-    showToast(approved?'Extension sidecar proxy approved.':'Extension sidecar proxy consent revoked.');
+    showToast(approved?t('wg_extension_sidecar_proxy_approved'):t('wg_extension_sidecar_proxy_consent_revoked'));
     _renderExtensionsPanel(data,++_extensionsSidecarMonitorSeq);
   }catch(e){
     btn.disabled=false;
     btn.textContent=previousText;
-    showToast('Failed to update extension sidecar proxy consent: '+(e&&e.message?e.message:String(e)));
+    showToast(t('wg_failed_to_update_extension_sidecar_proxy')+(e&&e.message?e.message:String(e)));
   }
 }
 
@@ -10314,11 +10314,11 @@ function handleExtensionSettingsSave(btn){
   const api=window.HermesExtensionSettings.settingsForExtension(id);
   const result=api.setAll(_readExtensionSettingsForm(row));
   if(!result.ok){
-    showToast('Extension settings contain invalid values.');
+    showToast(t('wg_extension_settings_contain_invalid_values'));
     return;
   }
   _fillExtensionSettingsForm(row,id);
-  showToast('Extension settings saved in this browser.');
+  showToast(t('wg_extension_settings_saved_in_this_browser'));
 }
 
 function handleExtensionSettingsReset(btn){
@@ -10327,14 +10327,14 @@ function handleExtensionSettingsReset(btn){
   if(!id||!row||!window.HermesExtensionSettings) return;
   window.HermesExtensionSettings.settingsForExtension(id).reset();
   _fillExtensionSettingsForm(row,id);
-  showToast('Extension settings reset in this browser.');
+  showToast(t('wg_extension_settings_reset_in_this_browser'));
 }
 
 function handleExtensionStorageClear(btn){
   const id=btn&&btn.dataset.extensionStorageClear;
   if(!id||!window.HermesExtensionSettings) return;
   window.HermesExtensionSettings.storageForExtension(id).clear();
-  showToast('Extension storage cleared in this browser.');
+  showToast(t('wg_extension_storage_cleared_in_this_browser'));
 }
 
 async function loadExtensionsPanel(opts){
@@ -10350,7 +10350,7 @@ async function loadExtensionsPanel(opts){
   );
   if(copyBtn&&!preserveExisting) copyBtn.disabled=true;
   const seq=++_extensionsSidecarMonitorSeq;
-  if(!preserveExisting) target.innerHTML='<div class="extensions-loading">Loading extension diagnostics…</div>';
+  if(!preserveExisting) target.innerHTML='<div class="extensions-loading">'+t('wg_loading_extension_diagnostics')+'</div>';
   try{
     const data=await api('/api/extensions/status');
     if(seq!==_extensionsSidecarMonitorSeq) return;
@@ -10360,7 +10360,7 @@ async function loadExtensionsPanel(opts){
     if(preserveExisting&&target.innerHTML.trim()) return;
     _extensionsStatusData=null;
     if(copyBtn) copyBtn.disabled=true;
-    target.innerHTML='<div class="extensions-error">Failed to load extension diagnostics: '+esc(e.message||String(e))+'</div>';
+    target.innerHTML='<div class="extensions-error">'+t('wg_ext_diag_failed')+esc(e.message||String(e))+'</div>';
   }
   if(_extensionsActiveTab==='gallery'&&!_extensionsGalleryLoaded) loadExtensionsGallery();
 }
@@ -10424,7 +10424,7 @@ function _extensionSourceUrl(entry){
 function _extensionSourceLink(entry){
   const url=_extensionSourceUrl(entry);
   if(!url) return '';
-  return `<a class="extension-gallery-source-link" href="${esc(url)}" target="_blank" rel="noopener noreferrer">Source</a>`;
+  return `<a class="extension-gallery-source-link" href="${esc(url)}" target="_blank" rel="noopener noreferrer">${t('wg_source')}</a>`;
 }
 
 function _extensionPermissionList(value){
@@ -10441,9 +10441,9 @@ function _extensionPermissionRows(perms){
   const api=(perms.webui_api&&typeof perms.webui_api==='object')?perms.webui_api:{};
   const apiRead=_extensionPermissionList(api.read);
   const apiWrite=_extensionPermissionList(api.write);
-  if(apiRead) rows.push(['WebUI API reads',apiRead]);
-  if(apiWrite) rows.push(['WebUI API writes',apiWrite]);
-  if(perms.webui_navigation===true) rows.push(['Navigation','Can open or switch WebUI views']);
+  if(apiRead) rows.push([t('wg_webui_api_reads'),apiRead]);
+  if(apiWrite) rows.push([t('wg_webui_api_writes'),apiWrite]);
+  if(perms.webui_navigation===true) rows.push(['Navigation',t('wg_can_open_or_switch_webui_views')]);
 
   const sidecarCommands=(perms.sidecar_commands&&typeof perms.sidecar_commands==='object')?perms.sidecar_commands:{};
   const commandLabels=[
@@ -10457,31 +10457,31 @@ function _extensionPermissionRows(perms){
   const commands=commandLabels
     .filter(([key])=>sidecarCommands[key]===true)
     .map(([,label])=>label);
-  if(commands.length) rows.push(['Sidecar commands',commands.join(', ')]);
+  if(commands.length) rows.push([t('wg_sidecar_commands'),commands.join(', ')]);
 
   const dom=(perms.dom&&typeof perms.dom==='object')?perms.dom:{};
   const domItems=[];
   if(dom.owned===true) domItems.push('renders extension-owned UI');
-  if(dom.mutates_core_views===true) domItems.push('can alter core WebUI views');
-  if(domItems.length) rows.push(['DOM access',domItems.join(', ')]);
+  if(dom.mutates_core_views===true) domItems.push(t('wg_can_alter_core_webui_views'));
+  if(domItems.length) rows.push([t('wg_dom_access'),domItems.join(', ')]);
 
   const storage=(perms.storage&&typeof perms.storage==='object')?perms.storage:{};
   const ownedStorage=_extensionPermissionList(storage.owned||storage.owned_keys);
   const sharedStorage=_extensionPermissionList(storage.shared_webui_keys);
-  if(ownedStorage) rows.push(['Owned storage keys',ownedStorage]);
-  if(sharedStorage) rows.push(['Shared WebUI storage',sharedStorage]);
+  if(ownedStorage) rows.push([t('wg_owned_storage_keys'),ownedStorage]);
+  if(sharedStorage) rows.push([t('wg_shared_webui_storage'),sharedStorage]);
 
-  if(perms.loopback_sidecar===true) rows.push(['Loopback sidecar','Can contact a declared local loopback helper']);
-  if(perms.native_host===true) rows.push(['Native host','Requires a local native host or desktop app']);
+  if(perms.loopback_sidecar===true) rows.push([t('wg_loopback_sidecar'),t('wg_can_contact_a_declared_local_loopback')]);
+  if(perms.native_host===true) rows.push([t('wg_native_host'),t('wg_requires_a_local_native_host_or')]);
 
   const filesystem=(perms.filesystem&&typeof perms.filesystem==='object')?perms.filesystem:{};
   if(filesystem.arbitrary===true){
-    rows.push(['Filesystem','Can access arbitrary filesystem paths']);
+    rows.push(['Filesystem',t('wg_can_access_arbitrary_filesystem_paths')]);
   }else if(filesystem.serves_bundled_assets===true){
-    rows.push(['Filesystem','Serves bundled extension assets only']);
+    rows.push(['Filesystem',t('wg_serves_bundled_extension_assets_only')]);
   }
   if(perms.network_external===true||perms.external_network===true){
-    rows.push(['External network','Can contact external network origins']);
+    rows.push([t('wg_external_network'),t('wg_can_contact_external_network_origins')]);
   }
   return rows;
 }
@@ -10536,8 +10536,8 @@ async function loadExtensionsGallery(){
   _extensionsGalleryLoaded=true;
   const galleryEl=$('extensionsGallery');
   const installedEl=$('extensionsInstalled');
-  if(galleryEl) galleryEl.innerHTML='<div class="extensions-loading">Loading gallery…</div>';
-  if(installedEl) installedEl.innerHTML='<div class="extensions-loading">Loading installed extensions…</div>';
+  if(galleryEl) galleryEl.innerHTML='<div class="extensions-loading">'+t('settings_extensions_gallery_loading')+'</div>';
+  if(installedEl) installedEl.innerHTML='<div class="extensions-loading">'+t('wg_loading_installed_extensions')+'</div>';
   try{
     const [regData,statusData]=await Promise.all([
       api('/api/extensions/registry'),
@@ -10548,8 +10548,8 @@ async function loadExtensionsGallery(){
   }catch(e){
     _extensionsGalleryLoaded=false;
     const msg=esc(e&&e.message?e.message:String(e));
-    if(galleryEl) galleryEl.innerHTML='<div class="extensions-error">Failed to load gallery: '+msg+'</div>';
-    if(installedEl) installedEl.innerHTML='<div class="extensions-error">Failed to load extension status.</div>';
+    if(galleryEl) galleryEl.innerHTML='<div class="extensions-error">'+t('wg_ext_gallery_failed')+msg+'</div>';
+    if(installedEl) installedEl.innerHTML='<div class="extensions-error">'+t('wg_failed_to_load_extension_status')+'</div>';
   }
 }
 
@@ -10565,7 +10565,7 @@ function _renderExtensionsGallery(entries,statusData){
     statusData.extensions.forEach(e=>{ if(e&&e.id) installedIds.add(e.id); });
   }
   if(!Array.isArray(entries)||entries.length===0){
-    if(galleryEl) galleryEl.innerHTML='<div class="extensions-empty">No extensions found in the registry.</div>';
+    if(galleryEl) galleryEl.innerHTML='<div class="extensions-empty">'+t('settings_extensions_gallery_empty')+'</div>';
     if(installedEl){
       installedEl.innerHTML=_extensionInstalledList(statusData&&statusData.extensions,!!(statusData&&statusData.extension_dir_configured));
       _bindExtensionToggleButtons(installedEl);
@@ -10597,7 +10597,7 @@ function _renderExtensionsGallery(entries,statusData){
     const actionBtn=isInstalled
       ?`<button class="extension-gallery-uninstall-btn" data-ext-uninstall-id="${id}" type="button" data-i18n="ext_gallery_uninstall">Uninstall</button>`
       :`<button class="extension-gallery-install-btn" data-ext-install-id="${id}" type="button" data-i18n="ext_gallery_install">Install</button>`;
-    const installedBadge=isInstalled?'<span class="extension-gallery-installed-badge">Installed</span>':'';
+    const installedBadge=isInstalled?'<span class="extension-gallery-installed-badge">'+t('ext_gallery_installed')+'</span>':'';
     const card=`<div class="extension-gallery-card">
       <div class="extension-gallery-head">
         <div class="extension-gallery-info">
@@ -10613,7 +10613,7 @@ function _renderExtensionsGallery(entries,statusData){
     </div>`;
     galleryCards.push(card);
   }
-  if(galleryEl) galleryEl.innerHTML=galleryCards.length?galleryCards.join(''):'<div class="extensions-empty">No extensions found.</div>';
+  if(galleryEl) galleryEl.innerHTML=galleryCards.length?galleryCards.join(''):'<div class="extensions-empty">'+t('wg_no_extensions_found')+'</div>';
   if(installedEl){
     installedEl.innerHTML=_extensionInstalledList(statusData&&statusData.extensions,!!(statusData&&statusData.extension_dir_configured));
     _bindExtensionToggleButtons(installedEl);
@@ -10655,7 +10655,7 @@ async function handleExtensionInstall(btn,entry){
   }catch(e){
     btn.disabled=false;
     btn.textContent=previousText;
-    showToast('Install failed: '+(e&&e.message?e.message:String(e)));
+    showToast(t('wg_install_failed')+(e&&e.message?e.message:String(e)));
   }
 }
 
@@ -10663,16 +10663,16 @@ async function handleExtensionUninstall(btn,id){
   if(!btn||btn.disabled) return;
   const previousText=btn.textContent;
   btn.disabled=true;
-  btn.textContent='Uninstalling…';
+  btn.textContent=t('ext_gallery_uninstalling');
   try{
     await api('/api/extensions/uninstall',{method:'POST',body:JSON.stringify({id})});
-    showToast('Extension uninstalled.');
+    showToast(t('ext_gallery_uninstall_ok'));
     _extensionsGalleryLoaded=false;
     await loadExtensionsGallery();
   }catch(e){
     btn.disabled=false;
     btn.textContent=previousText;
-    showToast('Uninstall failed: '+(e&&e.message?e.message:String(e)));
+    showToast(t('wg_uninstall_failed')+(e&&e.message?e.message:String(e)));
   }
 }
 
@@ -10938,7 +10938,7 @@ async function loadProvidersPanel(){
       list.appendChild(_buildProviderCard(p));
     }
   }catch(e){
-    list.innerHTML='<div style="color:var(--error);padding:12px;font-size:13px">Failed to load providers: '+esc(e.message||String(e))+'</div>';
+    list.innerHTML='<div style="color:var(--error);padding:12px;font-size:13px">'+t('wg_providers_load_failed')+esc(e.message||String(e))+'</div>';
   }
 }
 
@@ -11214,7 +11214,7 @@ async function renderProviderCostChart(card){
   if(!hasData){
     const empty=document.createElement('div');
     empty.className='provider-cost-chart-wrap';
-    empty.innerHTML='<div class="provider-cost-chart-title">7-day spend</div><div class="provider-quota-message">Not enough data yet. Cost chart builds after 2 daily snapshots.</div>';
+    empty.innerHTML='<div class="provider-cost-chart-title">'+t('wg_7_day_spend')+'</div><div class="provider-quota-message">'+t('wg_not_enough_data_yet_cost_chart')+'</div>';
     body.appendChild(empty);
     _attachBudgetControls(empty,history,card,0);
     return;
@@ -11233,7 +11233,7 @@ async function renderProviderCostChart(card){
   }).join('');
   const wrap=document.createElement('div');
   wrap.className='provider-cost-chart-wrap';
-  wrap.innerHTML=`<div class="provider-cost-chart-title">7-day spend <span class="provider-cost-chart-pace">Monthly pace: ${esc(pace)}</span></div><div class="provider-cost-chart-bars insights-daily-token-chart">${bars}</div>`;
+  wrap.innerHTML=`<div class="provider-cost-chart-title">${t('wg_spend_7d')} <span class="provider-cost-chart-pace">${t('wg_monthly_pace',esc(pace))}</span></div><div class="provider-cost-chart-bars insights-daily-token-chart">${bars}</div>`;
   const monthly_budget=history&&history.monthly_budget!=null?history.monthly_budget:null;
   if(monthly_budget!=null&&paceNum>0){
     const paceSpan=wrap.querySelector('.provider-cost-chart-pace');
@@ -11403,7 +11403,7 @@ function _buildProviderCard(p){
     baseUrlField.className='provider-card-field';
     const baseUrlLabel=document.createElement('label');
     baseUrlLabel.className='provider-card-label';
-    baseUrlLabel.textContent='Base URL';
+    baseUrlLabel.textContent=t('wg_base_url');
     baseUrlField.appendChild(baseUrlLabel);
     const baseUrlRow=document.createElement('div');
     baseUrlRow.className='provider-card-row';
@@ -11416,7 +11416,7 @@ function _buildProviderCard(p){
     const testBtn=document.createElement('button');
     testBtn.type='button';
     testBtn.className='provider-card-btn provider-card-btn-ghost';
-    testBtn.textContent='Test connection';
+    testBtn.textContent=t('wg_test_connection');
     const probeStatus=document.createElement('div');
     probeStatus.className='provider-card-hint';
     baseUrlRow.appendChild(baseUrlInput);
@@ -11428,7 +11428,7 @@ function _buildProviderCard(p){
     keyField.className='provider-card-field';
     const keyLabel=document.createElement('label');
     keyLabel.className='provider-card-label';
-    keyLabel.textContent='API key (optional)';
+    keyLabel.textContent=t('wg_api_key_optional');
     keyField.appendChild(keyLabel);
     const keyRow=document.createElement('div');
     keyRow.className='provider-card-row';
@@ -11436,7 +11436,7 @@ function _buildProviderCard(p){
     keyInput.type='password';
     keyInput.className='provider-card-input';
     keyInput.autocomplete='off';
-    keyInput.placeholder='Optional';
+    keyInput.placeholder=t('wg_optional');
     keyRow.appendChild(keyInput);
     keyField.appendChild(keyRow);
 
@@ -11452,7 +11452,7 @@ function _buildProviderCard(p){
     modelInput.type='text';
     modelInput.className='provider-card-input';
     modelInput.autocomplete='off';
-    modelInput.placeholder='model id';
+    modelInput.placeholder=t('wg_model_id');
     const modelDatalist=document.createElement('datalist');
     const modelListId='providerModelList-'+p.id;
     modelDatalist.id=modelListId;
@@ -11547,7 +11547,7 @@ function _buildProviderCard(p){
     const toggleBtn=document.createElement('button');
     toggleBtn.type='button';
     toggleBtn.className='provider-card-btn provider-card-btn-ghost';
-    toggleBtn.textContent='Show';
+    toggleBtn.textContent=t('wg_show');
     toggleBtn.onclick=()=>{
       const revealed=input.type==='text';
       input.type=revealed?'password':'text';
@@ -11578,8 +11578,8 @@ function _buildProviderCard(p){
     const hint=document.createElement('div');
     hint.className='provider-card-hint';
     hint.textContent=p.is_custom
-      ? 'Custom provider loaded from config.yaml / hermes model. Edit it from the CLI or config file.'
-      : 'Provider is managed outside the WebUI.';
+      ? t('wg_custom_provider_loaded_from_config_yaml')
+      : t('wg_provider_is_managed_outside_the_webui');
     body.appendChild(hint);
   }
 
@@ -11589,7 +11589,7 @@ function _buildProviderCard(p){
     modelSection.className='provider-card-models';
     const modelLabel=document.createElement('div');
     modelLabel.className='provider-card-label';
-    modelLabel.textContent='Models';
+    modelLabel.textContent=t('wg_models');
     modelSection.appendChild(modelLabel);
     const modelList=document.createElement('div');
     modelList.className='provider-card-model-tags';
@@ -11612,7 +11612,7 @@ function _buildProviderCard(p){
       const more=document.createElement('span');
       more.className='provider-card-model-tag provider-card-model-tag-more';
       more.textContent='+'+hiddenCount+' more';
-      more.title='The /model slash command can autocomplete every model in this provider\'s catalog.';
+      more.title=t('wg_the_model_slash_command_can_autocomplete');
       modelList.appendChild(more);
     }
     modelSection.appendChild(modelList);
@@ -11670,12 +11670,12 @@ async function _saveProviderKey(providerId){
       _refreshModelDropdownsAfterProviderChange();
       await loadProvidersPanel(); // refresh list
     }else{
-      showToast(res.error||'Failed to save key');
+      showToast(res.error||t('wg_failed_to_save_key'));
       els.saveBtn.disabled=false;
       els.saveBtn.textContent=t('providers_save');
     }
   }catch(e){
-    showToast('Error: '+e.message);
+    showToast(t('error_prefix')+e.message);
     els.saveBtn.disabled=false;
     els.saveBtn.textContent=t('providers_save');
   }
@@ -11697,7 +11697,7 @@ async function _removeProviderKey(providerId){
       _refreshModelDropdownsAfterProviderChange();
       await loadProvidersPanel(); // refresh list
     }else{
-      showToast(res.error||'Failed to remove key');
+      showToast(res.error||t('wg_failed_to_remove_key'));
       if(els.saveBtn){els.saveBtn.disabled=false;els.saveBtn.textContent=t('providers_save');}
     }
   }catch(e){
@@ -11710,9 +11710,9 @@ async function _removeProviderKey(providerId){
     // deployment-shape failure #2572 calls out keeps its actionable hint
     // instead of being flattened to a single generic toast.
     if(e&&e.status===403){
-      showToast(e.message||'Session expired. Reload the page and try again.',6000,'error');
+      showToast(e.message||t('wg_session_expired_reload_the_page_and'),6000,'error');
     }else{
-      showToast('Error: '+e.message);
+      showToast(t('error_prefix')+e.message);
     }
     if(els.saveBtn){els.saveBtn.disabled=false;els.saveBtn.textContent=t('providers_save');}
   }
@@ -11724,7 +11724,7 @@ async function _testSelfHostedConnection(providerId){
   const baseUrl=(els.baseUrlInput.value||'').trim();
   const apiKey=(els.apiKeyInput.value||'').trim();
   if(!baseUrl){
-    showToast('Base URL is required');
+    showToast(t('wg_base_url_is_required'));
     return;
   }
 
@@ -11732,10 +11732,10 @@ async function _testSelfHostedConnection(providerId){
   if(!testBtn) return;
   const prevLabel=testBtn.textContent;
   testBtn.disabled=true;
-  testBtn.textContent='Testing...';
+  testBtn.textContent=t('wg_testing');
   if(els.probeStatus){
     els.probeStatus.style.color='var(--muted)';
-    els.probeStatus.textContent='Testing connection...';
+    els.probeStatus.textContent=t('wg_testing_connection');
   }
 
   try{
@@ -11751,7 +11751,7 @@ async function _testSelfHostedConnection(providerId){
       if(els.probeStatus){
         const count=models.length;
         els.probeStatus.style.color='var(--ok)';
-        els.probeStatus.textContent=`Connected. ${count} model(s) available.`;
+        els.probeStatus.textContent=t('wg_connected_0_model_s_available', count);
       }
       if(!els.modelInput.value&&models.length&&models[0]){
         els.modelInput.value=models[0].id||models[0];
@@ -11766,14 +11766,14 @@ async function _testSelfHostedConnection(providerId){
         els.probeStatus.style.color='var(--accent)';
         els.probeStatus.textContent=`${err}${detail}`;
       }
-      showToast(`Connection test failed: ${err}`);
+      showToast(t('wg_connection_test_failed_0', err));
     }
   }catch(e){
     if(els.probeStatus){
       els.probeStatus.style.color='var(--accent)';
-      els.probeStatus.textContent=e&&e.message?e.message:'Connection test failed';
+      els.probeStatus.textContent=e&&e.message?e.message:t('wg_connection_test_failed');
     }
-    showToast('Connection test failed: '+(e&&e.message||'request error'));
+    showToast(t('wg_connection_test_failed_2')+(e&&e.message||'request error'));
   }finally{
     testBtn.disabled=false;
     testBtn.textContent=prevLabel;
@@ -11787,18 +11787,18 @@ async function _saveSelfHostedProvider(providerId){
   const key=(els.apiKeyInput.value||'').trim();
   const model=(els.modelInput.value||'').trim();
   if(!baseUrl){
-    showToast('Base URL is required');
+    showToast(t('wg_base_url_is_required'));
     return;
   }
   if(!model){
-    showToast('Model is required');
+    showToast(t('wg_model_is_required'));
     return;
   }
   if(!els.saveBtn) return;
   const saveBtn=els.saveBtn;
   const prevLabel=saveBtn.textContent;
   saveBtn.disabled=true;
-  saveBtn.textContent='Saving...';
+  saveBtn.textContent=t('wg_saving');
   try{
     const payload={provider:providerId,base_url:baseUrl,model:model};
     if(key) payload.api_key=key;
@@ -11809,12 +11809,12 @@ async function _saveSelfHostedProvider(providerId){
       _refreshModelDropdownsAfterProviderChange();
       await loadProvidersPanel();
     }else{
-      showToast(res&&res.error||'Failed to save provider');
+      showToast(res&&res.error||t('wg_failed_to_save_provider'));
       saveBtn.disabled=false;
       saveBtn.textContent=prevLabel;
     }
   }catch(e){
-    showToast('Error: '+(e&&e.message||'Failed to save provider'));
+    showToast(t('error_prefix')+(e&&e.message||t('wg_failed_to_save_provider')));
     saveBtn.disabled=false;
     saveBtn.textContent=prevLabel;
   }
@@ -11852,13 +11852,13 @@ async function _refreshProviderModels(providerId, btn){
   try{
     const res=await api('/api/models/refresh',{method:'POST',body:JSON.stringify({provider:providerId})});
     if(res.ok){
-      showToast(t('providers_models_refreshed')||('Models refreshed for '+res.provider));
+      showToast(t('providers_models_refreshed')||(t('wg_models_refreshed_for')+res.provider));
       _refreshModelDropdownsAfterProviderChange();
     }else{
-      showToast(res.error||'Failed to refresh models');
+      showToast(res.error||t('wg_failed_to_refresh_models'));
     }
   }catch(e){
-    showToast(e.status===404?'Refresh not available for this provider.':(e.message||'Failed to refresh models'));
+    showToast(e.status===404?t('wg_refresh_not_available_for_this_provider'):(e.message||t('wg_failed_to_refresh_models')));
   }finally{
     btn.disabled=false;
     btn.innerHTML=orig;
@@ -11974,7 +11974,7 @@ async function loadPasskeys(){
     return;
   }
   if(!window.PublicKeyCredential||!navigator.credentials){
-    list.textContent='Passkeys are not supported by this browser/context.';
+    list.textContent=t('wg_passkeys_are_not_supported_by_this');
     const btn=$('btnRegisterPasskey'); if(btn) btn.disabled=true;
     return;
   }
@@ -11985,14 +11985,14 @@ async function loadPasskeys(){
       return;
     }
     const creds=(data&&data.credentials)||[];
-    if(!creds.length){list.textContent='No passkeys registered.';return;}
-    list.innerHTML=creds.map(c=>`<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;border:1px solid var(--border);border-radius:8px;padding:8px;margin-top:6px"><span>${esc(c.label||'Passkey')}</span><button class="btn-tiny" onclick="deletePasskey('${esc(c.id)}')">Remove</button></div>`).join('');
-  }catch(e){list.textContent='Failed to load passkeys: '+e.message;}
+    if(!creds.length){list.textContent=t('wg_no_passkeys_registered');return;}
+    list.innerHTML=creds.map(c=>`<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;border:1px solid var(--border);border-radius:8px;padding:8px;margin-top:6px"><span>${esc(c.label||'Passkey')}</span><button class="btn-tiny" onclick="deletePasskey('${esc(c.id)}')">${t('remove')}</button></div>`).join('');
+  }catch(e){list.textContent=t('wg_failed_to_load_passkeys')+e.message;}
 }
 
 async function registerPasskey(){
-  if(!window.PublicKeyCredential||!navigator.credentials){showToast('Passkeys require a supported browser and secure context.');return;}
-  const label='This device';
+  if(!window.PublicKeyCredential||!navigator.credentials){showToast(t('wg_passkeys_require_a_supported_browser_and'));return;}
+  const label=t('wg_this_device');
   try{
     const optData=await api('/api/auth/passkey/register/options',{method:'POST',body:'{}'});
     const pk=optData.publicKey;
@@ -12005,17 +12005,17 @@ async function registerPasskey(){
       id:cred.id,rawId:_bytesToB64u(cred.rawId),type:cred.type,label,
       response:{clientDataJSON:_bytesToB64u(cred.response.clientDataJSON),attestationObject:_bytesToB64u(cred.response.attestationObject)}
     })});
-    showToast('Passkey registered');
+    showToast(t('wg_passkey_registered'));
     loadPasskeys();
     try{_syncPasswordlessButton(await api('/api/auth/status'));}catch(_e){}
-  }catch(e){showToast('Passkey registration failed: '+e.message);}
+  }catch(e){showToast(t('wg_passkey_registration_failed')+e.message);}
 }
 
 async function deletePasskey(id){
-  const ok=await showConfirmDialog({title:'Remove passkey?',message:'This browser/device will no longer be able to sign in with that passkey.',confirmLabel:'Remove',danger:true,focusCancel:true});
+  const ok=await showConfirmDialog({title:t('wg_remove_passkey'),message:t('wg_this_browser_device_will_no_longer'),confirmLabel:t('remove'),danger:true,focusCancel:true});
   if(!ok) return;
-  try{await api('/api/auth/passkey/delete',{method:'POST',body:JSON.stringify({id})});showToast('Passkey removed');loadPasskeys();try{_syncPasswordlessButton(await api('/api/auth/status'));}catch(_e){}}
-  catch(e){showToast('Failed to remove passkey: '+e.message);}
+  try{await api('/api/auth/passkey/delete',{method:'POST',body:JSON.stringify({id})});showToast(t('wg_passkey_removed'));loadPasskeys();try{_syncPasswordlessButton(await api('/api/auth/status'));}catch(_e){}}
+  catch(e){showToast(t('wg_failed_to_remove_passkey')+e.message);}
 }
 
 function _applySavedSettingsUi(saved, body, opts){
@@ -12757,7 +12757,7 @@ async function saveSettings(andClose){
           body.default_model=model;
           body.default_model_provider=(modelState&&modelState.model===model)?(modelState.model_provider||null):null;
         }catch(_modelErr){
-          if(typeof showToast==='function') showToast('Failed to update default model — settings saved');
+          if(typeof showToast==='function') showToast(t('wg_failed_to_update_default_model_settings'));
         }
       }
       _applySavedSettingsUi(saved, body, {sendKey,showTokenUsage,showQuotaChip,showConversationOutline,showBusyPlaceholderHint,showTps,fadeTextEffect,showCliSessions,theme,language,sidebarDensity,fontSize});
@@ -12788,7 +12788,7 @@ async function saveSettings(andClose){
         body.default_model=model;
         body.default_model_provider=(modelState&&modelState.model===model)?(modelState.model_provider||null):null;
       }catch(_modelErr){
-        if(typeof showToast==='function') showToast('Failed to update default model — settings saved');
+        if(typeof showToast==='function') showToast(t('wg_failed_to_update_default_model_settings'));
       }
     }
     _applySavedSettingsUi(saved, body, {sendKey,showTokenUsage,showQuotaChip,showConversationOutline,showBusyPlaceholderHint,showTps,fadeTextEffect,showCliSessions,theme,language,sidebarDensity,fontSize});
@@ -12814,14 +12814,14 @@ async function signOut(){
 }
 
 async function goPasswordless(){
-  const ok=await showConfirmDialog({title:'Go passwordless?',message:'This removes the password and keeps passkey sign-in enabled. Keep at least one passkey registered or you could lose access.',confirmLabel:'Go passwordless',danger:false,focusCancel:true});
+  const ok=await showConfirmDialog({title:t('wg_go_passwordless_3'),message:t('wg_this_removes_the_password_and_keeps'),confirmLabel:t('wg_go_passwordless_2'),danger:false,focusCancel:true});
   if(!ok) return;
   const currentPw=($('settingsCurrentPassword')||{}).value;
   const payload={_passwordless:true};
   if(_settingsPasswordAuthEnabled && currentPw) payload._current_password=currentPw;
   try{
     const saved=await api('/api/settings',{method:'POST',body:JSON.stringify(payload)});
-    showToast('Password removed. Passkey sign-in remains enabled.');
+    showToast(t('wg_password_removed_passkey_sign_in_remains'));
     _setSettingsAuthButtonsVisible(!!saved.auth_enabled);
     _syncPasswordlessButton({auth_enabled:saved.auth_enabled,password_auth_enabled:false,passkeys_count:1});
     const pwField=$('settingsPassword'); if(pwField) pwField.value='';
@@ -12833,7 +12833,7 @@ async function goPasswordless(){
       _renderSettingsAuthStatus(authStatus);
       _updateAuthWarningBadge(authStatus);
     }catch(e){}
-  }catch(e){showToast('Failed to go passwordless: '+e.message);}
+  }catch(e){showToast(t('wg_failed_to_go_passwordless')+e.message);}
 }
 
 async function disableAuth(){
@@ -13370,7 +13370,7 @@ async function _restoreCheckpoint(workspace,checkpoint,message){
     if(data&&data.ok){
       showToast(t('checkpoint_restored')+(data.files_restored_count?` (${data.files_restored_count} ${t('checkpoint_files').toLowerCase()})`:''));
     }else{
-      showToast((data&&data.error)||'Restore failed','error');
+      showToast((data&&data.error)||t('wg_restore_failed'),'error');
     }
   }catch(e){
     showToast(t('checkpoint_restore')+': '+e.message,'error');

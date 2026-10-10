@@ -10,6 +10,7 @@ import pytest
 
 import api.routes as routes
 import api.wings_voice as wings_voice
+from tests.wings_i18n import en  # Wings: UI text via t() (CI ABGLEICH WG-R3)
 
 
 STATIC_DIR = Path(__file__).resolve().parent.parent / "static"
@@ -640,7 +641,7 @@ def test_openai_option_in_html():
 def test_openai_voice_placeholder_in_panels():
     src = (STATIC_DIR / "panels.js").read_text(encoding="utf-8")
     assert "engine==='openai'" in src
-    assert 'OpenAI voice (server-configured)' in src
+    assert "t('wg_openai_voice')" in src and en("wg_openai_voice") == 'OpenAI voice (server-configured)'
 
 
 def test_play_openai_tts_exists_in_ui_js():
