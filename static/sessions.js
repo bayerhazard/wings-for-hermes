@@ -7966,7 +7966,7 @@ function renderSessionListFromCache(){
     const icon=document.createElement('span');
     icon.className='session-folder-icon';
     icon.dataset.wingsIcon='1';
-    icon.innerHTML=(typeof li==='function')?li(isUnassigned?'archive':'folder',18,1.75):'';
+    icon.innerHTML=(typeof li==='function')?li(isUnassigned?'archive':'folder',18):'';
     header.appendChild(icon);
     const name=document.createElement('span');
     name.className='session-folder-name';
