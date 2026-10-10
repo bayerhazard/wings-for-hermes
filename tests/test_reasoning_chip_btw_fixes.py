@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import pathlib
 import re
+from tests.wings_i18n import en  # Wings: UI text via t() (CI ABGLEICH WG-R3)
 
 
 REPO = pathlib.Path(__file__).resolve().parent.parent
@@ -149,10 +150,10 @@ class TestReasoningChipNoneState:
         )
 
     def test_none_and_default_have_visible_labels(self):
-        assert "if(effort==='none') return 'None';" in UI_JS, (
+        assert "if(effort==='none') return t('wg_reasoning_none');" in UI_JS and en("wg_reasoning_none") == "None", (
             "the disabled reasoning state must render a visible 'None' label"
         )
-        assert "if(!effort) return 'Default';" in UI_JS, (
+        assert "if(!effort) return t('wg_reasoning_default');" in UI_JS and en("wg_reasoning_default") == "Default", (
             "the unset reasoning state must render a visible 'Default' label"
         )
 

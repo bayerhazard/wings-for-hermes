@@ -1874,7 +1874,7 @@ async function _populateCronFormModelSelect(selectedModel, selectedProvider, dis
     const groups = (Array.isArray(data && data.groups) && data.groups.length) ? data.groups : [];
     for (const g of groups) {
       const og = document.createElement('optgroup');
-      og.label = g.provider || g.provider_id || 'Configured';
+      og.label = g.provider || g.provider_id || t('model_group_configured');
       if (g.provider_id) og.dataset.provider = g.provider_id;
       for (const m of [...(Array.isArray(g.models) ? g.models : []), ...(Array.isArray(g.extra_models) ? g.extra_models : [])]) {
         if (!m || !m.id) continue;
@@ -4041,7 +4041,7 @@ async function loadKanbanBoards(){
   const activeMeta = boards.find(b => b.slug === active) || {slug: active, name: active, icon: '', color: ''};
   const nameEl = document.getElementById('kanbanBoardSwitcherName');
   const iconEl = document.getElementById('kanbanBoardSwitcherIcon');
-  if (nameEl) nameEl.textContent = activeMeta.name || activeMeta.slug || 'Default';
+  if (nameEl) nameEl.textContent = activeMeta.name || activeMeta.slug || t('wg_default_profile');
   if (iconEl) {
     iconEl.textContent = activeMeta.icon || '';
     if (activeMeta.color) iconEl.style.color = activeMeta.color;
@@ -4497,7 +4497,7 @@ const STATIC_MODEL_HEALTH_ROWS = [
   {id:'openai/gpt-5.4', provider:'OpenAI', inputCostPerM:2.00, outputCostPerM:10.00, replacement:t('wg_use_for_complex_synthesis_fall_back')},
   {id:'anthropic/claude-sonnet-4.5', provider:'Anthropic', inputCostPerM:3.00, outputCostPerM:15.00, replacement:t('wg_strong_coding_and_analysis_option_use')},
   {id:'google/gemini-2.5-pro', provider:'Google', inputCostPerM:1.25, outputCostPerM:10.00, replacement:t('wg_long_context_research_option_use_flash')},
-  {id:'google/gemini-2.5-flash', provider:'Google', inputCostPerM:0.30, outputCostPerM:2.50, replacement:'Low-latency replacement for lighter multimodal or research turns'},
+  {id:'google/gemini-2.5-flash', provider:'Google', inputCostPerM:0.30, outputCostPerM:2.50, replacement:t('wg_flash_replacement')},
 ];
 
 function _renderModelHealthCost(row) {
@@ -4545,7 +4545,7 @@ async function loadInsights(animate) {
 }
 
 function _formatLlmWikiTimestamp(value) {
-  if (!value) return 'Never';
+  if (!value) return t('wg_never');
   try { return new Date(value).toLocaleString(); }
   catch (_) { return String(value); }
 }
@@ -4584,7 +4584,7 @@ function _renderLlmWikiStatus(d) {
   const isEmpty = status.available && status.status === 'empty';
   const isError = status.status === 'error';
   const badgeClass = isReady ? 'ok' : isError ? 'err' : isEmpty ? 'warn' : 'muted';
-  const badgeText = isReady ? 'Available' : isError ? 'Error' : isEmpty ? 'Empty' : 'Unavailable';
+  const badgeText = isReady ? t('wg_available') : isError ? t('wg_error_state') : isEmpty ? t('wg_empty') : t('wg_unavailable');
   const rawDocsUrl = status.docs_url || 'https://hermes-agent.nousresearch.com/docs/user-guide/skills/bundled/research/research-llm-wiki';
   // Guard against unsafe URL schemes (e.g. js: / data:) if docs_url ever
   // becomes config-driven. esc() HTML-escapes but doesn't validate URL scheme.
@@ -5453,16 +5453,16 @@ function _renderExternalNotesSources() {
           <div class="notes-source-card-head notes-ai-recent-head"><strong>${li('bot', 14)}${esc(t('external_notes_recent_ai'))}</strong><span class="detail-badge">${esc(t('external_notes_auto'))}</span></div>
           <div class="notes-ai-recent-list">${recentAiNotes.map(note => {
             const updated = note.updated_time ? new Date(Number(note.updated_time)).toLocaleString() : '';
-            return `<button type="button" class="notes-result-card notes-ai-recent-item" onclick="previewExternalNote('${esc(note.source||'joplin')}','${esc(note.id||'')}')"><strong>${esc(note.title||note.label||'Untitled')}</strong><span>${li('clock', 14)}${esc(note.label||t('external_notes_recent_ai_reason'))}${updated ? ` · ${esc(updated)}` : ''}</span></button>`;
+            return `<button type="button" class="notes-result-card notes-ai-recent-item" onclick="previewExternalNote('${esc(note.source||'joplin')}','${esc(note.id||'')}')"><strong>${esc(note.title||note.label||t('untitled'))}</strong><span>${li('clock', 14)}${esc(note.label||t('external_notes_recent_ai_reason'))}${updated ? ` · ${esc(updated)}` : ''}</span></button>`;
           }).join('')}</div>
         </section>`
       : '';
     const searchError = _notesSearchError ? `<div class="detail-form-error">${esc(_notesSearchError)}</div>` : '';
     const resultHtml = _notesSearchResults.length
-      ? `<div class="notes-search-results">${_notesSearchResults.map(note => `<button type="button" class="notes-result-card" onclick="previewExternalNote('${esc(note.source||_notesSelectedSource)}','${esc(note.id||'')}')"><strong>${esc(note.title||'Untitled')}</strong>${note.snippet?`<span>${esc(note.snippet)}</span>`:''}</button>`).join('')}</div>`
+      ? `<div class="notes-search-results">${_notesSearchResults.map(note => `<button type="button" class="notes-result-card" onclick="previewExternalNote('${esc(note.source||_notesSelectedSource)}','${esc(note.id||'')}')"><strong>${esc(note.title||t('untitled'))}</strong>${note.snippet?`<span>${esc(note.snippet)}</span>`:''}</button>`).join('')}</div>`
       : `<div class="memory-empty">${esc(t('external_notes_search_empty'))}</div>`;
     const previewHtml = _notesPreviewNote
-      ? `<section class="notes-source-card notes-preview-card"><div class="notes-source-card-head"><strong>${esc(_notesPreviewNote.title||'Untitled')}</strong><span class="detail-badge">${esc(_notesPreviewNote.source||_notesSelectedSource)}</span></div><div class="memory-content preview-md">${renderMd(_notesPreviewNote.body||'')}</div></section>`
+      ? `<section class="notes-source-card notes-preview-card"><div class="notes-source-card-head"><strong>${esc(_notesPreviewNote.title||t('untitled'))}</strong><span class="detail-badge">${esc(_notesPreviewNote.source||_notesSelectedSource)}</span></div><div class="memory-content preview-md">${renderMd(_notesPreviewNote.body||'')}</div></section>`
       : '';
     const cards = sources.map(src => {
       const status = src.active ? t('source_active') : (src.status || t('source_configured'));
@@ -7428,7 +7428,7 @@ async function _populateProfileFormModelSelect(){
     const groups = (Array.isArray(data && data.groups) && data.groups.length) ? data.groups : [];
     for (const g of groups) {
       const og = document.createElement('optgroup');
-      og.label = g.provider || g.provider_id || 'Configured';
+      og.label = g.provider || g.provider_id || t('model_group_configured');
       if (g.provider_id) og.dataset.provider = g.provider_id;
       for (const m of [...(Array.isArray(g.models) ? g.models : []), ...(Array.isArray(g.extra_models) ? g.extra_models : [])]) {
         if (!m || !m.id) continue;
@@ -9794,7 +9794,7 @@ async function loadSettingsPanel(){
 // ── Extensions panel (browser-origin diagnostics + local enable controls) ──
 
 function _extensionStatusLabel(value){
-  return value ? 'Enabled' : 'Disabled';
+  return value ? t('wg_enabled') : t('wg_disabled');
 }
 
 function _extensionBooleanBadge(value){
@@ -9832,9 +9832,9 @@ function _extensionCountValue(counts,key,urls){
 function _extensionEntryStatusLabel(entry){
   const status=(entry&&entry.status)||'';
   if(status==='manifest_disabled') return t('wg_disabled_in_manifest');
-  if(status==='user_disabled') return 'Disabled';
-  if(status==='enabled') return 'Enabled';
-  return 'Unknown';
+  if(status==='user_disabled') return t('wg_disabled');
+  if(status==='enabled') return t('wg_enabled');
+  return t('status_unknown');
 }
 
 function _extensionEntryBadge(entry){
@@ -9916,7 +9916,7 @@ function _extensionInstalledList(extensions,extensionDirConfigured){
     const canToggle=!!(entry&&entry.can_toggle);
     const userEnabled=!!(entry&&entry.user_enabled);
     const disabledAttr=canToggle?'':' disabled aria-disabled="true"';
-    const buttonText=userEnabled?'Disable':'Enable';
+    const buttonText=userEnabled?t('disable'):t('plugins_enable_toggle');
     const nextEnabled=userEnabled?'false':'true';
     const note=canToggle
       ? t('wg_toggles_the_webui_managed_override_for')
@@ -10237,7 +10237,7 @@ async function handleExtensionToggle(btn){
   if(!id) return;
   const previousText=btn.textContent;
   btn.disabled=true;
-  btn.textContent=enabled?'Enabling…':'Disabling…';
+  btn.textContent=enabled?t('wg_enabling'):t('wg_disabling');
   try{
     const data=await api('/api/extensions/toggle',{method:'POST',body:JSON.stringify({id,enabled})});
     showToast(enabled?t('wg_extension_enabled_reload_webui_to_apply'):t('wg_extension_disabled_reload_webui_to_apply'));
@@ -10256,7 +10256,7 @@ async function handleExtensionSidecarProxyConsent(btn){
   if(!id) return;
   const previousText=btn.textContent;
   btn.disabled=true;
-  btn.textContent=approved?'Approving…':'Revoking…';
+  btn.textContent=approved?t('wg_approving'):t('wg_revoking');
   try{
     const data=await api('/api/extensions/sidecar-proxy-consent',{method:'POST',body:JSON.stringify({id,approved})});
     showToast(approved?t('wg_extension_sidecar_proxy_approved'):t('wg_extension_sidecar_proxy_consent_revoked'));
@@ -10786,7 +10786,7 @@ const enabled=plugin&&plugin.enabled!==false;
   // crafted value could break out). Render inert markup + bind listeners below
   // with the raw closure values.
   const openBtn=enabled&&tab&&tab.path
-    ? `<a href="${esc(tab.path)}" class="plugin-open-btn">${esc(tab.label||plugin.name||'Open')} \u2197</a>`
+    ? `<a href="${esc(tab.path)}" class="plugin-open-btn">${esc(tab.label||plugin.name||t('wg_open'))} \u2197</a>`
     : '';
   const toggleHtml=enabled&&isDashboardPlugin
     ? `<div class="plugin-card-footer-row">
@@ -11551,7 +11551,7 @@ function _buildProviderCard(p){
     toggleBtn.onclick=()=>{
       const revealed=input.type==='text';
       input.type=revealed?'password':'text';
-      toggleBtn.textContent=revealed?'Show':'Hide';
+      toggleBtn.textContent=revealed?t('wg_reveal'):t('wg_conceal');
     };
     saveBtn=document.createElement('button');
     saveBtn.type='button';

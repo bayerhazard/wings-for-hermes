@@ -77,7 +77,7 @@ async function _shareLoad(){
     }
     const title=$('shareTitle');
     const meta=$('shareMeta');
-    if(title) title.textContent=share.title||'Untitled';
+    if(title) title.textContent=share.title||t('untitled');
     if(meta){
       const count=Number(share.message_count||share.messages.length||0);
       meta.textContent=t('wg_share_meta', count);

@@ -187,9 +187,10 @@
     var roleEl = row.closest('[data-role]');
     var role = roleEl ? roleEl.getAttribute('data-role') : '';
     if (!role) role = row.classList.contains('assistant-turn') ? 'assistant' : '';
-    if (role === 'user') return 'Nachricht';
-    if (role === 'assistant') return 'Antwort';
-    return 'Nachricht';
+    /* Wings: was German in every language (CI ABGLEICH WG-R3) */
+    var tr = typeof t === 'function' ? t : function (k) { return k === 'wg_role_answer' ? 'Response' : 'Message'; };
+    if (role === 'assistant') return tr('wg_role_answer');
+    return tr('wg_role_message');
   }
 
   function closeSheet() {

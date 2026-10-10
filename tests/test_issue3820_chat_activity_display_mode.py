@@ -374,7 +374,7 @@ def test_transparent_stream_live_branch_uses_direct_rows():
     assert "data-tool-count" in UI_JS
     # Transparent mode labels the event controls as a trace, not a Worklog
     # Activity summary.
-    assert "return toolCount?`Trace: ${toolCount} ${toolCount===1?'tool':'tools'}`:'Trace';" in UI_JS
+    assert "return toolCount?t('wg_trace_count',toolCount):t('wg_trace');" in UI_JS
     assert "return `Activity: ${toolCount} ${toolCount===1?'tool':'tools'}`" not in UI_JS
     assert "Activity: ${parts.join(' · ')}" not in UI_JS
     # The summary must not list thinking count (DESIGN.md:75 forbids a second

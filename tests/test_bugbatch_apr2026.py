@@ -10,6 +10,7 @@ Covers:
 """
 import pathlib
 import re
+from tests.wings_i18n import en  # Wings: UI text via t() (CI ABGLEICH WG-R3)
 
 REPO_ROOT = pathlib.Path(__file__).parent.parent
 STYLE_CSS = (REPO_ROOT / "static" / "style.css").read_text(encoding="utf-8")
@@ -164,7 +165,8 @@ def test_590_transcribing_status_shown_before_fetch():
     transcribe_fn_start = BOOT_JS.find("async function _transcribeBlob(")
     assert transcribe_fn_start != -1, "_transcribeBlob not found in boot.js"
     fn_body = BOOT_JS[transcribe_fn_start:transcribe_fn_start + 600]
-    status_pos = fn_body.find("setComposerStatus('Transcribing")
+    status_pos = fn_body.find("setComposerStatus(t('wg_transcribing'))")  # Wings: via t() (CI ABGLEICH WG-R3)
+    assert en("wg_transcribing") == "Transcribing…"
     fetch_pos  = fn_body.find("await fetch(")
     assert status_pos != -1, (
         "setComposerStatus('Transcribing…') must be called before the fetch in _transcribeBlob"

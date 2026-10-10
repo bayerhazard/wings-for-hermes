@@ -1047,7 +1047,7 @@ def test_sessions_js_treats_email_as_messaging_source():
     for raw_source in ("email", "wecom", "wecom_callback"):
         assert f"'{raw_source}'" in raw_section, f"Missing raw source {raw_source!r} in _MESSAGING_RAW_SOURCES"
 
-    assert "email: 'Email'" in label_section
+    assert "email: (typeof t === 'function' ? t('wg_email') : 'Email')," in label_section
     assert "wecom: 'WeCom'" in label_section
     assert "wecom_callback: 'WeCom Callback'" in label_section
 
