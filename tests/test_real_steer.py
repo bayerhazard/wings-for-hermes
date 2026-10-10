@@ -24,6 +24,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from tests.helpers import source_between as _source_between
+from tests.wings_i18n import T_EN_JS  # Wings: UI text via t() (CI ABGLEICH WG-R3)
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
@@ -422,7 +423,7 @@ class TestFrontendWiring:
             }})().catch(err=>{{console.error(err); process.exit(1);}});
             """
         )
-        subprocess.run([node, "-e", script], check=True, capture_output=True, text=True)
+        subprocess.run([node, "-e", T_EN_JS + script], check=True, capture_output=True, text=True)
 
     def test_attachment_only_steer_indicator_uses_file_label(self):
         import json
@@ -446,7 +447,7 @@ class TestFrontendWiring:
             let S = {{session:{{session_id:'A'}}, pendingFiles:[{{name:'a.pdf'}}]}};
             let apiPayload = null;
             let indicatorText = null;
-            function t(k){{return k;}}
+            const t = globalThis.t;  // Wings: real en text from T_EN_JS (WG-R3)
             function $(id){{return {{value:'', classList:{{add(){{}}, remove(){{}}}}, style:{{}}}};}}
             function setComposerStatus(){{}}
             function showToast(){{}}
@@ -470,7 +471,7 @@ class TestFrontendWiring:
             }})().catch(err=>{{console.error(err); process.exit(1);}});
             """
         )
-        subprocess.run([node, "-e", script], check=True, capture_output=True, text=True)
+        subprocess.run([node, "-e", T_EN_JS + script], check=True, capture_output=True, text=True)
 
     def test_file_steer_targets_captured_session_when_user_switches_mid_upload(self):
         import json
@@ -535,7 +536,7 @@ class TestFrontendWiring:
             }})().catch(err=>{{console.error(err); process.exit(1);}});
             """
         )
-        subprocess.run([node, "-e", script], check=True, capture_output=True, text=True)
+        subprocess.run([node, "-e", T_EN_JS + script], check=True, capture_output=True, text=True)
 
     def test_dead_steer_fallback_clears_busy_state_and_recovery_sends_normally(self):
         import json
@@ -838,7 +839,7 @@ class TestFrontendWiring:
             }})().catch(err=>{{console.error(err); process.exit(1);}});
             """
         )
-        subprocess.run([node, "-e", script], check=True, capture_output=True, text=True)
+        subprocess.run([node, "-e", T_EN_JS + script], check=True, capture_output=True, text=True)
 
     def test_send_busy_steer_accepts_file_only_input(self):
         idx = self.msgs.find("if(S.busy||compressionRunning)")
@@ -945,7 +946,7 @@ class TestFrontendWiring:
             assert.strictEqual(barWrap.dataset.uploadSessionId, undefined);
             """
         )
-        subprocess.run([node, "-e", script], check=True, capture_output=True, text=True)
+        subprocess.run([node, "-e", T_EN_JS + script], check=True, capture_output=True, text=True)
 
     def test_pending_steer_leftover_listener(self):
         """Frontend must listen for pending_steer_leftover SSE events and queue them."""

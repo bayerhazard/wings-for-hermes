@@ -70,7 +70,7 @@ def test_directive_consumed_at_injection_site():
 def test_directive_injection_before_empty_guard():
     src = read("static/messages.js")
     inject_pos = src.index("_forcedSkillDirectivePending")
-    guard_pos = src.index("if(!msgText){setComposerStatus('Nothing to send');return;}")
+    guard_pos = src.index("if(!msgText){setComposerStatus(t('wg_nothing_to_send'));return;}")
     assert inject_pos < guard_pos, "directive injection must appear before the if(!msgText) guard"
 
 

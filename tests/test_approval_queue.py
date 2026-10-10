@@ -10,6 +10,7 @@ import re
 import shutil
 import subprocess
 import sys
+from tests.wings_i18n import T_EN_JS  # Wings: UI text via t() (CI ABGLEICH WG-R3)
 
 REPO_ROOT = pathlib.Path(__file__).parent.parent.resolve()
 sys.path.insert(0, str(REPO_ROOT))
@@ -133,7 +134,7 @@ def test_chat_stream_approval_listener_renders_received_count():
     source.listeners.approval({{ data: JSON.stringify({{command: 'head', approval_id: 'a', pending_count: 2}}) }});
     process.stdout.write(JSON.stringify(rendered));
     """
-    result = subprocess.run([node, "-e", script], capture_output=True, text=True, check=False)
+    result = subprocess.run([node, "-e", T_EN_JS + script], capture_output=True, text=True, check=False)
     assert result.returncode == 0, result.stderr
     rendered = json.loads(result.stdout)
     assert rendered == [{

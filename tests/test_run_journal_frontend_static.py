@@ -314,7 +314,7 @@ def test_error_reconnect_path_can_restore_from_journal():
 
     assert "st.active" in block
     assert "st.replay_available" in block
-    assert "Restoring stream" in block
+    assert "Restoring stream" in block or "t('wg_restoring_stream')" in block
     assert "_runJournalReplayParams()" in block
 
 

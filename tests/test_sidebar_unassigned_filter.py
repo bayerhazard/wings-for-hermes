@@ -123,10 +123,10 @@ def test_empty_state_message_for_unassigned_filter():
     """When the Unassigned filter is active and no sessions match, the empty-state
     message should be specific to that filter rather than generic project text."""
     js = _js()
-    assert "'No unassigned sessions.'" in js, (
+    assert "t('wg_no_unassigned_sessions')" in js and en("wg_no_unassigned_sessions") == "No unassigned sessions.", (
         "Empty-state copy must be specific when the Unassigned filter is active"
     )
-    assert "_activeProject===NO_PROJECT_FILTER?'No unassigned sessions.':'No sessions in this project yet.'" in js, (
+    assert "_activeProject===NO_PROJECT_FILTER?t('wg_no_unassigned_sessions'):t('wg_no_project_sessions')" in js, (
         "Empty-state copy must branch on the active filter"
     )
 

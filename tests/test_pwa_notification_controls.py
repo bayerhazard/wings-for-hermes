@@ -39,10 +39,10 @@ def test_notification_payload_uses_completion_session_when_provided():
     assert "tag:sid?`hermes-${sid}`" in MESSAGES_JS
     assert "function _completionNotificationPreviewText" in MESSAGES_JS
     assert "_completionNotificationPreviewText(lastAsst," in MESSAGES_JS
-    assert "sendBrowserNotification('Response complete',_completionPreview||'Task finished',{forceHidden:_wasEverBackgrounded,sid:activeSid})" in MESSAGES_JS
+    assert "sendBrowserNotification(t('wg_notify_response_complete'),_completionPreview||t('wg_notify_task_finished'),{forceHidden:_wasEverBackgrounded,sid:activeSid})" in MESSAGES_JS
     assert "assistantText?assistantText.slice(0,100)" not in MESSAGES_JS
-    assert "sendBrowserNotification('Approval required',d.description||'Tool approval needed',{sid:activeSid})" in MESSAGES_JS
-    assert "sendBrowserNotification('Clarification needed',d.question||'Tool clarification needed',{sid:activeSid})" in MESSAGES_JS
+    assert "sendBrowserNotification(t('wg_notify_approval'),d.description||t('wg_notify_tool_approval'),{sid:activeSid})" in MESSAGES_JS
+    assert "sendBrowserNotification(t('clarify_heading'),d.question||t('wg_notify_tool_clarify'),{sid:activeSid})" in MESSAGES_JS
 
 
 def test_completion_notification_preview_uses_settled_message_not_live_prefix():

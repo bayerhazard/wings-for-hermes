@@ -2008,7 +2008,7 @@ def test_sidebar_search_and_rows_use_read_only_display_title():
     assert "const rawTitle=_sessionDisplayTitle(s);" in js
     assert "const tags=_sessionTitleTags(rawTitle);" in js
     assert "const segTitle=_sessionDisplayTitle(seg)||t('session_lineage_segment_untitled');" in js
-    assert "const childTitle=_sessionDisplayTitle(child)||'Untitled child session';" in js
+    assert "const childTitle=_sessionDisplayTitle(child)||t('wg_untitled_child');" in js
 
 
 def test_child_session_parent_segment_note_uses_display_title():
