@@ -12,6 +12,7 @@ from api.streaming import (
     _restore_reasoning_metadata,
     _sanitize_messages_for_api,
 )
+from tests.wings_i18n import en  # Wings: UI text via t() (CI ABGLEICH WG-R3)
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -554,8 +555,8 @@ def test_auto_compression_uses_command_action_copy():
     assert end != -1, "auto compression detail helper not found after preview helper"
     helper = src[start:end]
 
-    assert "Compressing context" in helper
-    assert "Context auto-compressed" in helper
+    assert "t('wg_compressing_context')" in helper and en("wg_compressing_context") == "Compressing context"
+    assert "t('wg_context_auto_compressed')" in helper and en("wg_context_auto_compressed") == "Context auto-compressed"
     assert "Compression finished" not in helper
     assert "return running?'Running':'Done';" not in helper
 

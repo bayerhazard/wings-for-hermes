@@ -7,6 +7,7 @@ import subprocess
 from pathlib import Path
 
 import pytest
+from tests.wings_i18n import T_EN_JS  # Wings: UI text via t() (CI ABGLEICH WG-R3)
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -19,7 +20,7 @@ def _run_node(body):
     env = os.environ.copy()
     env["UI_JS_PATH"] = str(UI_JS)
     script = NODE_PREFIX + body
-    result = subprocess.run([NODE, "-e", script], env=env, text=True, capture_output=True, check=False)
+    result = subprocess.run([NODE, "-e", T_EN_JS + script], env=env, text=True, capture_output=True, check=False)
     assert result.returncode == 0, result.stderr
     return json.loads(result.stdout)
 

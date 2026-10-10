@@ -9,6 +9,7 @@ import subprocess
 from pathlib import Path
 
 import pytest
+from tests.wings_i18n import T_EN_JS  # Wings: UI text via t() (CI ABGLEICH WG-R3)
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -116,7 +117,7 @@ def test_loadSession_inflight_reattach_merges_pending_user_before_render():
 
 def _run_node(script: str) -> dict:
     completed = subprocess.run(
-        [NODE, "-e", script],
+        [NODE, "-e", T_EN_JS + script],
         cwd=ROOT,
         text=True,
         capture_output=True,

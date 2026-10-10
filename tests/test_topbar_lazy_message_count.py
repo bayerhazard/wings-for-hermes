@@ -1,4 +1,5 @@
 from pathlib import Path
+from tests.wings_i18n import en  # Wings: UI text via t() (CI ABGLEICH WG-R3)
 
 ROOT = Path(__file__).resolve().parents[1]
 UI_JS = (ROOT / "static" / "ui.js").read_text(encoding="utf-8")
@@ -16,7 +17,7 @@ def test_topbar_uses_session_total_for_lazy_loaded_transcripts():
 
 def test_load_earlier_indicator_names_server_side_older_count():
     assert "const serverOlderCount=hasServerOlder&&Number.isFinite(Number(_oldestIdx))?Math.max(0,Number(_oldestIdx)):0;" in UI_JS
-    assert "Load earlier messages (${serverOlderCount} older)" in UI_JS
+    assert "t('wg_load_earlier',serverOlderCount)" in UI_JS and en("wg_load_earlier", "${serverOlderCount}") == "Load earlier messages (${serverOlderCount} older)"
 
 
 def test_sync_topbar_does_not_count_only_loaded_tail_messages():

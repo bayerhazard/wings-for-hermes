@@ -9,7 +9,8 @@ scripts/ci/i18n_fest.py, two rules:
   reason in i18n_fest.ERLAUBT.
 - JS is a ratchet: STAND holds the number of fixed texts per file. It may only
   go down; a file missing from STAND must stay at zero. 2c-2 brought the chat
-  (sessions.js, messages.js, commands.js) to zero, 2c-3 lowers the rest. What
+  (sessions.js, messages.js, commands.js) to zero, 2c-3a ui.js and boot.js,
+  2c-3b lowers the rest. What
   stays in JS is listed with a reason in i18n_fest.JS_ERLAUBT.
 - Notices that go into the transcript stay English there (server, session
   files and tests share one wording) and are translated when shown:
@@ -42,15 +43,13 @@ NODE = shutil.which("node")
 # Fixed UI texts per JS file. Lower a number when a PR removes texts; never raise it.
 STAND = {
     "assistant_turn_anchors.js": 14,
-    "boot.js": 31,
     "login.js": 3,
     "onboarding.js": 45,
-    "panels.js": 363,
+    "panels.js": 275,
     "share.js": 12,
     "terminal.js": 2,
-    "ui.js": 328,
     "wings_mobile.js": 1,
-    "workspace.js": 21,
+    "workspace.js": 14,
 }
 
 _LADEN = r"""
@@ -78,7 +77,9 @@ def test_allowed_texts_still_exist():
 
 def test_js_allowed_texts_still_exist():
     for (datei, anfang) in i18n_fest.JS_ERLAUBT:
-        assert anfang in (STATIC / datei).read_text(encoding="utf-8"), (datei, anfang)
+        src = (STATIC / datei).read_text(encoding="utf-8")
+        # multi-line templates are reported with their whitespace collapsed
+        assert anfang in src or anfang in " ".join(src.split()), (datei, anfang)
 
 
 # One real notice per wgHinweis() rule, as Wings or the server writes it.

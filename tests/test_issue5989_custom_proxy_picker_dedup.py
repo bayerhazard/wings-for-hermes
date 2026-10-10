@@ -4,6 +4,7 @@ import json
 import re
 import subprocess
 from pathlib import Path
+from tests.wings_i18n import T_EN_JS  # Wings: UI text via t() (CI ABGLEICH WG-R3)
 
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -108,7 +109,7 @@ console.log(JSON.stringify({{
   unnamespaced:snapshot(unnamespaced),
 }}));
 """
-    result = subprocess.run(["node", "-e", script], capture_output=True, text=True)
+    result = subprocess.run(["node", "-e", T_EN_JS + script], capture_output=True, text=True)
     assert result.returncode == 0, result.stderr
     return json.loads(result.stdout)
 

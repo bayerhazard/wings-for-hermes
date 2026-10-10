@@ -11,6 +11,7 @@ from api.compression_recovery import (
 from api.models import Session
 from api.session_recovery import _state_db_row_to_sidecar
 from api.webui_session_db import WebUIJsonSessionDB
+from tests.wings_i18n import en  # Wings: UI text via t() (CI ABGLEICH WG-R3)
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -472,9 +473,9 @@ def test_compression_recovery_action_handles_stale_card_409():
     # Retires the stale persisted card so it is no longer clickable.
     assert "data-compression-recovery-consumed" in body
     # Neutral/info toast, not the generic error path.
-    assert "no longer available" in body
+    assert "t('wg_recovery_moved_on')" in body and "no longer available" in en("wg_recovery_moved_on")
     # The 409 branch returns before falling through to the generic error toast.
-    assert body.index("e.status===409") < body.index("Compression recovery failed:")
+    assert body.index("e.status===409") < body.index("t('wg_recovery_failed')")
     # The finally-block must NOT re-enable a retired stale-card button.
     assert "retiredRecoveryCard" in body
     assert "if(!retiredRecoveryCard) btn.disabled=false" in body

@@ -25,6 +25,7 @@ import types
 import functools
 
 import pytest
+from tests.wings_i18n import en  # Wings: UI text via t() (CI ABGLEICH WG-R3)
 
 REPO = pathlib.Path(__file__).parent.parent
 
@@ -1834,7 +1835,7 @@ class TestUiJsUpdateBanner:
         m = re.search(r'function applyUpdates\b.*?\n\}', src, re.DOTALL)
         assert m, "applyUpdates() not found"
         fn = m.group(0)
-        assert 'restarting' in fn.lower(), (
+        assert "t('wg_upd_applied')" in fn and 'restarting' in en('wg_upd_applied'), (
             "success toast must mention 'restarting' (server self-restarts after update)"
         )
         assert 'Reloading' not in fn, (
@@ -3225,7 +3226,7 @@ def test_force_update_confirm_discloses_untracked_file_deletion():
     m = re.search(r'async function forceUpdate\b.*?\n\}', src, re.DOTALL)
     assert m, "forceUpdate() not found"
     fn = m.group(0)
-    assert 'delete untracked files' in fn, (
+    assert "t('wg_force_message',target)" in fn and 'delete untracked files' in en('wg_force_message', 'x'), (
         "forceUpdate confirmation must disclose that git clean -fd deletes "
         "untracked files before the hard reset"
     )

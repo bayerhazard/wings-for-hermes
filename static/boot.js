@@ -59,7 +59,7 @@ async function cancelStream(reason){
     else setStatus('');
     // /api/chat/cancel only exposes `cancelled:bool`, so we cannot
     // distinguish reasons — keep the toast generic and short.
-    if(typeof showToast==='function') showToast('Stream is no longer active',2000);
+    if(typeof showToast==='function') showToast(t('wg_stream_inactive'),2000);
   }
   return respOk;
 }
@@ -1148,7 +1148,7 @@ function _micEncodeWav(samples, sampleRate){
       const res=await fetch('api/transcribe',{method:'POST',body:form});
       const data=await res.json().catch(()=>({}));
       if(!res.ok){
-        const err=new Error(data.error||'Transcription failed');
+        const err=new Error(data.error||t('wg_transcription_failed'));
         err.status=res.status;
         throw err;
       }

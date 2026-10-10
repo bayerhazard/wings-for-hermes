@@ -5,6 +5,7 @@ import json
 import pathlib
 import re
 import subprocess
+from tests.wings_i18n import T_EN_MJS  # Wings: UI text via t() (CI ABGLEICH WG-R3)
 
 
 REPO = pathlib.Path(__file__).parent.parent
@@ -143,7 +144,7 @@ console.log(JSON.stringify({
 def test_failed_sidebar_stop_keeps_local_state():
     script = _NODE_SCRIPT.replace("__CANCEL_SESSION_STREAM_SRC__", CANCEL_SESSION_STREAM_SRC)
     completed = subprocess.run(
-        ["node", "--input-type=module", "-e", script],
+        ["node", "--input-type=module", "-e", T_EN_MJS + script],
         cwd=str(REPO),
         capture_output=True,
         encoding="utf-8",
@@ -220,7 +221,7 @@ console.log(JSON.stringify(M));
     .replace("__ENGLISH__", json.dumps(english_message))
     .replace("__GERMAN__", json.dumps(german_message)))
     completed = subprocess.run(
-        ["node", "--input-type=module", "-e", script],
+        ["node", "--input-type=module", "-e", T_EN_MJS + script],
         cwd=str(REPO), capture_output=True, encoding="utf-8", timeout=30,
     )
     assert completed.returncode == 0, (

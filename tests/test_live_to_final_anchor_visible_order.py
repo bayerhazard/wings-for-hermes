@@ -6,6 +6,7 @@ import subprocess
 from pathlib import Path
 
 import pytest
+from tests.wings_i18n import T_EN_JS  # Wings: UI text via t() (CI ABGLEICH WG-R3)
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -67,7 +68,7 @@ def _event_listener_body(src, event_name):
 
 def _run_node_script(script):
     assert NODE, "node is required for DOM-executed anchor render tests"
-    result = subprocess.run([NODE, "-e", script], text=True, capture_output=True, check=False)
+    result = subprocess.run([NODE, "-e", T_EN_JS + script], text=True, capture_output=True, check=False)
     assert result.returncode == 0, result.stderr
     return json.loads(result.stdout)
 
