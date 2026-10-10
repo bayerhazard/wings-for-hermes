@@ -105,6 +105,7 @@ def _commands_harness(body: str) -> str:
             "  no_active_session: 'No active session',",
             "  branch_forked: 'Forked into new session',",
             "  branch_failed: 'Fork failed: ',",
+            "  wg_fork_readonly: 'Read-only sessions cannot be forked.',",  # Wings (WG-R3)
             "}[key] || key);",
             "const showToast = (...args) => { toasts.push(args); };",
             "const api = async (url, opts) => {",

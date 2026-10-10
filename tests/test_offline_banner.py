@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import pathlib
+from tests.wings_i18n import en  # Wings: UI text via t() (CI ABGLEICH WG-R3)
 
 
 REPO_ROOT = pathlib.Path(__file__).parent.parent
@@ -78,7 +79,8 @@ def test_sse_error_defers_while_page_hidden_until_tab_returns():
     assert "function _deferStreamErrorIfPageHidden(source)" in MESSAGES_JS
     assert "document.visibilityState==='hidden'" in MESSAGES_JS
     assert "document.wasDiscarded===true" in MESSAGES_JS
-    assert "Connection paused. Reconnecting when this tab returns…" in MESSAGES_JS
+    assert "setComposerStatus(t('wg_connection_paused'))" in MESSAGES_JS
+    assert en("wg_connection_paused") == "Connection paused. Reconnecting when this tab returns…"
     assert "document.addEventListener('visibilitychange',resume)" in MESSAGES_JS
     assert "window.addEventListener('pageshow',resume)" in MESSAGES_JS
     error_handler = MESSAGES_JS.split("source.addEventListener('error',async e=>{", 1)[1].split("source.addEventListener('cancel'", 1)[0]

@@ -24,6 +24,7 @@ break the chip.
 from __future__ import annotations
 
 import pathlib
+from tests.wings_i18n import en  # Wings: UI text via t() (CI ABGLEICH WG-R3)
 
 JS = pathlib.Path(__file__).parent.parent / "static" / "sessions.js"
 CSS = pathlib.Path(__file__).parent.parent / "static" / "style.css"
@@ -91,7 +92,7 @@ def test_unassigned_chip_only_shown_when_relevant():
 def test_unassigned_chip_label_and_handler():
     """The chip label should be 'Unassigned' and clicking it should set the sentinel."""
     js = _js()
-    assert "noneChip.textContent='Unassigned';" in js, (
+    assert "noneChip.textContent=t('session_folder_unassigned');" in js and en("session_folder_unassigned") == "Unassigned", (
         "The Unassigned chip must display the label 'Unassigned'"
     )
     assert "_setActiveProjectFilter(NO_PROJECT_FILTER)" in js, (
@@ -122,10 +123,10 @@ def test_empty_state_message_for_unassigned_filter():
     """When the Unassigned filter is active and no sessions match, the empty-state
     message should be specific to that filter rather than generic project text."""
     js = _js()
-    assert "'No unassigned sessions.'" in js, (
+    assert "t('wg_no_unassigned_sessions')" in js and en("wg_no_unassigned_sessions") == "No unassigned sessions.", (
         "Empty-state copy must be specific when the Unassigned filter is active"
     )
-    assert "_activeProject===NO_PROJECT_FILTER?'No unassigned sessions.':'No sessions in this project yet.'" in js, (
+    assert "_activeProject===NO_PROJECT_FILTER?t('wg_no_unassigned_sessions'):t('wg_no_project_sessions')" in js, (
         "Empty-state copy must branch on the active filter"
     )
 

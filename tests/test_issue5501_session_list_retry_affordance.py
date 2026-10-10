@@ -6,6 +6,7 @@ import subprocess
 from pathlib import Path
 
 import pytest
+from tests.wings_i18n import T_EN_JS, en  # Wings: UI text via t() (CI ABGLEICH WG-R3)
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -31,7 +32,7 @@ def _extract_function(source_text, function_name):
 
 
 def _run_node(script):
-    proc = subprocess.run([NODE, "-e", script], capture_output=True, text=True, check=True)
+    proc = subprocess.run([NODE, "-e", T_EN_JS + script], capture_output=True, text=True, check=True)
     return json.loads(proc.stdout)
 
 
@@ -580,7 +581,7 @@ def test_session_list_error_note_has_live_region_and_pending_uses_aria_disabled(
     assert "setAttribute('aria-disabled','true')" in note_fn
     assert "retry.disabled=true" not in note_fn
     # true ellipsis, not three dots
-    assert "Retrying…" in note_fn
+    assert "t('wg_retrying')" in note_fn and en("wg_retrying") == "Retrying…"
     assert "Retrying..." not in note_fn
     # keyboard focus restored on a failed retry
     assert "_retryFailedFocus" in note_fn

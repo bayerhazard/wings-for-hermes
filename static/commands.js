@@ -203,7 +203,7 @@ function getMatchingCommands(prefix){
       : null;
     matches.push({
       name:'pet',
-      desc:String((petMeta&&petMeta.description)||'Desktop Companion command').trim()||'Desktop Companion command',
+      desc:String((petMeta&&petMeta.description)||t('wg_cmd_desc_companion')).trim()||t('wg_cmd_desc_companion'),
       source:'agent',
     });
     seen.add('pet');
@@ -215,7 +215,7 @@ function getMatchingCommands(prefix){
     if(cmd.cli_only&&name!=='pet')continue;
     matches.push({
       name,
-      desc:String(cmd&&cmd.description||'').trim()||'Agent command',
+      desc:String(cmd&&cmd.description||'').trim()||t('wg_cmd_desc_agent'),
       source:cmd.category==='Plugin'?'plugin':'agent',
     });
     seen.add(name);
@@ -530,7 +530,7 @@ async function getComposerPathAutocompleteMatches(text,cursor){
     .map(path=>({
       name:path,
       value:path,
-      desc:'Workspace path',
+      desc:t('wg_cmd_desc_workspace_path'),
       source:'path',
       tokenStart:token.start,
       tokenEnd:token.end,
@@ -790,7 +790,7 @@ async function cmdTerminal(){
     if(data&&data.terminal_remote_backend){
       const msg=typeof _terminalRemoteBackendUnsupportedMessage==='function'
         ? _terminalRemoteBackendUnsupportedMessage()
-        : 'Embedded terminal is only supported for local terminal backends.';
+        : t('terminal_remote_backend_unsupported');
       showToast(msg,3200,'warning');
       if(typeof syncTerminalButton==='function') syncTerminalButton();
       return;
@@ -844,7 +844,7 @@ async function _pollManualCompressionResult(sid){
     const data=await api(`/api/session/compress/status?session_id=${encodeURIComponent(sid)}`);
     if(data&&data.status==='done') return data;
     if(data&&data.status==='error'){
-      const err=new Error(data.error||'Compression failed');
+      const err=new Error(data.error||t('compress_failed_label'));
       err.status=data.error_status||400;
       throw err;
     }
@@ -935,7 +935,7 @@ async function resumeManualCompressionForSession(sid){
         focusTopic:'',
         commandText:'/compress',
         beforeCount:visibleMessages.length,
-        errorText:`Compression failed: ${e.message}`,
+        errorText:t('compress_failed_label')+': '+e.message,
         anchorVisibleIdx:Math.max(0, visibleMessages.length-1),
         anchorMessageKey:null,
       });
@@ -972,7 +972,7 @@ async function _runManualCompression(focusTopic){
       if(typeof setBusy==='function') setBusy(false);
       if(typeof setComposerStatus==='function') setComposerStatus('');
       renderMessages();
-      showToast('Compression failed: '+(preflightErr.message||'session no longer available'));
+      showToast(t('compress_failed_label')+': '+(preflightErr.message||t('wg_session_gone')));
       return;
     }
     if(typeof setBusy==='function') setBusy(true);
@@ -998,7 +998,7 @@ async function _runManualCompression(focusTopic){
     renderMessages();
     const started=await api('/api/session/compress/start',{method:'POST',body:JSON.stringify(body)});
     if(started&&started.status==='error'){
-      const err=new Error(started.error||'Compression failed');
+      const err=new Error(started.error||t('compress_failed_label'));
       err.status=started.error_status||400;
       throw err;
     }
@@ -1013,7 +1013,7 @@ async function _runManualCompression(focusTopic){
         focusTopic:(focusTopic||'').trim(),
         commandText:focusTopic?`/compress ${focusTopic}`:'/compress',
         beforeCount:(S.messages||[]).filter(m=>m&&m.role&&m.role!=='tool').length,
-        errorText:`Compression failed: ${e.message}`,
+        errorText:t('compress_failed_label')+': '+e.message,
         anchorVisibleIdx: Math.max(0, visibleCount - 1),
         anchorMessageKey:null,
       });
@@ -1022,7 +1022,7 @@ async function _runManualCompression(focusTopic){
     if(typeof setBusy==='function') setBusy(false);
     if(typeof setComposerStatus==='function') setComposerStatus('');
     renderMessages();
-    showToast('Compression failed: '+e.message);
+    showToast(t('compress_failed_label')+': '+e.message);
     return;
   }
   if(typeof setBusy==='function') setBusy(false);
@@ -1108,7 +1108,7 @@ async function cmdSkills(args){
     renderMessages();
     showToast(t('type_slash'));
   }catch(e){
-    showToast('Failed to load skills: '+e.message);
+    showToast(t('wg_skills_load_failed')+e.message);
   }
 }
 
@@ -1145,11 +1145,11 @@ async function cmdUse(args){
       S.messages.push({role:'assistant', content:`Next turn: skill \`${match.name}\` will be forced.`});
       renderMessages();
     }
-    showToast(`Skill \`${match.name}\` will be used for next turn.`);
+    showToast(t('wg_skill_next_turn',match.name));
   }catch(e){
     resolve(null);
     if(_forcedSkillDirectivePending===pending)_forcedSkillDirectivePending = null;
-    showToast('Failed to load skills: '+e.message);
+    showToast(t('wg_skills_load_failed')+e.message);
   }
 }
 
@@ -1475,7 +1475,7 @@ function _steerIndicatorText(originalMsg, filesSnapshot){
     .map(f=>f&&(f.name||f.filename||f.path||''))
     .map(v=>String(v||'').trim())
     .filter(Boolean);
-  return names.length?`Attached files: ${names.join(', ')}`:'Attached files';
+  return names.length?t('wg_attached_files_list',names.join(', ')):t('wg_attached_files');
 }
 
 async function _steerPersistDraftForOwner(ownerSid, originalMsg, explicitSteer, filesSnapshot){
@@ -1805,7 +1805,7 @@ function cmdReasoning(args){
   function _fmtStatus(st){
     const vis=(st && st.show_reasoning===false)?'off':'on';
     const eff=(st && st.reasoning_effort)||'default';
-    return BRAIN+' Reasoning effort: '+eff+' \u00B7 display: '+vis
+    return BRAIN+' '+t('wg_reasoning_status',eff,vis==='off'?t('wg_off'):t('wg_on'))
       +'  |  /reasoning show|hide|none|minimal|low|medium|high|xhigh|max';
   }
   if(!arg){
@@ -1827,7 +1827,7 @@ function cmdReasoning(args){
     // /api/reasoning on every page load.
     api('/api/reasoning',{method:'POST',body:JSON.stringify({display:arg})}).catch(function(){});
     api('/api/settings',{method:'POST',body:JSON.stringify({show_thinking:on})}).catch(function(){});
-    showToast(BRAIN+' Thinking blocks: '+(on?'on':'off')+' (saved)');
+    showToast(BRAIN+' '+t('wg_thinking_blocks',on?t('wg_on'):t('wg_off')));
     return true;
   }
   if(EFFORTS.includes(arg)){
@@ -1838,15 +1838,15 @@ function cmdReasoning(args){
     api('/api/reasoning',{method:'POST',body:JSON.stringify({effort:arg})})
       .then(function(st){
         const eff=(st && st.reasoning_effort)||arg;
-        showToast(BRAIN+' Reasoning effort: '+eff+' (saved; applies to next turn)');
+        showToast(BRAIN+' '+t('wg_reasoning_saved',eff));
         if(typeof _applyReasoningChip==='function') _applyReasoningChip(eff, st||{});
       })
       .catch(function(e){
-        showToast(BRAIN+' Failed to set effort: '+(e && e.message ? e.message : arg));
+        showToast(BRAIN+' '+t('wg_reasoning_failed')+(e && e.message ? e.message : arg));
       });
     return true;
   }
-  showToast('Unknown argument: '+arg+' \u2014 use show|hide|'+EFFORTS.join('|'));
+  showToast(t('wg_unknown_argument',arg,EFFORTS.join('|')));
   return true;
 }
 function cmdVoice(){
@@ -1899,7 +1899,7 @@ async function cmdBranch(args){
   const branchableReadOnlySession=typeof _isBranchableReadOnlySession==='function'
     ? _isBranchableReadOnlySession(S.session)
     : false;
-  if(readOnlySession&&!branchableReadOnlySession){showToast('Read-only sessions cannot be forked.',3000);return;}
+  if(readOnlySession&&!branchableReadOnlySession){showToast(t('wg_fork_readonly'),3000);return;}
   const customTitle=(args||'').trim()||null;
   try{
     const data=await api('/api/session/branch',{
@@ -1935,7 +1935,7 @@ async function forkFromMessage(msgIdx){
     const _msg=(Array.isArray(S.messages)&&S.messages[msgIdx-1])||null;
     const _isLastMsg=msgIdx>=(Array.isArray(S.messages)?S.messages.length:0);
     if((_msg&&(_msg._live||_msg._pending))||_isLastMsg){
-      showToast('Cannot fork a message still being generated.',3000);
+      showToast(t('wg_fork_generating'),3000);
       return;
     }
   }
@@ -1945,7 +1945,7 @@ async function forkFromMessage(msgIdx){
   const branchableReadOnlySession=typeof _isBranchableReadOnlySession==='function'
     ? _isBranchableReadOnlySession(S.session)
     : false;
-  if(readOnlySession&&!branchableReadOnlySession){showToast('Read-only sessions cannot be forked.',3000);return;}
+  if(readOnlySession&&!branchableReadOnlySession){showToast(t('wg_fork_readonly'),3000);return;}
   const initialSid = S.session.session_id;
   // Capture the absolute keep_count before any async work that may
   // reset _oldestIdx.  _oldestIdx is 0 when the full transcript is
@@ -2009,7 +2009,7 @@ function _buildBundleCommandEntry(bundle){
   const skillCount=Number(bundle&&bundle.skill_count||0);
   return{
     name:slug,
-    desc:String(bundle&&bundle.description||'').trim()||'Skill bundle',
+    desc:String(bundle&&bundle.description||'').trim()||t('wg_cmd_desc_bundle'),
     source:'bundle',
     skillCount:Number.isFinite(skillCount)?skillCount:0,
   };
@@ -2093,7 +2093,7 @@ function showCmdDropdown(matches){
     const badge=c.source==='skill'
       ? ` <span class="cmd-item-badge cmd-item-badge-skill">${esc(t('slash_skill_badge'))}</span>`
       : c.source==='bundle'
-      ? ' <span class="cmd-item-badge">Bundle</span>'
+      ? ` <span class="cmd-item-badge">${esc(t('wg_cmd_badge_bundle'))}</span>`
       : '';
     if(c.source==='skill') el.classList.add('cmd-item-skill');
     if(isPath) el.classList.add('cmd-item-path');

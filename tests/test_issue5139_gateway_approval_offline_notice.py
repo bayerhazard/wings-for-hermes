@@ -10,6 +10,7 @@ from unittest.mock import MagicMock, patch
 
 from api.config import STREAMS, STREAMS_LOCK, invalidate_gateway_caps
 from api.gateway_chat import _run_gateway_chat_streaming
+from tests.wings_i18n import en  # Wings: UI text via t() (CI ABGLEICH WG-R3)
 
 REPO = Path(__file__).resolve().parents[1]
 GATEWAY_CHAT = (REPO / "api" / "gateway_chat.py").read_text(encoding="utf-8")
@@ -243,7 +244,7 @@ def test_gateway_chat_keeps_unsupported_warning_for_timeout_capabilities_probe()
 
 def test_messages_js_handles_offline_warning_without_touching_unsupported_branch():
     assert "d.type==='approval_gateway_offline'" in MESSAGES_JS
-    assert "Gateway offline" in MESSAGES_JS
+    assert "t('wg_gateway_offline')" in MESSAGES_JS and en("wg_gateway_offline") == "Gateway offline"
     assert "d.type==='approval_gateway_unsupported'" in MESSAGES_JS
     assert "Approvals not supported" in MESSAGES_JS
     assert "setComposerStatus(`${d.message||'Warning'}`);" in MESSAGES_JS

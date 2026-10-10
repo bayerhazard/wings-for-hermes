@@ -28,6 +28,7 @@ import textwrap
 from pathlib import Path
 
 import pytest
+from tests.wings_i18n import T_EN_JS  # Wings: UI text via t() (CI ABGLEICH WG-R3)
 
 ROOT = Path(__file__).resolve().parents[1]
 MESSAGES_JS = ROOT.joinpath("static", "messages.js").read_text(encoding="utf-8")
@@ -161,7 +162,7 @@ def _run_reentrant_guard_in_node(composer_value: str):
         "guard": guard,
     }
 
-    proc = subprocess.run([node, "-e", harness], capture_output=True, text=True, timeout=30)
+    proc = subprocess.run([node, "-e", T_EN_JS + harness], capture_output=True, text=True, timeout=30)
     assert proc.returncode == 0, f"node harness failed: {proc.stderr}"
     return json.loads(proc.stdout.strip())
 

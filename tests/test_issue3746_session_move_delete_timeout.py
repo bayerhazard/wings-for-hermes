@@ -140,7 +140,7 @@ def test_new_project_and_move_shortcut_guards_503():
     assert "try{" in block and "}catch(e){" in block, (
         "the new-project-and-move move call must be wrapped in try/catch (#3746)"
     )
-    assert "move failed" in block.lower(), (
+    assert "move failed" in block.lower() or "move_failed" in block, (
         "a failed move must surface an actionable toast (#3746)"
     )
     # The authoritative refetch (#2551) must remain in the success path.

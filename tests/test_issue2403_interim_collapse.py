@@ -97,7 +97,7 @@ class TestInterimCollapseHandlerStructure:
         src = read("static/messages.js")
         fn = _extract_interim_handler(src)
         # Toggle label must be dynamic: "Show N earlier update(s)"
-        assert "earlier update" in fn, (
+        assert "t('wg_show_earlier_updates'," in fn, (
             "collapse toggle text must reference 'earlier update' so the count is visible"
         )
 

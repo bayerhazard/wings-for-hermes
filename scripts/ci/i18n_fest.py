@@ -5,7 +5,8 @@ data-i18n-* twin, and every visible text node needs a data-i18n element around
 it. Names, data placeholders and samples are listed in ERLAUBT with a reason.
 
 JS: string literals in UI positions (textContent, title, toasts, dialog
-options, HTML snippets) are counted per file. The counts are the ratchet in
+options, HTML snippets) and every string literal holding an English phrase
+are counted per file (comments, console and thrown errors aside). The counts are the ratchet in
 tests/test_ci_sperrklinke.py: they may only go down.
 
 Run:
@@ -111,6 +112,18 @@ _SCHNIPSEL_ATTR = re.compile(
     r"""\b(?:title|aria-label|placeholder|data-tooltip)=["\\]*["']([^"'$<>]*[A-Za-z]{3}[^"'$<>]*)["\\]""")
 
 
+# Any string literal holding an English phrase: a capitalised word and at
+# least one lower-case word after it ("Hide archived", "No saved prompts yet.").
+_LITERAL = re.compile(r"""(['"`])((?:\\.|(?!\1)[^\n\\]|\\\n)*?)\1""")
+# Fallback text right after a t() call or a helper taking the key first:
+#   t('k')||'Text'   (t('k'))||'Text'   ?t('k'):'Text'   _replyT('k', 'Text')
+_RUECKFALL = re.compile(r"(?:\bt\((?:[^()]|\([^()]*\))*\)\)?\s*(?:\|\||:)\s*|\w+T\(\s*['\"][\w.]+['\"]\s*,\s*)$")
+_ATTR_VOR = re.compile(r"\b(?:title|aria-label|placeholder|data-tooltip)=$")
+# Multi-line template literals (notices, help texts); snippet text in data-i18n elements is skipped.
+_VORLAGE = re.compile(r"`((?:\\.|\$\{(?:[^{}]|\{[^{}]*\})*\}|[^`\\])*)`")
+_PHRASE = re.compile(r"\b[A-Z][A-Za-z]+(?: [a-z]+)+")
+
+
 def _sichtbar(text):
     s = re.sub(r"\$\{[^}]*\}", "", text)
     s = re.sub(r"<[^>]+>", "", s).strip()
@@ -120,17 +133,112 @@ def _sichtbar(text):
     return not (re.fullmatch(r"[\w.:/-]+", s) and not re.match(r"[A-Z][a-z]", s))
 
 
+# JS texts that stay as they are: (file, start of the text) -> reason.
+HINWEIS = "Hinweis im Verlauf: bleibt englisch, wgHinweis() übersetzt beim Anzeigen (WG-R3, Entscheidung A)"
+AGENT = "Text an den Agenten: bleibt englisch"
+EREIGNIS = "Ereignisdaten wie in api/streaming.py, Tests vergleichen sie"
+JS_ERLAUBT = {
+    ("messages.js", "Context auto-compressed"): EREIGNIS,
+    ("messages.js", "Compressing context"): EREIGNIS,
+    ("messages.js", "The browser lost the live SSE connection before the response finished."): EREIGNIS,
+    ("commands.js", "Steer"): "Begriff des Agenten, im Deutschen gleich",
+    ("commands.js", "Desktop Companion app"): "Produktname in den Hinweisen zu /pet",
+    ("sessions.js", "\\]]+|\\/session\\/[^\\s"): "Teil einer Regex",
+    ("messages.js", "# Hermes session"): "Kopf der Markdown-Datei beim Export",
+    ("commands.js", "[USER OVERRIDE]"): AGENT,
+    ("commands.js", "[Attached files for this steer:"): AGENT,
+    ("messages.js", "${text}\\n\\n[Attached files:"): AGENT,
+    # Notices that go into the transcript (S.messages); wgHinweis() has a rule for each.
+    ("commands.js", "${DESKTOP_COMPANION_NAME} is "): HINWEIS,
+    ("commands.js", "${DESKTOP_COMPANION_NAME} status is"): HINWEIS,
+    ("commands.js", "\\n\\nBrowser tools in WebUI"): HINWEIS,
+    ("commands.js", "No skills found."): HINWEIS,
+    ("commands.js", "No skills matching"): HINWEIS,
+    ("commands.js", "Skills matching"): HINWEIS,
+    ("commands.js", "Available skills ("): HINWEIS,
+    ("commands.js", "No skill named"): HINWEIS,
+    ("commands.js", "Next turn: skill"): HINWEIS,
+    ("commands.js", "Goal command failed"): HINWEIS,
+    ("commands.js", "**Goal command failed:**"): HINWEIS,
+    ("messages.js", "Desktop Companion is unavailable in WebUI."): HINWEIS,
+    ("messages.js", "Desktop Companion command error:"): HINWEIS,
+    ("messages.js", "Agent command runtime unavailable in WebUI."): HINWEIS,
+    ("messages.js", "Agent command error:"): HINWEIS,
+    ("messages.js", "Plugin command runtime unavailable in WebUI."): HINWEIS,
+    ("messages.js", "Plugin command error:"): HINWEIS,
+    ("messages.js", "MoA unavailable:"): HINWEIS,
+    ("messages.js", "Bundle command error:"): HINWEIS,
+    ("messages.js", "**Error:**"): HINWEIS,
+    ("messages.js", "**Connection interrupted:**"): HINWEIS,
+    ("messages.js", "**No response received.**"): HINWEIS,
+    ("messages.js", "**Task cancelled:**"): HINWEIS,
+    ("messages.js", "The only assistant text returned for this turn"): HINWEIS,
+    ("messages.js", "Task cancelled"): HINWEIS,
+    ("messages.js", "Response interrupted"): HINWEIS,
+    ("messages.js", "Context compression exhausted"): HINWEIS,
+    ("messages.js", "Tool iteration limit reached"): HINWEIS,
+    ("messages.js", "Out of credits"): HINWEIS,
+    ("messages.js", "Rate limit reached"): HINWEIS,
+    ("messages.js", "No response from provider"): HINWEIS,
+    ("messages.js", "Cancellation details"): HINWEIS,
+    ("messages.js", "Interruption details"): HINWEIS,
+    ("messages.js", "Terminal state details"): HINWEIS,
+}
+
+
+def _erlaubt(datei, text):
+    """JS_ERLAUBT keys are the start of the text they allow."""
+    return any(d == datei and text.startswith(anfang) for d, anfang in JS_ERLAUBT)
+
+
+def _tag_vor(src, pos):
+    """The opening tag that ends right before pos (text) or contains pos (attribute)."""
+    anfang = src.rfind("<", 0, pos)
+    ende = src.find(">", pos)
+    return src[anfang:ende] if anfang != -1 else ""
+
+
 def js_funde(datei):
-    """Fixed UI text in one JS file: [(line, text)]."""
+    """Fixed UI text in one JS file not covered by JS_ERLAUBT: [(line, text)]."""
     src = datei.read_text(encoding="utf-8")
+    zeilen = src.split("\n")
     zeile = lambda pos: src.count("\n", 0, pos) + 1
-    funde = [(zeile(m.start()), m.group(2)) for m in _SENKE.finditer(src) if _sichtbar(m.group(2))]
+    kommentar = lambda pos: zeilen[zeile(pos) - 1].lstrip().startswith(("//", "*", "/*"))
+    funde = [(zeile(m.start()), m.group(2)) for m in _SENKE.finditer(src)
+             if _sichtbar(m.group(2)) and not kommentar(m.start())]
     for m in _SCHNIPSEL_TEXT.finditer(src):
         t = m.group(1).strip()
-        if _sichtbar(t) and not re.search(r"[=;(){}]|&&|\|\|", t):
-            funde.append((zeile(m.start()), t))
-    funde += [(zeile(m.start()), m.group(1)) for m in _SCHNIPSEL_ATTR.finditer(src)]
-    return sorted(set(funde))
+        if not _sichtbar(t) or re.search(r"[=;(){}]|&&|\|\|", t) or kommentar(m.start()):
+            continue
+        if "data-i18n=" in src[src.rfind("<", 0, m.start() + 1):m.start() + 1]:
+            continue  # the element carries its key; applyLocaleToDOM sets the text
+        funde.append((zeile(m.start()), t))
+    for m in _LITERAL.finditer(src):
+        z = zeilen[zeile(m.start()) - 1]
+        if kommentar(m.start()) or re.search(r"console\.|throw new|querySelector", z):
+            continue
+        davor = src[max(0, m.start() - 80):m.start()]
+        if re.search(r"\bt\(\s*$", davor) or _RUECKFALL.search(davor) or _ATTR_VOR.search(davor):
+            continue  # a key, the fallback of a t() call, or an attribute the snippet rule judges
+        sicht = re.sub(r"<[^>]*>", " ", re.sub(r"\$\{[^}]*\}", "", m.group(2)))
+        if _PHRASE.search(sicht) and "data-i18n=" not in m.group(2):
+            funde.append((zeile(m.start()), m.group(2)))
+    for m in _VORLAGE.finditer(src):
+        if "\n" not in m.group(1) or src[m.start() - 1:m.start()] in ("'", '"') or kommentar(m.start()):
+            continue
+        sicht = re.sub(r"\$\{(?:[^{}]|\{[^{}]*\})*\}", "", m.group(1))
+        sicht = re.sub(r"<(\w+)[^>]*data-i18n[^>]*>[^<]*</\1>", " ", sicht)
+        sicht = re.sub(r"<[^>]*>", " ", sicht)
+        if _PHRASE.search(sicht):
+            funde.append((zeile(m.start()), " ".join(m.group(1).split())[:200]))
+    for m in _SCHNIPSEL_ATTR.finditer(src):
+        attr = m.group(0).split("=")[0]
+        zwilling = {"title": "data-i18n-title", "data-tooltip": "data-i18n-title",
+                    "aria-label": "data-i18n-aria-label", "placeholder": "data-i18n-placeholder"}[attr]
+        if zwilling in _tag_vor(src, m.start()) or kommentar(m.start()):
+            continue
+        funde.append((zeile(m.start()), m.group(1)))
+    return sorted(f for f in set(funde) if not _erlaubt(datei.name, f[1]))
 
 
 def js_stand():

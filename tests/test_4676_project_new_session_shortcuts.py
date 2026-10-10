@@ -7,6 +7,8 @@ from pathlib import Path
 
 import pytest
 
+from tests.wings_i18n import T_EN_JS  # Wings: t() from the en locale (CI ABGLEICH WG-R3)
+
 
 ROOT = Path(__file__).resolve().parents[1]
 SESSIONS_JS = ROOT / "static" / "sessions.js"
@@ -348,7 +350,7 @@ def _run_quick_create_case(
         "toasts": [],
     }
     result = subprocess.run(
-        [NODE, "-e", _HELPER, str(SESSIONS_JS), json.dumps(payload)],
+        [NODE, "-e", T_EN_JS + _HELPER, str(SESSIONS_JS), json.dumps(payload)],
         capture_output=True,
         text=True,
         timeout=30,
