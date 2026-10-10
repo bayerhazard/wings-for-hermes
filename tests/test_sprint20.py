@@ -92,9 +92,9 @@ def test_mic_button_svg_microphone_shape():
     btn_start = html.find('id="btnMic"')
     btn_end = html.find('</button>', btn_start) + len('</button>')
     btn_html = html[btn_start:btn_end]
-    assert '<rect' in btn_html, "mic SVG missing rect (mic body)"
-    assert '<path' in btn_html, "mic SVG missing path (arc)"
-    assert '<line' in btn_html, "mic SVG missing line (stand)"
+    # Wings: icons come from the CI by meaning (CI ABGLEICH WG-Z1)
+    assert 'data-li="mikrofon"' in btn_html, "mic button must show the CI microphone"
+    assert '<path' in btn_html, "mic SVG missing path"
 
 
 def test_mic_button_inside_composer_left():

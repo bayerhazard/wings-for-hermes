@@ -852,7 +852,7 @@ async function toggleSavedPromptsPopup(){
       del.className='saved-prompt-delete';
       del.type='button';
       del.title=(typeof t==='function'&&t('saved_prompts_delete'))||'Delete';
-      del.innerHTML='<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+      del.innerHTML='<svg data-li="schliessen" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18" /> <path d="m6 6 12 12" /></svg>';
       del.onclick=async(e)=>{
         e.stopPropagation();
         try{await api('/api/prompts',{method:'DELETE',body:JSON.stringify({id:p.id})});}catch(_e){}
@@ -7822,10 +7822,10 @@ function _ensureClarifyCardDom() {
   card.innerHTML = `
     <div class="clarify-inner">
       <div class="clarify-header">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 17h.01"/><path d="M9.09 9a3 3 0 1 1 5.82 1c0 2-3 2-3 4"/><circle cx="12" cy="12" r="10"/></svg>
+        <svg data-li="frage" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.992 16.342a2 2 0 0 1 .094 1.167l-1.065 3.29a1 1 0 0 0 1.236 1.168l3.413-.998a2 2 0 0 1 1.099.092 10 10 0 1 0-4.777-4.719" /> <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" /> <path d="M12 17h.01" /></svg>
         <span id="clarifyHeading" data-i18n="clarify_heading">Clarification needed</span>
         <span class="clarify-countdown" id="clarifyCountdown"></span>
-        <button type="button" class="clarify-collapse" id="clarifyCollapse" aria-expanded="true" aria-label="Collapse clarification" data-i18n-aria-label="wg_collapse_clarify" data-i18n-title="wg_collapse_clarify" aria-controls="clarifyQuestion clarifyChoices clarifyInput clarifyHint" onclick="toggleClarifyCardCollapsed()" title="Collapse clarification"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg></button>
+        <button type="button" class="clarify-collapse" id="clarifyCollapse" aria-expanded="true" aria-label="Collapse clarification" data-i18n-aria-label="wg_collapse_clarify" data-i18n-title="wg_collapse_clarify" aria-controls="clarifyQuestion clarifyChoices clarifyInput clarifyHint" onclick="toggleClarifyCardCollapsed()" title="Collapse clarification"><svg data-li="chevron" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6" /></svg></button>
       </div>
       <div class="clarify-question" id="clarifyQuestion"></div>
       <div class="clarify-choices" id="clarifyChoices"></div>

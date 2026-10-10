@@ -37,8 +37,7 @@ TAFEL = {
     "file-code": "code", "book-open": "wissensdatenbank", "message-square": "besprechung",
     "terminal": "rolle-konsole", "bot": "ai", "shuffle": "weitergabe", "dollar-sign": "kosten",
     "hash": "anzahl", "git-branch": "zweig", "layers": "zusammenfuehren", "plug": "stecker",
-    "undo": "rueckgaengig", "audio-lines": "welle", "braces": "code", "clipboard-list": "liste",
-    "map": "kalender",
+    "undo": "rueckgaengig", "audio-lines": "welle",
 }
 
 KOPF = """// ── Icons from the AImighty CI (CI ABGLEICH WG-Z1) ──────────────────────────
