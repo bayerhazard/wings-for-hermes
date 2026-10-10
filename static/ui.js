@@ -2547,16 +2547,16 @@ function _inlineMediaHtmlForRef(ref, sessionId){
   }
   if(_PDF_EXTS.test(ref)){
     const fname=esc(ref.split('/').pop()||ref);
-    return `<div class="pdf-preview-load" data-path="${esc(ref)}"><span class="pdf-preview-spinner">⏳</span> ${esc(typeof t==='function'?t('pdf_loading'):'Loading')} ${fname}...</div>`;
+    return `<div class="pdf-preview-load" data-path="${esc(ref)}"><span class="pdf-preview-spinner">${_liOr('laden',14,'')}</span> ${esc(typeof t==='function'?t('pdf_loading'):'Loading')} ${fname}...</div>`;
   }
   if(_HTML_EXTS.test(ref)){
-    return `<div class="html-preview-load" data-path="${esc(ref)}"><span class="html-preview-spinner">⏳</span> ${esc(typeof t==='function'?t('html_loading'):'Loading')}...</div>`;
+    return `<div class="html-preview-load" data-path="${esc(ref)}"><span class="html-preview-spinner">${_liOr('laden',14,'')}</span> ${esc(typeof t==='function'?t('html_loading'):'Loading')}...</div>`;
   }
   const fname=esc(ref.split('/').pop()||ref);
   if(/\.(patch|diff)$/i.test(ref)) return `<div class="diff-inline-load" data-path="${esc(ref)}">${esc(typeof t==='function'?t('diff_loading'):'Loading diff')} ${fname}...</div>`;
   if(_CSV_EXTS.test(ref)) return `<div class="csv-inline-load" data-path="${esc(ref)}">${esc(typeof t==='function'?t('csv_loading'):'Loading')} ${fname}...</div>`;
   if(_EXCALIDRAW_EXTS.test(ref)) return `<div class="excalidraw-inline-load" data-path="${esc(ref)}">${esc(typeof t==='function'?t('excalidraw_loading'):'Loading')} ${fname}...</div>`;
-  return `<a class="msg-media-link" href="${esc(apiUrl+'&download=1')}" download="${fname}">📎 ${fname}</a>`;
+  return `<a class="msg-media-link" href="${esc(apiUrl+'&download=1')}" download="${fname}">${_liOr('anhang',13,'')} ${fname}</a>`;
 }
 function _renderAttachmentHtml(fname, url){
   const kind=_mediaKindForName(fname);
@@ -4916,9 +4916,9 @@ document.addEventListener('click',function(e){
       api('/api/reasoning',{method:'POST',body:JSON.stringify(payload)})
         .then(function(st){
           _applyReasoningChip((st&&st.reasoning_effort)||effort, st||{});
-          showToast('🧠 '+t('wg_reasoning_set',(st&&st.reasoning_effort)||effort));
+          showToast(t('wg_reasoning_set',(st&&st.reasoning_effort)||effort));
         })
-        .catch(function(){showToast('🧠 '+t('wg_reasoning_set_failed'));});
+        .catch(function(){showToast(t('wg_reasoning_set_failed'));});
       closeReasoningDropdown();
     }
   }
@@ -5041,8 +5041,8 @@ function _renderToolsetsPresetSections(opts) {
   const selectedSet = new Set(selected);
   const hasCustom = selected.length > 0;
   state.textContent = hasCustom
-    ? '🔧 ' + selected.join(', ')
-    : '👤 ' + t('session_toolsets_profile_defaults');
+    ? selected.join(', ')
+    : t('session_toolsets_profile_defaults');
 
   section.innerHTML = '';
   const defaultsBtn = document.createElement('button');
@@ -5167,9 +5167,9 @@ function _applySessionToolsets(toolsets) {
     S._pendingSessionToolsets = toolsets;
     _applyToolsetsChip(toolsets);
     if (Array.isArray(toolsets) && toolsets.length) {
-      showToast('🔧 ' + t('session_toolsets_applied') + ': ' + toolsets.join(', '));
+      showToast(t('session_toolsets_applied') + ': ' + toolsets.join(', '));
     } else {
-      showToast('🌍 ' + t('session_toolsets_cleared'));
+      showToast(t('session_toolsets_cleared'));
     }
     return;
   }
@@ -5183,9 +5183,9 @@ function _applySessionToolsets(toolsets) {
         S.session.enabled_toolsets = r.enabled_toolsets || null;
         _applyToolsetsChip(r.enabled_toolsets || null);
         if (r.enabled_toolsets && r.enabled_toolsets.length) {
-          showToast('🔧 ' + t('session_toolsets_applied') + ': ' + r.enabled_toolsets.join(', '));
+          showToast(t('session_toolsets_applied') + ': ' + r.enabled_toolsets.join(', '));
         } else {
-          showToast('🌍 ' + t('session_toolsets_cleared'));
+          showToast(t('session_toolsets_cleared'));
         }
       } else {
         showToast(t('session_toolsets_failed') + (r && r.error ? r.error : t('wg_unknown_error')), 3000, 'error');
@@ -7007,8 +7007,8 @@ function renderMd(raw){
       const body=item.parts.join('\n').trim();
       const text=body;
       let inner;
-      if(!ordered && /^\[x\] /i.test(text)) inner='<span class="task-done">✅</span> '+inlineMd(text.slice(4));
-      else if(!ordered && /^\[ \] /.test(text)) inner='<span class="task-todo">☐</span> '+inlineMd(text.slice(4));
+      if(!ordered && /^\[x\] /i.test(text)) inner='<span class="task-done">'+(typeof li==='function'?li('erfolg',14):'✓')+'</span> '+inlineMd(text.slice(4));
+      else if(!ordered && /^\[ \] /.test(text)) inner='<span class="task-todo">'+(typeof li==='function'?li('offen',14):'–')+'</span> '+inlineMd(text.slice(4));
       else inner=inlineMd(text);
       const valueAttr=item.value!==null?` value="${item.value}"`:'';
       const styleAttr=item.indent?` style="margin-left:16px"`:'';
@@ -7889,6 +7889,9 @@ function copyToastText(btn){
   const done=()=>{const old=btn.textContent;btn.textContent=t('wg_copied');setTimeout(()=>{btn.textContent=old;},1200);};
   _copyText(text).then(done).catch(()=>{});
 }
+// Wings (CI ABGLEICH WG-Z1): an icon where icons.js is loaded; the share page and
+// Node harnesses render Markdown without it, they get the plain fallback.
+function _liOr(name,size,fallback){return typeof li==='function'?li(name,size):fallback;}
 function showToast(msg,ms,type){
   const el=$('toast');if(!el)return;
   const s=String(msg==null?'':msg);let t=type;
@@ -18181,7 +18184,7 @@ function buildCsvTablePreview(path, text, downloadUrl=''){
   const headerRow=headers.map(h=>`<th>${esc(h)}</th>`).join('');
   const fname=path.split('/').pop()||path;
   const downloadLink=downloadUrl
-    ? `<a class="csv-download-link msg-media-link" href="${esc(downloadUrl)}" download="${esc(fname)}">📎 ${esc(fname)}</a>`
+    ? `<a class="csv-download-link msg-media-link" href="${esc(downloadUrl)}" download="${esc(fname)}">${_liOr('anhang',13,'')} ${esc(fname)}</a>`
     : '';
   return {
     html:`<div class="csv-table-wrap"><div class="pre-header csv-preview-header"><span class="csv-preview-title">${esc(fname)} <span style="opacity:.5;font-size:11px">${t('csv_header_note')}</span></span>${downloadLink}</div><table class="csv-table"><thead><tr>${headerRow}</tr></thead><tbody>${bodyRows}</tbody></table></div>`,
@@ -18191,7 +18194,7 @@ function buildCsvTablePreview(path, text, downloadUrl=''){
 function _csvPreviewErrorHtml(path, errorKey){
   const fname=path.split('/').pop()||path;
   const downloadUrl=_csvMediaUrl(path,{download:true});
-  return `<div class="diff-inline-error">${esc(fname)}<br><a class="msg-media-link" href="${esc(downloadUrl)}" download="${esc(fname)}">📎 ${esc(fname)}</a><br><span style="color:var(--muted);font-size:12px">${t(errorKey)}</span></div>`;
+  return `<div class="diff-inline-error">${esc(fname)}<br><a class="msg-media-link" href="${esc(downloadUrl)}" download="${esc(fname)}">${_liOr('anhang',13,'')} ${esc(fname)}</a><br><span style="color:var(--muted);font-size:12px">${t(errorKey)}</span></div>`;
 }
 
 function loadCsvInline(container){
@@ -18356,7 +18359,7 @@ function loadPdfInline(container){
         .then(buf=>{
           if(buf.byteLength>PDF_MAX_SIZE){
             const dlUrl=publicMediaUrl+'&download=1';
-            el.outerHTML=`<div class="pdf-preview-fallback"><a class="msg-media-link" href="${dlUrl}" download="${esc(fname)}">📎 ${esc(fname)}</a><br><span style="color:var(--muted);font-size:12px">${t('pdf_too_large')}</span></div>`;
+            el.outerHTML=`<div class="pdf-preview-fallback"><a class="msg-media-link" href="${dlUrl}" download="${esc(fname)}">${_liOr('anhang',13,'')} ${esc(fname)}</a><br><span style="color:var(--muted);font-size:12px">${t('pdf_too_large')}</span></div>`;
             return;
           }
           return pdfjsLib.getDocument({data:buf, isEvalSupported:false}).promise;
@@ -18368,7 +18371,7 @@ function loadPdfInline(container){
           const pagesLabel=total>1?` · ${total} pages`:'';
           const wrap=document.createElement('div');
           wrap.className='pdf-preview-wrap';
-          wrap.innerHTML=`<div class="pdf-preview-header"><span>📄 ${esc(fname)}${pagesLabel}</span><a href="${dlUrl}" download="${esc(fname)}" class="pdf-download-link">${t('pdf_download')} ↓</a></div><div class="pdf-preview-body"></div>`;
+          wrap.innerHTML=`<div class="pdf-preview-header"><span>${_liOr('pdf',14,'')} ${esc(fname)}${pagesLabel}</span><a href="${dlUrl}" download="${esc(fname)}" class="pdf-download-link">${t('pdf_download')} ↓</a></div><div class="pdf-preview-body"></div>`;
           const body=wrap.querySelector('.pdf-preview-body');
           el.replaceWith(wrap);
           // Render every page (capped) sequentially to limit memory; the
@@ -18403,7 +18406,7 @@ function loadPdfInline(container){
         })
         .catch(()=>{
           const dlUrl=publicMediaUrl+'&download=1';
-          el.outerHTML=`<div class="pdf-preview-fallback"><a class="msg-media-link" href="${dlUrl}" download="${esc(fname)}">📎 ${esc(fname)}</a><br><span style="color:var(--muted);font-size:12px">${t('pdf_error')}</span></div>`;
+          el.outerHTML=`<div class="pdf-preview-fallback"><a class="msg-media-link" href="${dlUrl}" download="${esc(fname)}">${_liOr('anhang',13,'')} ${esc(fname)}</a><br><span style="color:var(--muted);font-size:12px">${t('pdf_error')}</span></div>`;
         });
     };
     if(_pdfjsReady){
@@ -18424,7 +18427,7 @@ function loadPdfInline(container){
         if(!_pdfjsReady){
           const dlUrl=publicMediaUrl+'&download=1';
           if(el.parentNode){
-            el.outerHTML=`<div class="pdf-preview-fallback"><a class="msg-media-link" href="${dlUrl}" download="${esc(fname)}">📎 ${esc(fname)}</a><br><span style="color:var(--muted);font-size:12px">${t('pdf_error')}</span></div>`;
+            el.outerHTML=`<div class="pdf-preview-fallback"><a class="msg-media-link" href="${dlUrl}" download="${esc(fname)}">${_liOr('anhang',13,'')} ${esc(fname)}</a><br><span style="color:var(--muted);font-size:12px">${t('pdf_error')}</span></div>`;
           }
         }
       },15000);
@@ -18450,7 +18453,7 @@ function loadHtmlInline(container){
       .then(html=>{
         if(html.length>HTML_MAX_SIZE){
           const openUrl=publicMediaUrl+'&inline=1';
-          el.outerHTML=`<div class="html-preview-fallback"><a class="msg-media-link" href="${openUrl}" target="_blank" rel="noopener">📎 ${esc(fname)}</a><br><span style="color:var(--muted);font-size:12px">${t('html_too_large')}</span></div>`;
+          el.outerHTML=`<div class="html-preview-fallback"><a class="msg-media-link" href="${openUrl}" target="_blank" rel="noopener">${_liOr('anhang',13,'')} ${esc(fname)}</a><br><span style="color:var(--muted);font-size:12px">${t('html_too_large')}</span></div>`;
           return;
         }
         const openUrl=publicMediaUrl+'&inline=1';
@@ -18459,7 +18462,7 @@ function loadHtmlInline(container){
       })
       .catch(()=>{
         const dlUrl=publicMediaUrl+'&download=1';
-        el.outerHTML=`<div class="html-preview-fallback"><a class="msg-media-link" href="${dlUrl}" download="${esc(fname)}">📎 ${esc(fname)}</a><br><span style="color:var(--muted);font-size:12px">${t('html_error')}</span></div>`;
+        el.outerHTML=`<div class="html-preview-fallback"><a class="msg-media-link" href="${dlUrl}" download="${esc(fname)}">${_liOr('anhang',13,'')} ${esc(fname)}</a><br><span style="color:var(--muted);font-size:12px">${t('html_error')}</span></div>`;
       });
   });
 }
@@ -19891,9 +19894,9 @@ function renderTray(){ // non-media files use paperclip chip
       } else if(_SVG_EXTS.test(f.name)){
         chip.innerHTML=`<img class="attach-thumb attach-thumb--svg" src="${esc(blobUrl)}" alt="${esc(f.name)}" title="${esc(f.name)}"><button title="${t('remove_title')}">${li('x',12)}</button>`;
       } else if(mediaKind==='audio'){
-        chip.innerHTML=`<span class="attach-chip-media">🎵 ${esc(f.name)}</span><audio controls preload="metadata" src="${esc(blobUrl)}"></audio><button title="${t('remove_title')}">${li('x',12)}</button>`;
+        chip.innerHTML=`<span class="attach-chip-media">${_liOr('welle',13,'')} ${esc(f.name)}</span><audio controls preload="metadata" src="${esc(blobUrl)}"></audio><button title="${t('remove_title')}">${li('x',12)}</button>`;
       } else if(mediaKind==='video'){
-        chip.innerHTML=`<span class="attach-chip-media">🎬 ${esc(f.name)}</span><video controls preload="metadata" src="${esc(blobUrl)}"></video><button title="${t('remove_title')}">${li('x',12)}</button>`;
+        chip.innerHTML=`<span class="attach-chip-media">${_liOr('lauf-gestartet',13,'')} ${esc(f.name)}</span><video controls preload="metadata" src="${esc(blobUrl)}"></video><button title="${t('remove_title')}">${li('x',12)}</button>`;
       }
     } else {
       chip.innerHTML=`${li('plus',12)} ${esc(f.name)} <button title="${t('remove_title')}">${li('x',12)}</button>`;

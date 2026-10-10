@@ -11,7 +11,7 @@ function _showStreamTimeoutHint(ms){
     const paint=()=>{
       if(!remaining){el.style.display='none';el.textContent='';return;}
       el.style.display='inline-flex';
-      el.textContent='⏱ '+remaining+'s…';
+      el.textContent=remaining+' s …';
     };
     paint();
     const iv=setInterval(()=>{

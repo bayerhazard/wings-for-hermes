@@ -223,7 +223,7 @@ function _renderOnboardingModelField(){
 function _renderOnboardingProviderOAuthField(provider){
   if(!provider||provider.oauth_provider!=='anthropic')return '';
   return `<div class="onboarding-oauth-card onboarding-oauth-pending" style="margin-top:12px">
-    <div class="onboarding-oauth-icon">🔑</div>
+    <div class="onboarding-oauth-icon">${li('schluessel',20)}</div>
     <div style="flex:1">
       <strong>${t('wg_ob_cc_title')}</strong>
       <p style="margin-top:6px;color:var(--muted);font-size:13px"><strong>${t('wg_ob_cc_not_api_key')}</strong> ${t('wg_ob_cc_when','<code>claude setup-token</code>')}</p>
@@ -325,7 +325,7 @@ function _renderOnboardingBody(){
         _setOnboardingNotice(t('onboarding_notice_setup_required'),'warn');
         body.innerHTML=`
           <div class="onboarding-oauth-card onboarding-oauth-pending">
-            <div class="onboarding-oauth-icon">⚠</div>
+            <div class="onboarding-oauth-icon">${li('achtung',20)}</div>
             <div style="flex:1">
               <strong>${t('onboarding_oauth_provider_not_ready_title')}</strong>
               <p>${codexOauthPendingBody}</p>
@@ -633,7 +633,7 @@ async function cancelCodexOAuth(){
   }
   _setCodexOAuthButton(true);
   if(flowDiv){
-    flowDiv.innerHTML=`<div class="onboarding-oauth-card"><div class="onboarding-oauth-icon">⏹</div><div><strong>${t('wg_ob_oauth_cancelled')}</strong><p style="margin-top:6px;color:var(--muted);font-size:13px">${t('wg_ob_start_again')}</p></div></div>`;
+    flowDiv.innerHTML=`<div class="onboarding-oauth-card"><div class="onboarding-oauth-icon">${li('stopp',20)}</div><div><strong>${t('wg_ob_oauth_cancelled')}</strong><p style="margin-top:6px;color:var(--muted);font-size:13px">${t('wg_ob_start_again')}</p></div></div>`;
   }
 }
 
@@ -641,7 +641,7 @@ function _renderCodexOAuthTerminal(status,message){
   const flowDiv=$('codexOAuthFlow');
   if(!flowDiv)return;
   const ok=status==='success';
-  const icon=ok?'✅':status==='expired'?'⌛':status==='cancelled'?'⏹':'❌';
+  const icon=li(ok?'erfolg':status==='expired'?'frist':status==='cancelled'?'stopp':'fehler',20);
   const title=ok?t('oauth_codex_success'):(status==='expired'?t('oauth_codex_expired'):(status==='cancelled'?t('wg_ob_oauth_cancelled'):t('oauth_codex_error')));
   flowDiv.innerHTML=`
     <div class="onboarding-oauth-card ${ok?'onboarding-oauth-ready':''}" ${ok?'':'style="border-color:var(--error,#e55)"'}>
@@ -689,7 +689,7 @@ async function startCodexOAuth(){
   _codexOAuthFlowId=null;
   _setCodexOAuthButton(false);
   flowDiv.style.display='block';
-  flowDiv.innerHTML=`<div class="onboarding-oauth-card onboarding-oauth-pending"><div class="onboarding-oauth-icon">⏳</div><div><strong>${t('oauth_codex_polling')}</strong><p>${t('wg_ob_device_flow')}</p></div></div>`;
+  flowDiv.innerHTML=`<div class="onboarding-oauth-card onboarding-oauth-pending"><div class="onboarding-oauth-icon">${li('laden',20)}</div><div><strong>${t('oauth_codex_polling')}</strong><p>${t('wg_ob_device_flow')}</p></div></div>`;
   try{
     const resp=await api('/api/onboarding/oauth/start',{method:'POST',body:JSON.stringify({provider:'openai-codex'})});
     if(resp.error) throw new Error(resp.error);
@@ -698,7 +698,7 @@ async function startCodexOAuth(){
     _codexOAuthFlowId=flow_id;
     flowDiv.innerHTML=`
       <div class="onboarding-oauth-card onboarding-oauth-pending">
-        <div class="onboarding-oauth-icon">📋</div>
+        <div class="onboarding-oauth-icon">${li('kopieren',20)}</div>
         <div style="flex:1">
           <strong>${t('oauth_codex_step1')}</strong>
           <p><a href="${esc(verification_uri)}" target="_blank" rel="noopener" style="color:var(--accent);word-break:break-all">${esc(verification_uri)}</a></p>
@@ -743,7 +743,7 @@ async function cancelAnthropicOAuth(){
   }
   _setAnthropicOAuthButton(true);
   if(flowDiv){
-    flowDiv.innerHTML=`<div class="onboarding-oauth-card"><div class="onboarding-oauth-icon">⏹</div><div><strong>${t('wg_ob_cc_cancelled')}</strong><p style="margin-top:6px;color:var(--muted);font-size:13px">${t('wg_ob_start_again')}</p></div></div>`;
+    flowDiv.innerHTML=`<div class="onboarding-oauth-card"><div class="onboarding-oauth-icon">${li('stopp',20)}</div><div><strong>${t('wg_ob_cc_cancelled')}</strong><p style="margin-top:6px;color:var(--muted);font-size:13px">${t('wg_ob_start_again')}</p></div></div>`;
   }
 }
 
@@ -751,7 +751,7 @@ function _renderAnthropicOAuthTerminal(status,message){
   const flowDiv=$('anthropicOAuthFlow');
   if(!flowDiv)return;
   const ok=status==='success';
-  const icon=ok?'✅':status==='expired'?'⌛':status==='cancelled'?'⏹':'❌';
+  const icon=li(ok?'erfolg':status==='expired'?'frist':status==='cancelled'?'stopp':'fehler',20);
   const title=ok?t('wg_ob_cc_linked'):(status==='expired'?t('wg_ob_cc_expired'):(status==='cancelled'?t('wg_ob_cc_cancelled'):t('wg_ob_cc_failed')));
   flowDiv.style.display='block';
   flowDiv.innerHTML=`
@@ -800,7 +800,7 @@ async function startAnthropicOAuth(){
   _anthropicOAuthFlowId=null;
   _setAnthropicOAuthButton(false);
   flowDiv.style.display='block';
-  flowDiv.innerHTML=`<div class="onboarding-oauth-card onboarding-oauth-pending"><div class="onboarding-oauth-icon">⏳</div><div><strong>${t('wg_ob_cc_checking')}</strong><p>${t('wg_ob_cc_checking_detail')}</p></div></div>`;
+  flowDiv.innerHTML=`<div class="onboarding-oauth-card onboarding-oauth-pending"><div class="onboarding-oauth-icon">${li('laden',20)}</div><div><strong>${t('wg_ob_cc_checking')}</strong><p>${t('wg_ob_cc_checking_detail')}</p></div></div>`;
   try{
     const resp=await api('/api/onboarding/oauth/start',{method:'POST',body:JSON.stringify({provider:'anthropic'})});
     if(resp.error) throw new Error(resp.error);
@@ -818,7 +818,7 @@ async function startAnthropicOAuth(){
     }
     flowDiv.innerHTML=`
       <div class="onboarding-oauth-card onboarding-oauth-pending">
-        <div class="onboarding-oauth-icon">🖥️</div>
+        <div class="onboarding-oauth-icon">${li('geraet-bildschirm',20)}</div>
         <div style="flex:1">
           <strong>${t('wg_ob_cc_complete')}</strong>
           <p style="margin-top:6px">${esc(action_required||t('wg_ob_cc_run_setup'))}</p>
