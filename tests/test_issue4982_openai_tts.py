@@ -1,4 +1,5 @@
 """OpenAI-compatible TTS endpoint and UI wiring coverage for #4982."""
+import re
 import io
 import json
 import socket
@@ -633,7 +634,7 @@ def test_openai_tts_rejects_oversized_upstream_audio(monkeypatch):
 
 def test_openai_option_in_html():
     src = (STATIC_DIR / "index.html").read_text(encoding="utf-8")
-    assert '<option value="openai">OpenAI TTS (server)</option>' in src
+    assert re.search(r'<option value="openai"(?: data-i18n="wg_\w+")?>OpenAI\ TTS\ \(server\)</option>', src)
 
 
 def test_openai_voice_placeholder_in_panels():

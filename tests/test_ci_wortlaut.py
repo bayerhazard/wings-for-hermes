@@ -42,7 +42,7 @@ GLEICH_ERLAUBT = {
     "status_tokens", "yolo_pill_label", "session_worktree_badge", "session_toolsets_placeholder",
     "cron_mode_agent", "media_audio_label", "media_video_label", "insights_model_tokens",
     "insights_model_cache", "insights_skill_usage_col_skill", "insights_skill_usage_col_patches",
-    "insights_tokens", "slash_skill_badge",
+    "insights_tokens", "slash_skill_badge", "wg_reasoning_minimal",
 }
 
 # Where "Hermes" names a thing the user finds under that name (WG-R4, group 3).
