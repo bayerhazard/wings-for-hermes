@@ -149,13 +149,13 @@ function _interimCollapseDelegatedClick(e){
   if(hidden.length){
     hidden.forEach(el=>el.classList.remove('interim-collapsed'));
     toggle.dataset.expanded='1';
-    toggle.textContent='Collapse';
+    toggle.textContent=t('wg_collapse');
   } else {
     const all=Array.from(blocks.querySelectorAll('[data-interim="1"]'));
     const rehide=all.slice(0,all.length-threshold);
     rehide.forEach(el=>el.classList.add('interim-collapsed'));
     toggle.dataset.expanded='';
-    toggle.textContent='Show '+rehide.length+' earlier update'+(rehide.length===1?'':'s');
+    toggle.textContent=t('wg_show_earlier_updates',rehide.length);
   }
 }
 document.addEventListener('click', _interimCollapseDelegatedClick);
@@ -824,7 +824,7 @@ async function toggleSavedPromptsPopup(){
     if(btn)btn.setAttribute('aria-expanded','false');
     return;
   }
-  popup.innerHTML='<div class="saved-prompts-loading">Loading…</div>';
+  popup.innerHTML='<div class="saved-prompts-loading">'+esc(t('wg_loading'))+'</div>';
   popup.style.display='flex';
   if(btn)btn.setAttribute('aria-expanded','true');
   const prompts=await _loadSavedPrompts();
@@ -1315,7 +1315,7 @@ async function send(){
       if(_targetSid&&typeof _clearComposerDraft==='function'&&_targetSid!==(S.session&&S.session.session_id)) _clearComposerDraft(_targetSid,_text,S.pendingFiles?[...S.pendingFiles]:[]);
       S.pendingFiles=[];renderTray();
       updateQueueBadge(_targetSid);
-      showToast(`Queued: "${_text.slice(0,40)}${_text.length>40?'…':''}"`,2000);
+      showToast(t('wg_queued_toast',`${_text.slice(0,40)}${_text.length>40?'…':''}`),2000);
     }
     return;
   }
@@ -1398,7 +1398,7 @@ async function send(){
           if(await cancelStream('busy-interrupt')) showToast(t('busy_interrupt_confirm'),2000);
           else showToast(t('cancel_failed'),null,'error');
         } else {
-          showToast(`Queued: "${text.slice(0,40)}${text.length>40?'…':''}"`,2000);
+          showToast(t('wg_queued_toast',`${text.slice(0,40)}${text.length>40?'…':''}`),2000);
         }
       } else {
         // Default: queue mode (current behavior). Also the fallback for
@@ -1408,13 +1408,13 @@ async function send(){
         _clearComposerAfterQueuedSelectionSend(S.session&&S.session.session_id);
         S.pendingFiles=[];renderTray();
         updateQueueBadge(S.session.session_id);
-        showToast(`Queued: "${text.slice(0,40)}${text.length>40?'…':''}"`,2000);
+        showToast(t('wg_queued_toast',`${text.slice(0,40)}${text.length>40?'…':''}`),2000);
       }
     }
     return;
   }
   if(S.session&&(S.session.read_only||S.session.is_read_only)){
-    if(typeof showToast==='function') showToast('Read-only imported sessions cannot be modified.',3000);
+    if(typeof showToast==='function') showToast(t('wg_readonly_modify'),3000);
     return;
   }
   let _slashDisplayTextOverride=null;
@@ -1455,9 +1455,9 @@ async function send(){
         try{
           _petOutput=typeof handlePetSlashCommand==='function'
             ? await handlePetSlashCommand(text,{name:'pet'})
-            : {handled:false,message:'Desktop Companion is unavailable in WebUI.'};
+            : {handled:false,message:t('wg_companion_unavailable')};
         }catch(e){
-          _petOutput={handled:false,message:`Desktop Companion command error: ${e&&e.message||e}`};
+          _petOutput={handled:false,message:t('wg_companion_error',e&&e.message||e)};
         }
         if(_petOutput&&_petOutput.message){
           S.messages.push({role:'assistant',content:String(_petOutput.message),_ts:Date.now()/1000});
@@ -1789,7 +1789,7 @@ async function send(){
       const _retryModelState=_chatPayloadModelState();
       queueSessionMessage(activeSid,{text:msgText,files:[],model:_retryModelState.model,model_provider:_retryModelState.model_provider,profile:S.activeProfile||'default'});
       updateQueueBadge(activeSid);
-      showToast('Current session is still running. Reconnected and queued your message.',2600);
+      showToast(t('wg_queued_reconnected'),2600);
       try{
         await loadSession(activeSid);
         setComposerStatus('');
@@ -1833,7 +1833,7 @@ async function send(){
     if(startData&&startData.effective_model && S.session){
       const _sentModel=_modelState&&_modelState.model;
       if(_explicitPick && _sentModel && startData.effective_model!==_sentModel && typeof showToast==='function'){
-        showToast('Model '+_sentModel+' changed to '+startData.effective_model+' — profile provider mismatch', 5000);
+        showToast(t('wg_model_changed',_sentModel,startData.effective_model), 5000);
       }
       S.session.model=startData.effective_model;
       S.session.model_provider=startData.effective_model_provider||S.session.model_provider||null;
@@ -5376,7 +5376,7 @@ function attachLiveStream(activeSid, streamId, uploaded=[], options={}){
               toHide.forEach(el=>el.classList.add('interim-collapsed'));
             }
             const stillHidden=blocks.querySelectorAll('[data-interim="1"].interim-collapsed').length;
-            if(stillHidden) toggle.textContent='Show '+stillHidden+' earlier update'+(stillHidden===1?'':'s');
+            if(stillHidden) toggle.textContent=t('wg_show_earlier_updates',stillHidden);
           }
         }
       }
@@ -5580,7 +5580,7 @@ function attachLiveStream(activeSid, streamId, uploaded=[], options={}){
         setComposerStatus(`Context loaded: ${label}`);
       }else if(status==='error'){
         setComposerStatus(`Context unavailable: ${label}`);
-        if(typeof showToast==='function') showToast(`Context unavailable: ${String(prefill.error||label)}`,3600,'warning');
+        if(typeof showToast==='function') showToast(t('wg_context_unavailable',String(prefill.error||label)),3600,'warning');
       }
     });
 
@@ -5878,7 +5878,7 @@ function attachLiveStream(activeSid, streamId, uploaded=[], options={}){
           S.busy=false;
           // No-reply guard (#373): if agent returned nothing, show inline error
           if(!S.messages.some(m=>m.role==='assistant'&&String(m.content||'').trim())&&!assistantText){removeThinking();S.messages.push({role:'assistant',content:'**No response received.** Check your API key and model selection.'});}
-          if(_markerOnlyAssistantError&&typeof showToast==='function') showToast('No response received after context compression. Please retry.',5000,'error');
+          if(_markerOnlyAssistantError&&typeof showToast==='function') showToast(t('wg_no_response_after_compress'),5000,'error');
           if(isSessionViewed) _markSessionViewed(completedSid, completedMessageCount);
           // Cooldown: prevent refreshActiveSessionIfExternallyUpdated from
           // force-reloading immediately after "done" — the event already
@@ -6167,7 +6167,7 @@ function attachLiveStream(activeSid, streamId, uploaded=[], options={}){
           window._compressionUi=null;
           if(typeof clearCompressionUi==='function') clearCompressionUi();
           if(isRecoveryControlMessage){
-            if(typeof showToast==='function') showToast('Stream recovery signal received. Restoring transcript...',3500,'error');
+            if(typeof showToast==='function') showToast(t('wg_stream_recovery'),3500,'error');
           } else if(d.session&&typeof d.session==='object'){
             S.session=d.session;
             const _nextMsgs3018=(d.session.messages||[]).filter(m=>m&&m.role);
@@ -6554,7 +6554,7 @@ function attachLiveStream(activeSid, streamId, uploaded=[], options={}){
           if(typeof _setActiveSessionUrl==='function') _setActiveSessionUrl(S.session.session_id);
         }
         const _markerOnlyAssistantError=_replaceMarkerOnlyAssistantWithStreamError(S.messages);
-        if(_markerOnlyAssistantError&&typeof showToast==='function') showToast('No response received after context compression. Please retry.',5000,'error');
+        if(_markerOnlyAssistantError&&typeof showToast==='function') showToast(t('wg_no_response_after_compress'),5000,'error');
         const hasMessageToolMetadata=S.messages.some(m=>{
           if(!m||m.role!=='assistant') return false;
           // Recognize both the standard `tool_calls` (used by completed assistant
@@ -7715,7 +7715,7 @@ function _handleBgTaskCompleteEvent(e, expectedSid, opts) {
       try {
         const tid = (d.task_id || '').slice(0, 8) || '?';
         const tail = d.summary ? `: ${String(d.summary).slice(0, 80)}` : '';
-        showToast(`Task ${tid} done${tail}`, 2600);
+        showToast(t('wg_task_done', tid, tail), 2600);
       } catch (_) {}
     }
 
@@ -7825,7 +7825,7 @@ function _ensureClarifyCardDom() {
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 17h.01"/><path d="M9.09 9a3 3 0 1 1 5.82 1c0 2-3 2-3 4"/><circle cx="12" cy="12" r="10"/></svg>
         <span id="clarifyHeading" data-i18n="clarify_heading">Clarification needed</span>
         <span class="clarify-countdown" id="clarifyCountdown"></span>
-        <button type="button" class="clarify-collapse" id="clarifyCollapse" aria-expanded="true" aria-label="Collapse clarification" aria-controls="clarifyQuestion clarifyChoices clarifyInput clarifyHint" onclick="toggleClarifyCardCollapsed()" title="Collapse clarification"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg></button>
+        <button type="button" class="clarify-collapse" id="clarifyCollapse" aria-expanded="true" aria-label="Collapse clarification" data-i18n-aria-label="wg_collapse_clarify" data-i18n-title="wg_collapse_clarify" aria-controls="clarifyQuestion clarifyChoices clarifyInput clarifyHint" onclick="toggleClarifyCardCollapsed()" title="Collapse clarification"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg></button>
       </div>
       <div class="clarify-question" id="clarifyQuestion"></div>
       <div class="clarify-choices" id="clarifyChoices"></div>
@@ -8360,7 +8360,7 @@ function _startClarifyFallbackPoll(sid) {
           _clarifyMissingEndpointWarned = true;
           setComposerStatus("Clarify unavailable on current server build. Restart server.");
           if (typeof showToast === "function") {
-            showToast("Clarify endpoint unavailable. Please restart server.", 5000);
+            showToast(t('wg_clarify_unavailable'), 5000);
           }
           if (typeof console !== "undefined" && console.warn) {
             console.warn("[clarify] pending poll endpoint unavailable", logDetails);

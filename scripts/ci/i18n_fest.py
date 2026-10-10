@@ -120,17 +120,47 @@ def _sichtbar(text):
     return not (re.fullmatch(r"[\w.:/-]+", s) and not re.match(r"[A-Z][a-z]", s))
 
 
+# JS texts that stay as they are: (file, text) -> reason.
+JS_ERLAUBT = {
+    ("messages.js", "Context auto-compressed"): "Ereignisdaten wie in api/streaming.py, Tests vergleichen sie",
+    ("messages.js", "Compressing context"): "Ereignisdaten wie in api/streaming.py, Tests vergleichen sie",
+    ("messages.js", "The browser lost the live SSE connection before the response finished."):
+        "Ereignisdaten, Tests vergleichen sie",
+    ("commands.js", "Steer"): "Begriff des Agenten, im Deutschen gleich",
+    ("sessions.js", "\\]]+|\\/session\\/[^\\s"): "Teil einer Regex",
+}
+
+
+def _tag_vor(src, pos):
+    """The opening tag that ends right before pos (text) or contains pos (attribute)."""
+    anfang = src.rfind("<", 0, pos)
+    ende = src.find(">", pos)
+    return src[anfang:ende] if anfang != -1 else ""
+
+
 def js_funde(datei):
-    """Fixed UI text in one JS file: [(line, text)]."""
+    """Fixed UI text in one JS file not covered by JS_ERLAUBT: [(line, text)]."""
     src = datei.read_text(encoding="utf-8")
+    zeilen = src.split("\n")
     zeile = lambda pos: src.count("\n", 0, pos) + 1
-    funde = [(zeile(m.start()), m.group(2)) for m in _SENKE.finditer(src) if _sichtbar(m.group(2))]
+    kommentar = lambda pos: zeilen[zeile(pos) - 1].lstrip().startswith(("//", "*", "/*"))
+    funde = [(zeile(m.start()), m.group(2)) for m in _SENKE.finditer(src)
+             if _sichtbar(m.group(2)) and not kommentar(m.start())]
     for m in _SCHNIPSEL_TEXT.finditer(src):
         t = m.group(1).strip()
-        if _sichtbar(t) and not re.search(r"[=;(){}]|&&|\|\|", t):
-            funde.append((zeile(m.start()), t))
-    funde += [(zeile(m.start()), m.group(1)) for m in _SCHNIPSEL_ATTR.finditer(src)]
-    return sorted(set(funde))
+        if not _sichtbar(t) or re.search(r"[=;(){}]|&&|\|\|", t) or kommentar(m.start()):
+            continue
+        if "data-i18n=" in src[src.rfind("<", 0, m.start() + 1):m.start() + 1]:
+            continue  # the element carries its key; applyLocaleToDOM sets the text
+        funde.append((zeile(m.start()), t))
+    for m in _SCHNIPSEL_ATTR.finditer(src):
+        attr = m.group(0).split("=")[0]
+        zwilling = {"title": "data-i18n-title", "data-tooltip": "data-i18n-title",
+                    "aria-label": "data-i18n-aria-label", "placeholder": "data-i18n-placeholder"}[attr]
+        if zwilling in _tag_vor(src, m.start()) or kommentar(m.start()):
+            continue
+        funde.append((zeile(m.start()), m.group(1)))
+    return sorted(f for f in set(funde) if (datei.name, f[1]) not in JS_ERLAUBT)
 
 
 def js_stand():

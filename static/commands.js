@@ -972,7 +972,7 @@ async function _runManualCompression(focusTopic){
       if(typeof setBusy==='function') setBusy(false);
       if(typeof setComposerStatus==='function') setComposerStatus('');
       renderMessages();
-      showToast('Compression failed: '+(preflightErr.message||'session no longer available'));
+      showToast(t('compress_failed_label')+': '+(preflightErr.message||t('wg_session_gone')));
       return;
     }
     if(typeof setBusy==='function') setBusy(true);
@@ -1022,7 +1022,7 @@ async function _runManualCompression(focusTopic){
     if(typeof setBusy==='function') setBusy(false);
     if(typeof setComposerStatus==='function') setComposerStatus('');
     renderMessages();
-    showToast('Compression failed: '+e.message);
+    showToast(t('compress_failed_label')+': '+e.message);
     return;
   }
   if(typeof setBusy==='function') setBusy(false);
@@ -1108,7 +1108,7 @@ async function cmdSkills(args){
     renderMessages();
     showToast(t('type_slash'));
   }catch(e){
-    showToast('Failed to load skills: '+e.message);
+    showToast(t('wg_skills_load_failed')+e.message);
   }
 }
 
@@ -1145,11 +1145,11 @@ async function cmdUse(args){
       S.messages.push({role:'assistant', content:`Next turn: skill \`${match.name}\` will be forced.`});
       renderMessages();
     }
-    showToast(`Skill \`${match.name}\` will be used for next turn.`);
+    showToast(t('wg_skill_next_turn',match.name));
   }catch(e){
     resolve(null);
     if(_forcedSkillDirectivePending===pending)_forcedSkillDirectivePending = null;
-    showToast('Failed to load skills: '+e.message);
+    showToast(t('wg_skills_load_failed')+e.message);
   }
 }
 
@@ -1846,7 +1846,7 @@ function cmdReasoning(args){
       });
     return true;
   }
-  showToast('Unknown argument: '+arg+' \u2014 use show|hide|'+EFFORTS.join('|'));
+  showToast(t('wg_unknown_argument',arg,EFFORTS.join('|')));
   return true;
 }
 function cmdVoice(){
@@ -1899,7 +1899,7 @@ async function cmdBranch(args){
   const branchableReadOnlySession=typeof _isBranchableReadOnlySession==='function'
     ? _isBranchableReadOnlySession(S.session)
     : false;
-  if(readOnlySession&&!branchableReadOnlySession){showToast('Read-only sessions cannot be forked.',3000);return;}
+  if(readOnlySession&&!branchableReadOnlySession){showToast(t('wg_fork_readonly'),3000);return;}
   const customTitle=(args||'').trim()||null;
   try{
     const data=await api('/api/session/branch',{
@@ -1935,7 +1935,7 @@ async function forkFromMessage(msgIdx){
     const _msg=(Array.isArray(S.messages)&&S.messages[msgIdx-1])||null;
     const _isLastMsg=msgIdx>=(Array.isArray(S.messages)?S.messages.length:0);
     if((_msg&&(_msg._live||_msg._pending))||_isLastMsg){
-      showToast('Cannot fork a message still being generated.',3000);
+      showToast(t('wg_fork_generating'),3000);
       return;
     }
   }
@@ -1945,7 +1945,7 @@ async function forkFromMessage(msgIdx){
   const branchableReadOnlySession=typeof _isBranchableReadOnlySession==='function'
     ? _isBranchableReadOnlySession(S.session)
     : false;
-  if(readOnlySession&&!branchableReadOnlySession){showToast('Read-only sessions cannot be forked.',3000);return;}
+  if(readOnlySession&&!branchableReadOnlySession){showToast(t('wg_fork_readonly'),3000);return;}
   const initialSid = S.session.session_id;
   // Capture the absolute keep_count before any async work that may
   // reset _oldestIdx.  _oldestIdx is 0 when the full transcript is
@@ -2093,7 +2093,7 @@ function showCmdDropdown(matches){
     const badge=c.source==='skill'
       ? ` <span class="cmd-item-badge cmd-item-badge-skill">${esc(t('slash_skill_badge'))}</span>`
       : c.source==='bundle'
-      ? ' <span class="cmd-item-badge">Bundle</span>'
+      ? ` <span class="cmd-item-badge">${esc(t('wg_cmd_badge_bundle'))}</span>`
       : '';
     if(c.source==='skill') el.classList.add('cmd-item-skill');
     if(isPath) el.classList.add('cmd-item-path');

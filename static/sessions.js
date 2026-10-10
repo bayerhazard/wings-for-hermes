@@ -1765,7 +1765,7 @@ async function loadSession(sid){
     }
     _loadingOlder = false;
     const _msgInner = $('msgInner');
-    if (_msgInner && currentSid !== sid) _msgInner.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text-muted);font-size:14px;padding:40px;text-align:center;">Loading conversation...</div>';
+    if (_msgInner && currentSid !== sid) _msgInner.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text-muted);font-size:14px;padding:40px;text-align:center;">'+esc(t('wg_loading_conversation'))+'</div>';
   }
   // Phase 1: Load metadata only (~1KB) for fast session switching. Keep model
   // resolution out of the first-paint path; old provider-shaped model IDs are
@@ -1782,7 +1782,7 @@ async function loadSession(sid){
         return;
       }
       try{
-        if(typeof showToast==='function') showToast(`Switching to ${profileMismatch.profile} profile for this session…`,2200);
+        if(typeof showToast==='function') showToast(t('wg_switching_profile',profileMismatch.profile),2200);
         await _switchProfileForSessionLoad(profileMismatch.profile);
         // Post-await stale-load guard (Codex): the profile switch above does a
         // network POST + session-list re-render, during which the user may have
@@ -1841,8 +1841,8 @@ async function loadSession(sid){
         // When currentSid is set, a 500/network error may be transient — the
         // session might still exist on the server (#4028 follow-up).
         _clearStuckSessionOnBoot(sid, currentSid);
-        _msgInner.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text-muted);font-size:14px;padding:40px;text-align:center;">Failed to load session. Try refreshing or switching sessions.</div>';
-        if(typeof showToast==='function') showToast('Failed to load session',3000,'error');
+        _msgInner.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text-muted);font-size:14px;padding:40px;text-align:center;">'+esc(t('wg_session_load_failed_hint'))+'</div>';
+        if(typeof showToast==='function') showToast(t('wg_session_load_failed'),3000,'error');
       }
     }
     _clearSameSessionForceReloadHint(sid);
@@ -2167,9 +2167,9 @@ async function loadSession(sid){
       // persist forever with no recovery path.
       const _msgInner = $('msgInner');
       if (_msgInner) {
-        _msgInner.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text-muted);font-size:14px;padding:40px;text-align:center;">Failed to load messages. Try switching sessions or refreshing.</div>';
+        _msgInner.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text-muted);font-size:14px;padding:40px;text-align:center;">' + esc(t('wg_messages_load_failed_hint')) + '</div>';
       }
-      if (typeof showToast === 'function') showToast('Failed to load conversation messages', 3000, 'error');
+      if (typeof showToast === 'function') showToast(t('wg_messages_load_failed'), 3000, 'error');
       if (_isCurrentLoad()) _loadingSessionId = null;
       return;
     }
@@ -2705,9 +2705,9 @@ function _showHandoffHint(sid, rounds) {
       <span class="handoff-hint-meta">${esc(hintMeta)}</span>
     </div>
     <div class="handoff-hint-actions">
-      <button class="handoff-hint-action" type="button">View summary</button>
-      <button class="handoff-hint-dismiss" type="button" onclick="event.stopPropagation(); _dismissHandoffHint('${esc(sid)}')" title="Dismiss">
-        Close
+      <button class="handoff-hint-action" type="button">${esc(t('wg_view_summary'))}</button>
+      <button class="handoff-hint-dismiss" type="button" onclick="event.stopPropagation(); _dismissHandoffHint('${esc(sid)}')" title="${esc(t('wg_close_notice'))}">
+        ${esc(t('wg_close'))}
       </button>
     </div>
   `;
@@ -4208,7 +4208,7 @@ function _renderBatchActionBar(){
       }));
       const retainedCount=_worktreeResponseCount(results);
       showToast(retainedCount?t('session_archived_worktree'):t('session_archived'));exitSessionSelectMode();await renderSessionList();
-    }catch(e){showToast('Archive failed: '+(e.message||e));}
+    }catch(e){showToast(t('session_archive_failed')+(e.message||e));}
   };bar.appendChild(archiveBtn);
   // Move
   const moveBtn=document.createElement('button');moveBtn.className='batch-action-btn';
@@ -4245,7 +4245,7 @@ function _renderBatchActionBar(){
       if(cleanupFailedCount) showToast(t('delete_failed')+' ('+cleanupFailedCount+'/'+ids.length+')',0,'error');
       else showToast((retainedCount?t('session_deleted_worktree'):t('session_delete'))+' ('+ids.length+')');
       exitSessionSelectMode();await renderSessionList();
-    }catch(e){showToast('Delete failed: '+(e.message||e));}
+    }catch(e){showToast(t('delete_failed')+(e.message||e));}
   };bar.appendChild(deleteBtn);
 }
 function _showBatchProjectPicker(){
@@ -4253,11 +4253,11 @@ function _showBatchProjectPicker(){
   const bar=$('batchActionBar');if(!bar)return;
   bar.querySelectorAll('.batch-project-picker').forEach(p=>p.remove());
   const picker=document.createElement('div');picker.className='project-picker batch-project-picker';
-  const none=document.createElement('div');none.className='project-picker-item';none.textContent='No project';
+  const none=document.createElement('div');none.className='project-picker-item';none.textContent=t('wg_no_project');
   none.onclick=async()=>{picker.remove();
     try{await Promise.all(ids.map(sid=>api('/api/session/move',{method:'POST',body:JSON.stringify({session_id:sid,project_id:null})})));
-      showToast('Removed from project');exitSessionSelectMode();await renderSessionList();
-    }catch(e){showToast('Move failed: '+(e.message||e));}
+      showToast(t('wg_removed_from_project'));exitSessionSelectMode();await renderSessionList();
+    }catch(e){showToast(t('move_failed')+(e.message||e));}
   };picker.appendChild(none);
   for(const p of(_allProjects||[])){
     const item=document.createElement('div');item.className='project-picker-item';
@@ -4266,8 +4266,8 @@ function _showBatchProjectPicker(){
     const name=document.createElement('span');name.textContent=p.name;item.appendChild(name);
     item.onclick=async()=>{picker.remove();
       try{await Promise.all(ids.map(sid=>api('/api/session/move',{method:'POST',body:JSON.stringify({session_id:sid,project_id:p.project_id})})));
-        showToast('Moved to '+p.name);exitSessionSelectMode();await renderSessionList();
-      }catch(e){showToast('Move failed: '+(e.message||e));}
+        showToast(t('moved_to')+p.name);exitSessionSelectMode();await renderSessionList();
+      }catch(e){showToast(t('move_failed')+(e.message||e));}
     };picker.appendChild(item);
   }
   bar.appendChild(picker);
@@ -4470,7 +4470,7 @@ function _findSessionRenameRow(sessionId){
 
 function _buildSessionRenameStarter(session, displayEl, renderDisplay){
   return ()=>{
-    if(_isReadOnlySession(session)){ if(typeof showToast==='function') showToast('Read-only imported sessions cannot be renamed.',3000); return; }
+    if(_isReadOnlySession(session)){ if(typeof showToast==='function') showToast(t('wg_readonly_rename'),3000); return; }
     if(_loadingSessionId&&_loadingSessionId!==session.session_id) return;
 
     closeSessionActionMenu();
@@ -4732,7 +4732,7 @@ function _playSessionActionMenuEntrance(menu){
 }
 
 async function _archiveSession(session, archived=true, beforeListRender=null){
-  if(_isReadOnlySession(session)){ if(typeof showToast==='function') showToast('Read-only imported sessions cannot be modified.',3000); return false; }
+  if(_isReadOnlySession(session)){ if(typeof showToast==='function') showToast(t('wg_readonly_modify'),3000); return false; }
   const reflowPositions=_captureSessionReflowPositions();
   const renderHold=beforeListRender?Promise.resolve().then(beforeListRender):null;
   try{
@@ -4766,7 +4766,7 @@ function _openSessionActionMenu(session, anchorEl){
   menu.className='session-action-menu';
   menu.id='sessionActionMenu-'+(++_sessionActionMenuId);
   menu.setAttribute('role','menu');
-  menu.setAttribute('aria-label', 'Conversation actions');
+  menu.setAttribute('aria-label', t('wg_conversation_actions'));
   if(isReadOnly){
     _appendSessionExportHtmlAction(menu, session);
     _mountSessionActionMenu(menu, session, anchorEl);
@@ -5421,7 +5421,7 @@ function _renderSessionListLoadErrorNote(){
   // button can keep keyboard focus across the sidebar rebuild; the click/keydown
   // guards below make it inert while busy.
   const setPending=()=>{
-    retry.textContent='Retrying…';
+    retry.textContent=t('wg_retrying');
     retry.setAttribute('aria-disabled','true');
     retry.setAttribute('aria-busy','true');
     retry.onclick=null;
@@ -5436,7 +5436,7 @@ function _renderSessionListLoadErrorNote(){
       renderSessionListFromCache();
       void renderSessionList({deferWhileInteracting:false}).finally(()=>{
         if(!retry.parentNode||(_sessionListLoadError&&_sessionListLoadError.retrying)) return;
-        retry.textContent='Retry';
+        retry.textContent=t('wg_retry');
         retry.removeAttribute('aria-disabled');
         retry.removeAttribute('aria-busy');
         bindRetry();
@@ -5446,7 +5446,7 @@ function _renderSessionListLoadErrorNote(){
   if(retrying){
     setPending();
   }else{
-    retry.textContent='Retry';
+    retry.textContent=t('wg_retry');
     retry.removeAttribute('aria-disabled');
     bindRetry();
     // On a failure repaint that replaces a pending button, restore keyboard
@@ -6079,7 +6079,7 @@ async function probeGatewaySSEStatus(){
       startGatewayPollFallback(data.fallback_poll_ms || _gatewayFallbackPollMs);
       renderSessionList({deferWhileInteracting:true});
       if(!_gatewaySSEWarningShown && typeof showToast === 'function'){
-        showToast('Gateway sync unavailable — falling back to periodic refresh.', 5000);
+        showToast(t('wg_gateway_sync_unavailable'), 5000);
         _gatewaySSEWarningShown = true;
       }
     }
@@ -7537,8 +7537,8 @@ function _attachProjectQuickCreateButton(chip, project){
   btn.type='button';
   btn.className='project-chip-quick-create';
   btn.textContent='+';
-  btn.title='New conversation in this project';
-  btn.setAttribute('aria-label','New conversation in this project');
+  btn.title=t('wg_new_conversation_in_project');
+  btn.setAttribute('aria-label',t('wg_new_conversation_in_project'));
   const stop=function(e){
     if(!e) return;
     if(typeof e.preventDefault==='function') e.preventDefault();
@@ -7572,7 +7572,7 @@ function _attachProjectQuickCreateButton(chip, project){
       try{ if(typeof renderSessionList==='function') void renderSessionList({deferWhileInteracting:false}); }catch(_){}
     }catch(err){
       _setActiveProjectFilter(previousProject);
-      if(typeof showToast==='function') showToast('New conversation failed: '+(err&&err.message||err));
+      if(typeof showToast==='function') showToast(t('wg_new_conversation_failed')+(err&&err.message||err));
     }
   };
   btn.ondblclick=(e)=>{stop(e);};
@@ -7660,7 +7660,7 @@ function renderSessionListFromCache(){
   if(_sessionSelectMode){
     const selectBar=document.createElement('div');selectBar.className='session-select-bar';
     const exitBtn=document.createElement('button');exitBtn.className='batch-exit-btn';
-    exitBtn.textContent='\u2715';exitBtn.title='Exit select mode';
+    exitBtn.textContent='\u2715';exitBtn.title=t('wg_exit_select_mode');
     exitBtn.onclick=(e)=>{e.stopPropagation();exitSessionSelectMode();};
     selectBar.appendChild(exitBtn);
     const selectAllBtn=document.createElement('button');selectAllBtn.className='batch-select-all-btn';
@@ -7703,7 +7703,7 @@ function renderSessionListFromCache(){
     // "All" chip
     const allChip=document.createElement('span');
     allChip.className='project-chip'+(!_activeProject?' active':'');
-    allChip.textContent='All';
+    allChip.textContent=t('wg_all');
     allChip.onclick=()=>{_setActiveProjectFilter(null);};
     bar.appendChild(allChip);
     // "Unassigned" chip — only when there are sessions with no project to
@@ -7712,8 +7712,8 @@ function renderSessionListFromCache(){
     if(hasUnprojected){
       const noneChip=document.createElement('span');
       noneChip.className='project-chip no-project'+(_activeProject===NO_PROJECT_FILTER?' active':'');
-      noneChip.textContent='Unassigned';
-      noneChip.title='Show conversations not yet assigned to a project';
+      noneChip.textContent=t('session_folder_unassigned');
+      noneChip.title=t('wg_unassigned_title');
       noneChip.onclick=()=>{_setActiveProjectFilter(NO_PROJECT_FILTER);};
       bar.appendChild(noneChip);
     }
@@ -7788,7 +7788,7 @@ function renderSessionListFromCache(){
     const addBtn=document.createElement('button');
     addBtn.className='project-create-btn';
     addBtn.textContent='+';
-    addBtn.title='New project';
+    addBtn.title=t('wg_new_project');
     addBtn.onclick=(e)=>{e.stopPropagation();_startProjectCreate(bar,addBtn);};
     bar.appendChild(addBtn);
     list.appendChild(bar);
@@ -7802,13 +7802,13 @@ function renderSessionListFromCache(){
   if(otherProfileCount>0&&!_showAllProfiles){
     const pfToggle=document.createElement('div');
     pfToggle.style.cssText='font-size:10px;padding:4px 10px;color:var(--muted);cursor:pointer;text-align:center;opacity:.7;';
-    pfToggle.textContent='Show '+otherProfileCount+' from other profiles';
+    pfToggle.textContent=t('wg_show_other_profiles',otherProfileCount);
     pfToggle.onclick=()=>{_setShowAllProfiles(true);renderSessionList({deferWhileInteracting:false});};
     list.appendChild(pfToggle);
   } else if(_showAllProfiles){
     const pfToggle=document.createElement('div');
     pfToggle.style.cssText='font-size:10px;padding:4px 10px;color:var(--muted);cursor:pointer;text-align:center;opacity:.7;';
-    pfToggle.textContent='Show active profile only';
+    pfToggle.textContent=t('wg_show_active_profile_only');
     pfToggle.onclick=()=>{_setShowAllProfiles(false);renderSessionList({deferWhileInteracting:false});};
     list.appendChild(pfToggle);
   }
@@ -8047,7 +8047,7 @@ function renderSessionListFromCache(){
       const more=document.createElement('div');
       more.className='session-archive-more';
       more.style.cssText='font-size:10px;padding:6px 10px;color:var(--muted);cursor:pointer;text-align:center;opacity:.8;';
-      more.textContent='Load '+Math.min(SESSION_ARCHIVED_PAGE_SIZE, remainingArchived)+' more archived ('+remainingArchived+' remaining)';
+      more.textContent=t('wg_load_more_archived',Math.min(SESSION_ARCHIVED_PAGE_SIZE, remainingArchived),remainingArchived);
       more.onclick=()=>{
         _archivedRowsLoadedLimit=Math.min(
           SESSION_ARCHIVED_MAX_LOADED_LIMIT,
@@ -8436,7 +8436,7 @@ function renderSessionListFromCache(){
               if(!deleted) _settleForkSwipePaint();
             });
           }else if(typeof showToast==='function'){
-            showToast('Imported sessions cannot be deleted here.',3000);
+            showToast(t('wg_imported_cannot_delete'),3000);
             _gestureState='dragging';
             _settleForkSwipePaint();
           }
@@ -8523,7 +8523,7 @@ function renderSessionListFromCache(){
           mainBtn.type='button';
           mainBtn.className='session-child-session-main'+(childIsActive?' active':'');
           mainBtn.textContent=childLabelFor(child);
-          mainBtn.title='Open forked session';
+          mainBtn.title=t('wg_open_forked');
           mainBtn.onclick=async(e)=>{
             if(row._skipNextChildOpen){
               row._skipNextChildOpen=false;
@@ -8556,10 +8556,10 @@ function renderSessionListFromCache(){
             const menuBtn=document.createElement('button');
             menuBtn.type='button';
             menuBtn.className='session-actions-trigger';
-            menuBtn.title='Conversation actions';
+            menuBtn.title=t('wg_conversation_actions');
             menuBtn.setAttribute('aria-haspopup','menu');
             menuBtn.setAttribute('aria-expanded','false');
-            menuBtn.setAttribute('aria-label','Conversation actions');
+            menuBtn.setAttribute('aria-label',t('wg_conversation_actions'));
             menuBtn.innerHTML=ICONS.more;
             const stopMenuPointer=(e)=>e.stopPropagation();
             menuBtn.onpointerdown=stopMenuPointer;
@@ -8591,7 +8591,7 @@ function renderSessionListFromCache(){
         row.type='button';
         row.className='session-child-session'+(activeSidForSidebar&&child.session_id===activeSidForSidebar?' active':'');
         row.textContent=childLabelFor(child);
-        row.title='Open child session';
+        row.title=t('wg_open_child');
         row.onclick=async(e)=>{
           e.stopPropagation();
           await openChildSession(child);
@@ -8605,7 +8605,7 @@ function renderSessionListFromCache(){
       const chip=document.createElement('span');
       chip.className='session-tag';
       chip.textContent=tag;
-      chip.title='Click to filter by '+tag;
+      chip.title=t('wg_filter_by_tag',tag);
       chip.onclick=(e)=>{
         e.stopPropagation();
         const searchBox=$('sessionSearch');
@@ -8655,10 +8655,10 @@ function renderSessionListFromCache(){
       const menuBtn=document.createElement('button');
       menuBtn.type='button';
       menuBtn.className='session-actions-trigger';
-      menuBtn.title='Conversation actions';
+      menuBtn.title=t('wg_conversation_actions');
       menuBtn.setAttribute('aria-haspopup','menu');
       menuBtn.setAttribute('aria-expanded','false');
-      menuBtn.setAttribute('aria-label','Conversation actions');
+      menuBtn.setAttribute('aria-label',t('wg_conversation_actions'));
       menuBtn.innerHTML=ICONS.more;
       const stopMenuPointer=(e)=>e.stopPropagation();
       menuBtn.onpointerdown=stopMenuPointer;
@@ -8861,7 +8861,7 @@ function renderSessionListFromCache(){
           if(!deleted) _settleSessionSwipePaint();
         });
       }else if(typeof showToast==='function'){
-        showToast('Imported sessions cannot be deleted here.',3000);
+        showToast(t('wg_imported_cannot_delete'),3000);
         _gestureState='dragging';
         _settleSessionSwipePaint();
       }
@@ -9026,7 +9026,7 @@ if(typeof window!=='undefined'){
     // handler had. A user mid-turn who hits browser Back should NOT lose the
     // active stream. They can hit Back again once the turn ends.
     if(S.busy){
-      if(typeof showToast==='function') showToast('Finish the current turn before switching sessions.',3000);
+      if(typeof showToast==='function') showToast(t('wg_finish_turn_first'),3000);
       return;
     }
     void loadSession(sid);
@@ -9160,7 +9160,7 @@ async function deleteSession(sid, beforeDelete=null){
       await loadSession(remaining.sessions[0].session_id);
     }else{
       const _tt=$('topbarTitle');if(_tt)_tt.textContent=assistantDisplayName();
-      const _tm=$('topbarMeta');if(_tm)_tm.textContent='Start a new conversation';
+      const _tm=$('topbarMeta');if(_tm)_tm.textContent=t('wg_start_new_conversation');
       $('msgInner').innerHTML='';
       $('emptyState').style.display='';
       $('fileTree').innerHTML='';
@@ -9187,7 +9187,7 @@ function _showProjectPicker(session, anchorEl){
   // "No project" option
   const none=document.createElement('div');
   none.className='project-picker-item'+(!session.project_id?' active':'');
-  none.textContent='No project';
+  none.textContent=t('wg_no_project');
   none.onclick=async()=>{
     picker.remove();
     document.removeEventListener('click',close);
@@ -9200,9 +9200,9 @@ function _showProjectPicker(session, anchorEl){
       const idx=_allSessions.findIndex(s=>s&&s.session_id===session.session_id);
       if(idx>=0) _allSessions[idx].project_id=null;
       renderSessionListFromCache();
-      showToast('Removed from project');
+      showToast(t('wg_removed_from_project'));
     } catch(e) {
-      showToast('Unassign failed: '+(e.message||e));
+      showToast(t('wg_unassign_failed')+(e.message||e));
     }
   };
   picker.appendChild(none);
@@ -9243,22 +9243,22 @@ function _showProjectPicker(session, anchorEl){
         const idx=_allSessions.findIndex(s=>s&&s.session_id===session.session_id);
         if(idx>=0) _allSessions[idx].project_id=p.project_id;
         renderSessionListFromCache();
-        showToast('Moved to '+p.name);
-      }catch(e){showToast('Move failed: '+(e.message||e));}
+        showToast(t('moved_to')+p.name);
+      }catch(e){showToast(t('move_failed')+(e.message||e));}
     };
     picker.appendChild(item);
   }
   // "+ New project" shortcut at the bottom
   const createItem=document.createElement('div');
   createItem.className='project-picker-item project-picker-create';
-  createItem.textContent='+ New project';
+  createItem.textContent='+ '+t('wg_new_project');
   createItem.onclick=async()=>{
     picker.remove();
     document.removeEventListener('click',close);
     const name=await showPromptDialog({
       message:t('project_name_prompt'),
       confirmLabel:t('create'),
-      placeholder:'Project name'
+      placeholder:t('wg_project_name')
     });
     if(!name||!name.trim()) return;
     const color=PROJECT_COLORS[_allProjects.length%PROJECT_COLORS.length];
@@ -9272,10 +9272,10 @@ function _showProjectPicker(session, anchorEl){
         await api('/api/session/move',{method:'POST',body:JSON.stringify({session_id:session.session_id,project_id:res.project.project_id})});
         session.project_id=res.project.project_id;
         await renderSessionList();
-        showToast('Created "'+res.project.name+'" and moved session');
+        showToast(t('wg_project_created_moved',res.project.name));
       }catch(e){
         await renderSessionList();
-        showToast('Created "'+res.project.name+'" but move failed: '+(e&&e.message||'try again'));
+        showToast(t('wg_project_created_move_failed',res.project.name,(e&&e.message||t('wg_try_again'))));
       }
     }
   };
@@ -9328,7 +9328,7 @@ function _resizeProjectInput(inp){
 function _startProjectCreate(bar, addBtn){
   const inp=document.createElement('input');
   inp.className='project-create-input';
-  inp.placeholder='Project name';
+  inp.placeholder=t('wg_project_name');
   let _finishDone=false;
   const finish=async(save)=>{
     if(_finishDone) return;
@@ -9339,11 +9339,11 @@ function _startProjectCreate(bar, addBtn){
         await api('/api/projects/create',{method:'POST',body:JSON.stringify({name:inp.value.trim(),color})});
       }catch(e){
         _finishDone=false;
-        showToast('Project create failed: '+(e.message||e));
+        showToast(t('wg_project_create_failed')+(e.message||e));
         return;
       }
       await renderSessionList();
-      showToast('Project created');
+      showToast(t('wg_project_created'));
     }else{
       inp.replaceWith(addBtn);
     }
@@ -9375,10 +9375,10 @@ function _startProjectRename(proj, chip){
       try {
         await api('/api/projects/rename',{method:'POST',body:JSON.stringify({project_id:proj.project_id,name:inp.value.trim()})});
         await renderSessionList();
-        showToast('Project renamed');
+        showToast(t('wg_project_renamed'));
       } catch(e) {
         _finishDone=false;
-        showToast('Rename failed: '+(e.message||e));
+        showToast(t('rename_failed')+(e.message||e));
       }
     }else{
       renderSessionListFromCache();
@@ -9414,7 +9414,7 @@ function _showProjectContextMenu(e, proj, chip){
 
   // Rename option
   const renameItem=document.createElement('div');
-  renameItem.textContent='Rename';
+  renameItem.textContent=t('rename_title');
   renameItem.style.cssText='padding:7px 14px;cursor:pointer;font-size:13px;color:var(--text);';
   renameItem.onmouseenter=()=>renameItem.style.background='var(--hover-bg)';
   renameItem.onmouseleave=()=>renameItem.style.background='';
@@ -9433,9 +9433,9 @@ function _showProjectContextMenu(e, proj, chip){
       try {
         await api('/api/projects/rename',{method:'POST',body:JSON.stringify({project_id:proj.project_id,name:proj.name,color:hex})});
         await renderSessionList();
-        showToast('Color updated');
+        showToast(t('wg_color_updated'));
       } catch(e) {
-        showToast('Color update failed: '+(e.message||e));
+        showToast(t('wg_color_update_failed')+(e.message||e));
       }
     };
     colorRow.appendChild(dot);
@@ -9447,7 +9447,7 @@ function _showProjectContextMenu(e, proj, chip){
   sep.style.cssText='border:none;border-top:1px solid var(--border);margin:4px 0;';
   menu.appendChild(sep);
   const delItem=document.createElement('div');
-  delItem.textContent='Delete';
+  delItem.textContent=t('delete_title');
   delItem.style.cssText='padding:7px 14px;cursor:pointer;font-size:13px;color:var(--error);';
   delItem.onmouseenter=()=>delItem.style.background='var(--hover-bg)';
   delItem.onmouseleave=()=>delItem.style.background='';
@@ -9461,7 +9461,7 @@ function _showProjectContextMenu(e, proj, chip){
 
 async function _confirmDeleteProject(proj){
   const ok=await showConfirmDialog({
-    message:'Delete project "'+proj.name+'"? Sessions will be unassigned but not deleted.',
+    message:t('wg_delete_project_confirm',proj.name),
     confirmLabel:t('delete_title'),
     danger:true
   });
@@ -9470,9 +9470,9 @@ async function _confirmDeleteProject(proj){
     await api('/api/projects/delete',{method:'POST',body:JSON.stringify({project_id:proj.project_id})});
     if(_activeProject===proj.project_id) _activeProject=null;
     await renderSessionList();
-    showToast('Project deleted');
+    showToast(t('wg_project_deleted'));
   } catch(e) {
-    showToast('Delete failed: '+(e.message||e));
+    showToast(t('delete_failed')+(e.message||e));
   }
 }
 

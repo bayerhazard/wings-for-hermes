@@ -8,8 +8,9 @@ scripts/ci/i18n_fest.py, two rules:
   element. What stays (names, data placeholders, samples) is listed with a
   reason in i18n_fest.ERLAUBT.
 - JS is a ratchet: STAND holds the number of fixed texts per file. It may only
-  go down. 2c-2 and 2c-3 lower it; a new fixed text from an upstream port
-  fails here.
+  go down; a file missing from STAND must stay at zero. 2c-2 brought the chat
+  (sessions.js, messages.js, commands.js) to zero, 2c-3 lowers the rest. What
+  stays in JS is listed with a reason in i18n_fest.JS_ERLAUBT.
 
 Every key index.html names exists in English and German, and every key only
 Wings has starts with wg_ (CI ABGLEICH WG-K).
@@ -38,17 +39,14 @@ NODE = shutil.which("node")
 # Fixed UI texts per JS file. Lower a number when a PR removes texts; never raise it.
 STAND = {
     "assistant_turn_anchors.js": 7,
-    "boot.js": 16,
-    "commands.js": 13,
-    "messages.js": 29,
+    "boot.js": 15,
     "onboarding.js": 20,
-    "panels.js": 178,
-    "sessions.js": 67,
+    "panels.js": 171,
     "share.js": 6,
     "terminal.js": 1,
-    "ui.js": 116,
+    "ui.js": 109,
     "wings_mobile.js": 1,
-    "workspace.js": 7,
+    "workspace.js": 6,
 }
 
 _LADEN = r"""
@@ -72,6 +70,11 @@ def test_allowed_texts_still_exist():
     alle.feed(HTML)
     gefunden = {t for _, _, t in alle.funde}
     assert set(i18n_fest.ERLAUBT) - gefunden == set()
+
+
+def test_js_allowed_texts_still_exist():
+    for (datei, text) in i18n_fest.JS_ERLAUBT:
+        assert text in (STATIC / datei).read_text(encoding="utf-8"), (datei, text)
 
 
 def test_js_ratchet():
