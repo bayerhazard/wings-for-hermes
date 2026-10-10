@@ -105,7 +105,9 @@ async function api(path,opts={}){
           try{const j=JSON.parse(text);message=j.error||j.message||text;}catch(e){}
           // Attach the raw HTTP context so callers can branch on status (404 stale-session
           // cleanup, 401 redirect, 503 retry, etc.) without re-parsing the message string.
-          const err=new Error(message);
+          // Wings (CI ABGLEICH WG-R3, 2c-5): shown translated; the server's English stays in serverText
+          const err=new Error(typeof wgServer==='function'?wgServer(message):message);
+          err.serverText=message;
           err.status=res.status;
           err.statusText=res.statusText;
           err.body=text;

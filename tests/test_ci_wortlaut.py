@@ -52,6 +52,9 @@ HERMES_ERLAUBT = {
     "settings_label_dashboard_mode", "settings_desc_dashboard_mode", "tab_dashboard",
     "settings_desc_gateway_status", "settings_plugins_meta", "settings_plugins_empty",
     "status_hermes_home", "onboarding_notice_system_unavailable",
+    # server texts (2c-5): the gateway, the agent and its configuration under their names
+    "wg_srv_check_that_hermes_gateway_api_server", "wg_srv_hermes_agent_exposes_wiki_path_wiki",
+    "wg_srv_hermes_is_already_configured_config_yaml", "wg_srv_the_credential_pool_for_this_provider",
 }
 
 DU = re.compile(r"\b(?:du|dein(?:e[mnrs]?)?|dir|dich)\b", re.I)

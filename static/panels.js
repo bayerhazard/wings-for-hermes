@@ -1508,7 +1508,7 @@ async function _loadRunContent(jobId, filename, runId){
   try {
     const data = await api(`/api/crons/run?job_id=${encodeURIComponent(jobId)}&filename=${encodeURIComponent(filename)}`);
     if (data.error) {
-      body.textContent = data.error;
+      body.textContent = (typeof wgServer==='function'?wgServer(data.error):data.error);
       return;
     }
     const expanded = _cronExpansionGet(_cronRunExpandKey(jobId, filename));
@@ -4591,7 +4591,7 @@ function _renderLlmWikiStatus(d) {
   const docsUrl = /^https?:\/\//i.test(rawDocsUrl) ? rawDocsUrl : '#';
   const toggleNote = status.toggle_available
     ? t('wg_toggle_available_from_configured_hermes_agent')
-    : (status.toggle_reason || t('wg_no_stable_llm_wiki_on_off'));
+    : ((typeof wgServer==='function'?wgServer(status.toggle_reason):status.toggle_reason) || t('wg_no_stable_llm_wiki_on_off'));
   const statusNote = isReady
     ? t('wg_llm_wiki_is_configured_and_page')
     : isEmpty
@@ -6460,7 +6460,7 @@ async function promptWorkspacePath(){
     if(!target) throw new Error(t('workspace_not_added'));
     await switchToWorkspace(target.path,target.name);
   }catch(e){
-    if(String(e.message||'').includes('Workspace already in list')){
+    if(String(e.serverText||e.message||'').includes('Workspace already in list')){
       showToast(t('workspace_already_saved'));
       return;
     }
