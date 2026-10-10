@@ -40,11 +40,7 @@ def test_fullscreen_icon_has_distinct_expand_arrows():
     which `fit` does not have — a concrete distinguishing feature."""
     fit = _icon("fit")
     fullscreen = _icon("fullscreen")
-    # Diagonal expand strokes from the corners (e.g. "M4 4l5 5") — present in
-    # fullscreen, absent from fit's pure corner-bracket path.
-    assert re.search(r"M4 4l5 5|l5 5|l-5 5|l5 -5", fullscreen), (
-        "fullscreen icon should carry outward diagonal expand arrows"
-    )
-    assert not re.search(r"l5 5|l-5 5", fit), (
-        "fit icon should stay corner-brackets only (no diagonal arrows)"
-    )
+    # Wings: icons come from the CI by meaning (CI ABGLEICH WG-Z1) — fit is `einpassen`,
+    # fullscreen is `vollbild`, two different CI icons.
+    assert 'data-li="vollbild"' in fullscreen, "fullscreen icon should be the CI icon vollbild"
+    assert 'data-li="einpassen"' in fit, "fit icon should be the CI icon einpassen"
