@@ -117,7 +117,12 @@ _SCHNIPSEL_ATTR = re.compile(
 _LITERAL = re.compile(r"""(['"`])((?:\\.|(?!\1)[^\n\\]|\\\n)*?)\1""")
 # Fallback text right after a t() call or a helper taking the key first:
 #   t('k')||'Text'   (t('k'))||'Text'   ?t('k'):'Text'   _replyT('k', 'Text')
-_RUECKFALL = re.compile(r"(?:\bt\((?:[^()]|\([^()]*\))*\)\)?\s*(?:\|\||:)\s*|\w+T\(\s*['\"][\w.]+['\"]\s*,\s*)$")
+_RUECKFALL = re.compile(
+    r"(?:\bt\((?:[^()]|\([^()]*\))*\)\)?\s*(?:\|\||:)\s*"      # t('k')||'Text', ?t('k'):'Text'
+    r"|\|\|\s*'[^'\n]*'\)?\s*:\s*"                             # (t('k')||'Text'):'Text'
+    r"|\w+\(\s*['\"][a-z][a-z0-9]*_[\w.]*['\"]\s*,\s*)$")       # _helper('some_key', 'Text')
+# Text whose key sits right after it: {label:'Text', labelKey:'k'}
+_KEY_DANACH = re.compile(r"^\s*,\s*\w*[kK]ey\s*:")
 _ATTR_VOR = re.compile(r"\b(?:title|aria-label|placeholder|data-tooltip)=$")
 # Multi-line template literals (notices, help texts); snippet text in data-i18n elements is skipped.
 _VORLAGE = re.compile(r"`((?:\\.|\$\{(?:[^{}]|\{[^{}]*\})*\}|[^`\\])*)`")
@@ -148,6 +153,21 @@ JS_ERLAUBT = {
     ("commands.js", "[USER OVERRIDE]"): AGENT,
     ("commands.js", "[Attached files for this steer:"): AGENT,
     ("messages.js", "${text}\\n\\n[Attached files:"): AGENT,
+    ("boot.js", "Hide workspace panel"): "Rückfall von _uiText() mit Schlüssel workspace_panel_*",
+    ("boot.js", "Show workspace panel"): "Rückfall von _uiText() mit Schlüssel workspace_panel_*",
+    ("ui.js", "Send message"): "Rückfall von _tt('composer_'+action) mit Schlüssel",
+    ("ui.js", "Queue message"): "Rückfall von _tt('composer_'+action) mit Schlüssel",
+    ("ui.js", "Interrupt and send"): "Rückfall von _tt('composer_'+action) mit Schlüssel",
+    ("ui.js", "Steer current response"): "Rückfall von _tt('composer_'+action) mit Schlüssel",
+    ("ui.js", "Stop generation"): "Rückfall von _tt('composer_'+action) mit Schlüssel",
+    ("ui.js", "{3,})[ \\t]*$/);"): "Code zwischen zwei Backticks einer Regex, kein Text",
+    ("ui.js", "/g,' '); // Strip bold/italic"): "Code zwischen zwei Backticks einer Regex, kein Text",
+    ("ui.js", "WebUI"): "Name",
+    ("ui.js", "Agent"): "Name",
+    ("ui.js", "Token —"): "Platzhalter (Wings), ausgeblendet bis JS die Zahl setzt",
+    ("ui.js", "Compressing context"): "Datenattribut; die Anzeige kommt aus _autoCompressionBaseDetail()",
+    ("ui.js", "**Error:**"): HINWEIS,
+    ("ui.js", "Provider details"): HINWEIS,
     # Notices that go into the transcript (S.messages); wgHinweis() has a rule for each.
     ("commands.js", "${DESKTOP_COMPANION_NAME} is "): HINWEIS,
     ("commands.js", "${DESKTOP_COMPANION_NAME} status is"): HINWEIS,
@@ -187,8 +207,10 @@ JS_ERLAUBT = {
 
 
 def _erlaubt(datei, text):
-    """JS_ERLAUBT keys are the start of the text they allow."""
-    return any(d == datei and text.startswith(anfang) for d, anfang in JS_ERLAUBT)
+    """A JS_ERLAUBT key of 10 characters or more allows texts that start with it;
+    a shorter one (a name like "Agent") only the exact text."""
+    return any(d == datei and (text == anfang or (len(anfang) >= 10 and text.startswith(anfang)))
+               for d, anfang in JS_ERLAUBT)
 
 
 def _tag_vor(src, pos):
@@ -198,17 +220,30 @@ def _tag_vor(src, pos):
     return src[anfang:ende] if anfang != -1 else ""
 
 
+def _rueckfall_bereiche(src):
+    """Spans of _toolI18n('key', fallback, ...) calls: their texts are the en fallback."""
+    bereiche = []
+    for m in re.finditer(r"\b_toolI18n\(\s*'[\w.]+'\s*,", src):
+        tiefe, i = 1, m.end()
+        while i < len(src) and tiefe:
+            tiefe += {"(": 1, ")": -1}.get(src[i], 0)
+            i += 1
+        bereiche.append((m.start(), i))
+    return bereiche
+
+
 def js_funde(datei):
     """Fixed UI text in one JS file not covered by JS_ERLAUBT: [(line, text)]."""
     src = datei.read_text(encoding="utf-8")
     zeilen = src.split("\n")
     zeile = lambda pos: src.count("\n", 0, pos) + 1
     kommentar = lambda pos: zeilen[zeile(pos) - 1].lstrip().startswith(("//", "*", "/*"))
-    funde = [(zeile(m.start()), m.group(2)) for m in _SENKE.finditer(src)
-             if _sichtbar(m.group(2)) and not kommentar(m.start())]
+    funde = [(zeile(m.start(2)), m.group(2)) for m in _SENKE.finditer(src)
+             if _sichtbar(m.group(2)) and not kommentar(m.start())
+             and not _KEY_DANACH.match(src[m.end():m.end() + 40])]
     for m in _SCHNIPSEL_TEXT.finditer(src):
         t = m.group(1).strip()
-        if not _sichtbar(t) or re.search(r"[=;(){}]|&&|\|\|", t) or kommentar(m.start()):
+        if not _sichtbar(t) or re.search(r"[=;(){}\\]|&&|\|\|", t) or kommentar(m.start()):
             continue
         if "data-i18n=" in src[src.rfind("<", 0, m.start() + 1):m.start() + 1]:
             continue  # the element carries its key; applyLocaleToDOM sets the text
@@ -218,14 +253,17 @@ def js_funde(datei):
         if kommentar(m.start()) or re.search(r"console\.|throw new|querySelector", z):
             continue
         davor = src[max(0, m.start() - 80):m.start()]
-        if re.search(r"\bt\(\s*$", davor) or _RUECKFALL.search(davor) or _ATTR_VOR.search(davor):
+        if (re.search(r"\bt\(\s*$", davor) or _RUECKFALL.search(davor) or _ATTR_VOR.search(davor)
+                or _KEY_DANACH.match(src[m.end():m.end() + 40])):
             continue  # a key, the fallback of a t() call, or an attribute the snippet rule judges
         sicht = re.sub(r"<[^>]*>", " ", re.sub(r"\$\{[^}]*\}", "", m.group(2)))
         if _PHRASE.search(sicht) and "data-i18n=" not in m.group(2):
             funde.append((zeile(m.start()), m.group(2)))
     for m in _VORLAGE.finditer(src):
-        if "\n" not in m.group(1) or src[m.start() - 1:m.start()] in ("'", '"') or kommentar(m.start()):
-            continue
+        vor = src[:m.start()].rstrip()[-6:]
+        if ("\n" not in m.group(1) or kommentar(m.start())
+                or not re.search(r"(?:[=(,:?\[+{]|=>|return)$", vor)):
+            continue  # a template starts after an operator; anything else is code between two backticks
         sicht = re.sub(r"\$\{(?:[^{}]|\{[^{}]*\})*\}", "", m.group(1))
         sicht = re.sub(r"<(\w+)[^>]*data-i18n[^>]*>[^<]*</\1>", " ", sicht)
         sicht = re.sub(r"<[^>]*>", " ", sicht)
@@ -238,7 +276,9 @@ def js_funde(datei):
         if zwilling in _tag_vor(src, m.start()) or kommentar(m.start()):
             continue
         funde.append((zeile(m.start()), m.group(1)))
-    return sorted(f for f in set(funde) if not _erlaubt(datei.name, f[1]))
+    bereiche = _rueckfall_bereiche(src)
+    in_rueckfall = lambda z: any(src.count("\n", 0, a) + 1 <= z <= src.count("\n", 0, b) + 1 for a, b in bereiche)
+    return sorted(f for f in set(funde) if not _erlaubt(datei.name, f[1]) and not in_rueckfall(f[0]))
 
 
 def js_stand():
