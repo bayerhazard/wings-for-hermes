@@ -88,3 +88,23 @@ def test_waiting_icons_are_only_those_not_yet_in_the_stand():
     vorhanden = set(re.findall(r"^  '([\w-]+)':", ICONS, re.M))
     assert wartend <= AUSSTEHEND
     assert wartend & vorhanden == set(), f"in the stand now, switch to data-li: {wartend & vorhanden}"
+
+
+# ── No emoji as icons (Etappe 3d) ────────────────────────────────────────────
+_EMOJI = re.compile(r"[\U0001F300-\U0001FAFF☀-⛿⏩-⏺✅❌⌛]")
+# Emoji that stay, with a reason: (file, text on the line) -> reason.
+EMOJI_ERLAUBT = {
+    ("index.html", 'placeholder="📋"'): "Beispiel im Feld, in das man das Emoji eines Boards einträgt (Inhalt, kein Zeichen)",
+    ("panels.js", ":'⚙';"): "Rückfall, wenn li() fehlt",
+}
+
+
+def test_no_emoji_as_icons():
+    funde = []
+    for name in zeichen_einsetzen.DATEIEN:
+        for nr, zeile in enumerate((REPO / "static" / name).read_text(encoding="utf-8").split("\n"), 1):
+            if zeile.lstrip().startswith(("//", "*")) or not _EMOJI.search(zeile):
+                continue
+            if not any(d == name and stueck in zeile for d, stueck in EMOJI_ERLAUBT):
+                funde.append(f"{name}:{nr}: {zeile.strip()[:80]}")
+    assert funde == [], "emoji as icon — use li('<CI name>'):\n" + "\n".join(funde)

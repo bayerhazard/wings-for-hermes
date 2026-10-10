@@ -1181,7 +1181,7 @@ async function loadCrons(animate) {
       item.innerHTML = `
         <div class="cron-header">
           ${isNewRun ? '<span class="cron-new-dot" title="'+t('wg_new_run')+'"></span>' : ''}
-          ${isAgentMode ? '<span class="cron-agent-badge" title="'+t('wg_agent_mode')+'">🤖</span>' : `<span class="cron-script-badge" title="${esc(t('cron_script_badge_title') || 'Script job (no agent)')}">📜</span>`}
+          ${isAgentMode ? '<span class="cron-agent-badge" title="'+t('wg_agent_mode')+'">'+li('ai',13)+'</span>' : `<span class="cron-script-badge" title="${esc(t('cron_script_badge_title') || 'Script job (no agent)')}">${li('code',13)}</span>`}
           <span class="cron-name" title="${esc(job.name)}">${esc(job.name)}</span>
           <span class="cron-profile-badge" title="${esc(ownerProfileTitle)}">${esc(ownerProfileLabel)}</span>
           <span class="cron-status ${status.listClass}">${esc(status.label)}</span>
@@ -2220,7 +2220,7 @@ function _kanbanTaskMeta(task){
   bits.push(task.assignee ? task.assignee : t('kanban_unassigned'));
   if (task.tenant) bits.push(task.tenant);
   if (task.priority !== undefined && task.priority !== null) bits.push('P' + task.priority);
-  if (task.comment_count) bits.push('💬 ' + task.comment_count);
+  if (task.comment_count) bits.push(t('wg_comment_count', task.comment_count));
   if (task.link_counts && task.link_counts.children) bits.push('↳ ' + task.link_counts.children);
   return bits;
 }
@@ -2685,7 +2685,7 @@ function _kanbanCard(task, status){
     <div class="kanban-card-topline"><span class="kanban-card-id">${esc(task.id || '')}</span>${priority ? `<span class="kanban-badge priority">P${priority}</span>` : ''}${task.tenant ? `<span class="kanban-badge tenant">${esc(task.tenant)}</span>` : ''}</div>
     <div class="kanban-card-title">${esc(_kanbanTaskTitle(task))}</div>
     ${body ? `<div class="kanban-card-body">${_kanbanRenderMarkdown(body)}</div>` : ''}
-    <div class="kanban-card-meta">${assignee}${comments ? `<span class="kanban-card-metric">💬 ${comments}</span>` : ''}${linkTotal ? `<span class="kanban-card-metric">↔ ${linkTotal}</span>` : ''}${age ? `<span class="kanban-card-age">${esc(age)}</span>` : ''}</div>
+    <div class="kanban-card-meta">${assignee}${comments ? `<span class="kanban-card-metric">${li('besprechung',12)} ${comments}</span>` : ''}${linkTotal ? `<span class="kanban-card-metric">↔ ${linkTotal}</span>` : ''}${age ? `<span class="kanban-card-age">${esc(age)}</span>` : ''}</div>
     ${_kanbanCardQuickActions(task)}
   </article>`;
 }
@@ -13228,11 +13228,11 @@ function _renderGatewayStatus(r){
     card.innerHTML=`<div style="color:var(--muted);font-size:12px;display:flex;align-items:center;gap:6px"><span style="width:8px;height:8px;border-radius:50%;background:var(--error);display:inline-block"></span>${esc(statusLabel)}</div>${_gatewayActionControls(r)}`;
     return;
   }
-  const platformIcons={telegram:'💬',discord:'🎮',slack:'📝',web:'🌐',api:'🔌'};
+  const platformIcons={telegram:li('senden',13),discord:li('besprechung',13),slack:li('besprechung',13),web:li('netzrecherche',13),api:li('stecker',13)};
   let badges='';
   if(r.platforms&&r.platforms.length){
     badges=r.platforms.map(p=>{
-      const icon=platformIcons[p.name]||'📡';
+      const icon=platformIcons[p.name]||li('netzwerk',13);
       return `<span style="display:inline-flex;align-items:center;gap:4px;padding:3px 10px;background:var(--code-bg);border:1px solid var(--border2);border-radius:12px;font-size:12px;font-weight:500">${icon} ${esc(p.label)}</span>`;
     }).join(' ');
   }
