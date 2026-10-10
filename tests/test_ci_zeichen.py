@@ -54,3 +54,37 @@ def test_icons_js_equals_the_generator_output():
                           "--ci", os.environ["AIMIGHTY_CI"], "--stand", STAND.group(1), "--pruefen"],
                          capture_output=True, text=True)
     assert out.returncode == 0, out.stdout + out.stderr
+
+
+# ── Inline icons (Etappe 3b) ─────────────────────────────────────────────────
+import zeichen_einsetzen  # noqa: E402
+
+# CI names that are not in the stand yet; their <svg> carries data-li-ausstehend.
+AUSSTEHEND = {"pause", "erweiterung", "vergroessern", "verkleinern", "vollbild", "einpassen", "warteschlange"}
+
+
+def _inline_icons():
+    for name in zeichen_einsetzen.DATEIEN:
+        src = (REPO / "static" / name).read_text(encoding="utf-8")
+        for m in re.finditer(r"<svg\b[^>]*>", src):
+            if re.search(r"viewBox=.0 0 (24 24|16 16)", m.group(0)):
+                yield name, src.count("\n", 0, m.start()) + 1, m.group(0)
+
+
+def test_every_inline_icon_names_its_ci_icon():
+    ohne = [f"{d}:{z}" for d, z, tag in _inline_icons() if "data-li" not in tag]
+    assert ohne == [], f"inline <svg> without data-li (a CI name): {ohne}"
+
+
+def test_inline_icons_are_drawn_from_the_stand():
+    out = subprocess.run([sys.executable, str(REPO / "scripts" / "ci" / "zeichen_einsetzen.py"), "--pruefen"],
+                         capture_output=True, text=True)
+    assert out.returncode == 0, out.stdout + "\nrun: python3 scripts/ci/zeichen_einsetzen.py"
+
+
+def test_waiting_icons_are_only_those_not_yet_in_the_stand():
+    wartend = {re.search(r'data-li-ausstehend="([\w-]+)"', tag).group(1)
+               for _, _, tag in _inline_icons() if "data-li-ausstehend" in tag}
+    vorhanden = set(re.findall(r"^  '([\w-]+)':", ICONS, re.M))
+    assert wartend <= AUSSTEHEND
+    assert wartend & vorhanden == set(), f"in the stand now, switch to data-li: {wartend & vorhanden}"

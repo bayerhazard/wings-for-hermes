@@ -100,12 +100,9 @@ class TestComposerVoiceButtonHTML:
         )
         assert m, "btnVoiceMode element must be parseable"
         body = m.group(1)
-        # Lucide audio-lines path data — six <path d="M{x} {y}v{h}"/> entries.
-        bars = re.findall(r'<path d="M\d+\s+\d+v\d+"', body)
-        assert len(bars) >= 5, (
-            f"btnVoiceMode SVG must use audio-lines (>=5 vertical-bar paths); "
-            f"found {len(bars)}. Visual confusion bug returns if reverted to "
-            f"the old 'mic with sparkles' shape."
+        # Wings: icons come from the CI by meaning (CI ABGLEICH WG-Z1) — the waveform is `welle`
+        assert 'data-li="welle"' in body and 'data-li="mikrofon"' not in body, (
+            "btnVoiceMode must show the waveform, not the microphone — the visual confusion bug returns."
         )
         # Must NOT contain the old mic-shaped rect (rx="3" capsule) — that's
         # the dictation glyph and using it again recreates #1488.
