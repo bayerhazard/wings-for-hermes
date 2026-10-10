@@ -226,7 +226,7 @@ def test_session_swipe_actions_use_circular_icon_badges():
     assert "background:var(--session-swipe-action-color)" in badge
     assert "overflow:hidden" in badge
     assert ".session-item.archived .session-swipe-affordance-right{--session-swipe-action-color:var(--success);}" in STYLE_CSS
-    assert "_makeSessionSwipeAffordance('right',s.archived?'undo':'archive',s.archived?'Restore':t('session_batch_archive'))" in SESSIONS_JS
+    assert "_makeSessionSwipeAffordance('right',s.archived?'undo':'archive',s.archived?t('checkpoint_restore'):t('session_batch_archive'))" in SESSIONS_JS
     assert "stack.className='session-swipe-action-stack'" in SESSIONS_JS
     assert "stack.append(badge,text)" in SESSIONS_JS
     stack = STYLE_CSS[STYLE_CSS.find(".session-swipe-action-stack{"):STYLE_CSS.find(".session-swipe-badge{")]

@@ -126,7 +126,25 @@ _KEY_DANACH = re.compile(r"^\s*,\s*\w*[kK]ey\s*:")
 _ATTR_VOR = re.compile(r"\b(?:title|aria-label|placeholder|data-tooltip)=$")
 # Multi-line template literals (notices, help texts); snippet text in data-i18n elements is skipped.
 _VORLAGE = re.compile(r"`((?:\\.|\$\{(?:[^{}]|\{[^{}]*\})*\}|[^`\\])*)`")
-_PHRASE = re.compile(r"\b[A-Z][A-Za-z]+(?: [a-z]+)+")
+_PHRASE = re.compile(r"\b[A-Z][A-Za-z]+(?:-[a-z]+)*(?: [a-z]+)+")
+# A single English word as a whole literal ("Enabled", "Running", "Thinking…"). It counts
+# unless the code around it uses it as a value: a comparison, a lookup, a key, an id.
+_WORT = re.compile(r"""(['"])([A-Z][a-z]{2,}(?:-[a-z]+)?[.…!]?)\1""")
+_WORT_CODE_VOR = re.compile(
+    r"(?:===?|!==?|\bcase|\bin|\[|instanceof"
+    r"|\.(?:includes|startsWith|endsWith|indexOf|has|get|set|add|getItem|setItem|querySelector\w*"
+    r"|getElementById|closest|matches|contains|createElement|addEventListener|removeEventListener"
+    r"|dispatchEvent|test|match|replace|split)\("
+    r"|\b(?:key|name|id|type|kind|value|method|family|role|code|event|fallback)\s*:)\s*$")
+# Words that are code everywhere: keys, globals, error and header names.
+_WORT_CODE = {
+    "Enter", "Escape", "Tab", "Backspace", "Delete", "Home", "End", "PageUp", "PageDown", "Spacebar",
+    "Shift", "Control", "Meta", "Alt", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Space",
+    "Infinity", "NaN", "Date", "Error", "TimeoutError", "AbortError", "NotAllowedError", "Bearer",
+    "Accept", "Authorization", "Promise", "Object", "Array", "String", "Number", "Boolean", "Symbol",
+    "Map", "Set", "Math", "Intl", "Notification", "Range", "Selection", "Node", "Event", "Blob",
+    "File", "Image", "Audio", "Worker", "Text", "Comment",
+}
 
 
 def _sichtbar(text):
@@ -227,6 +245,48 @@ JS_ERLAUBT = {
     ("panels.js", "my-skill"): "Beispielname eines Skills",
     ("panels.js", "Workspace already in list"): "Vergleich mit der Fehlermeldung des Servers, kein Text",
     ("panels.js", "auto ("): "Wert auto, Erklärung dahinter per t()",
+    # Etappe 2c-4: single words that stay.
+    ("assistant_turn_anchors.js", "Hot-path write buffer; normalize"): 'interne Architekturbeschreibung, nie angezeigt',
+    ("boot.js", "Wings"): 'Name (Produkt, Anbieter, Dienst), in jeder Sprache gleich',
+    ("ui.js", "Wings"): 'Name (Produkt, Anbieter, Dienst), in jeder Sprache gleich',
+    ("commands.js", "\\`/${name}\\` is a Hermes CLI-only command"): HINWEIS,
+    ("commands.js", "General"): 'Kategorie eines Skills ohne Kategorie, Datenwert im Hinweis /skills',
+    ("messages.js", "Hermes"): 'Name des Agenten im Hinweis (wgHinweis übersetzt den Satz)',
+    ("panels.js", "Anthropic"): 'Name (Produkt, Anbieter, Dienst), in jeder Sprache gleich',
+    ("panels.js", "Google"): 'Name (Produkt, Anbieter, Dienst), in jeder Sprache gleich',
+    ("panels.js", "Hermes"): 'Standardwert der Einstellung bot_name, wie der Server ihn setzt (api/routes.py)',
+    ("panels.js", "Plugin"): 'Begriff, im Deutschen gleich',
+    ("panels.js", "Passkey"): 'Begriff, im Deutschen gleich',
+    ("panels.js", "Agent"): 'Bauteilname in Update-Meldungen neben „WebUI“',
+    ("sessions.js", "Telegram"): 'Name (Produkt, Anbieter, Dienst), in jeder Sprache gleich',
+    ("sessions.js", "Discord"): 'Name (Produkt, Anbieter, Dienst), in jeder Sprache gleich',
+    ("sessions.js", "Slack"): 'Name (Produkt, Anbieter, Dienst), in jeder Sprache gleich',
+    ("sessions.js", "Untitled"): "Kennwert des Servers ('Untitled'): er vergleicht Titel damit (api/routes.py)",
+    ("sessions.js", "Conversation"): 'Kopf des Markdown-Exports, wie „# Hermes session“',
+    ("sessions.js", "Waiting for permission decision"): "Rückfall, wenn t() fehlt",
+    ("sessions.js", "Waiting for your answer"): "Rückfall, wenn t() fehlt",
+    ("sessions.js", "Waiting for user action"): "Rückfall, wenn t() fehlt",
+    ("sessions.js", "Approval"): 'Rückfall, wenn t() fehlt',
+    ("sessions.js", "Question"): 'Rückfall, wenn t() fehlt',
+    ("sessions.js", "Attention"): 'Rückfall, wenn t() fehlt',
+    ("ui.js", "Mobile"): "Teil einer Element-ID (source.id+'Mobile')",
+    ("ui.js", "Download"): 'Rückfall, wenn t() fehlt',
+    ("ui.js", "Auto-compressing context..."): 'Datenattribut; die Anzeige kommt aus _autoCompressionBaseDetail()',
+    ("ui.js", "Running"): 'Statuswert, wird verglichen; angezeigt übersetzt (wg_tool_status_*)',
+    ("ui.js", "Failed"): 'Statuswert, wird verglichen; angezeigt übersetzt (wg_tool_status_*)',
+    ("ui.js", "Interrupted"): 'Statuswert, wird verglichen; angezeigt übersetzt (wg_tool_status_*)',
+    ("ui.js", "Completed"): 'Statuswert, wird verglichen; angezeigt übersetzt (wg_tool_status_*)',
+    ("ui.js", "Shell"): 'Begriff, im Deutschen gleich',
+    ("wings_mobile.js", "Message"): 'Rückfall, wenn t() fehlt',
+    ("wings_mobile.js", "Response"): 'Rückfall, wenn t() fehlt',
+    ("panels.js", "Appearance"): 'Teil der Element-ID settingsPane…, kein Text',
+    ("panels.js", "Conversation"): 'Teil der Element-ID settingsPane…, kein Text',
+    ("panels.js", "Extensions"): 'Teil der Element-ID settingsPane…, kein Text',
+    ("panels.js", "Help"): 'Teil der Element-ID settingsPane…, kein Text',
+    ("panels.js", "Plugins"): 'Teil der Element-ID settingsPane…, kein Text',
+    ("panels.js", "Preferences"): 'Teil der Element-ID settingsPane…, kein Text',
+    ("panels.js", "Providers"): 'Teil der Element-ID settingsPane…, kein Text',
+    ("panels.js", "System"): 'Teil der Element-ID settingsPane…, kein Text',
     ("panels.js", "Available on larger screens"): "Rückfall von t('settings_mode_advanced_desktop_only'), Upstream-Zeile",
 }
 
@@ -285,6 +345,17 @@ def js_funde(datei):
         sicht = re.sub(r"<[^>]*>", " ", re.sub(r"\$\{[^}]*\}", "", m.group(2)))
         if _PHRASE.search(sicht) and "data-i18n=" not in m.group(2):
             funde.append((zeile(m.start()), m.group(2)))
+    for m in _WORT.finditer(src):
+        z = zeilen[zeile(m.start()) - 1]
+        davor = src[max(0, m.start() - 80):m.start()]
+        spalte = m.start() - (src.rfind("\n", 0, m.start()) + 1)
+        if "// " in z[:spalte]:
+            continue  # inside a trailing comment
+        if (m.group(2) in _WORT_CODE or kommentar(m.start()) or re.search(r"console\.|throw new|querySelector", z)
+                or re.search(r"\bt\(\s*$", davor) or _RUECKFALL.search(davor) or _WORT_CODE_VOR.search(davor)
+                or _KEY_DANACH.match(src[m.end():m.end() + 40])):
+            continue
+        funde.append((zeile(m.start()), m.group(2)))
     for m in _VORLAGE.finditer(src):
         vor = src[:m.start()].rstrip()[-6:]
         if ("\n" not in m.group(1) or kommentar(m.start())

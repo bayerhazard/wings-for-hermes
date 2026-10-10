@@ -2340,7 +2340,7 @@ const _MESSAGING_SOURCE_LABELS = {
   telegram: 'Telegram',
   discord: 'Discord',
   slack: 'Slack',
-  email: 'Email',
+  email: (typeof t === 'function' ? t('wg_email') : 'Email'),
   wecom: 'WeCom',
   wecom_callback: 'WeCom Callback',
 };
@@ -7431,7 +7431,7 @@ function _sessionAttentionState(s){
   const labelKey=kind==='approval'?'session_attention_approval':(kind==='clarify'?'session_attention_clarify':'session_attention_generic');
   const titleKey=kind==='approval'?'session_attention_approval_title':(kind==='clarify'?'session_attention_clarify_title':'session_attention_generic_title');
   const fallback=kind==='approval'?(count===1?'Approval':`${count} approvals`):(kind==='clarify'?(count===1?'Question':`${count} questions`):(count===1?'Attention':`${count} items`));
-  const titleFallback=kind==='approval'?t('wg_waiting_permission'):(kind==='clarify'?t('wg_waiting_answer'):t('wg_waiting_action'));
+  const titleFallback=kind==='approval'?'Waiting for permission decision':(kind==='clarify'?'Waiting for your answer':'Waiting for user action');
   const label=(typeof t==='function')?t(labelKey,count):fallback;
   const title=(typeof t==='function')?t(titleKey,count):titleFallback;
   return {kind,count,severity:String(attention.severity||''),label,title};
@@ -7962,7 +7962,7 @@ function renderSessionListFromCache(){
     header.setAttribute('role','button');
     header.tabIndex=0;
     header.setAttribute('aria-expanded',isCollapsed?'false':'true');
-    header.title=(header.title?header.title+' · ':'')+(isCollapsed?'Expand':'Collapse')+' folder';
+    header.title=(header.title?header.title+' · ':'')+(isCollapsed?t('wg_expand_folder'):t('wg_collapse_folder'));
     const icon=document.createElement('span');
     icon.className='session-folder-icon';
     icon.dataset.wingsIcon='1';
@@ -8103,7 +8103,7 @@ function renderSessionListFromCache(){
     let cleanTitle=tags.length?rawTitle.replace(/#(?!\d+\b)[\w-]+/g,'').trim():rawTitle;
     // Guard: system prompt content must never surface as a visible session title
     if(cleanTitle.startsWith('[SYSTEM:')){
-      cleanTitle='Session';
+      cleanTitle=t('wg_session');
     }
     // Checkbox for batch select mode
     if(_sessionSelectMode&&!readOnly){
@@ -8572,7 +8572,7 @@ function renderSessionListFromCache(){
             actions.appendChild(menuBtn);
             row.appendChild(actions);
             row.append(
-              _makeSessionSwipeAffordance('right',child.archived?'undo':'archive',child.archived?'Restore':t('session_batch_archive')),
+              _makeSessionSwipeAffordance('right',child.archived?'undo':'archive',child.archived?t('checkpoint_restore'):t('session_batch_archive')),
               _makeSessionSwipeAffordance('left','trash-2',t('session_batch_delete')),
             );
             installForkChildSwipe(row, child, actions);
@@ -8685,7 +8685,7 @@ function renderSessionListFromCache(){
 
     if(!readOnly){
       el.append(
-        _makeSessionSwipeAffordance('right',s.archived?'undo':'archive',s.archived?'Restore':t('session_batch_archive')),
+        _makeSessionSwipeAffordance('right',s.archived?'undo':'archive',s.archived?t('checkpoint_restore'):t('session_batch_archive')),
         _makeSessionSwipeAffordance('left','trash-2',t('session_batch_delete')),
       );
     }

@@ -1586,7 +1586,7 @@ async function send(){
   let _composerDraftClearPromise=null;
   if (activeSid && typeof _clearComposerDraft === 'function') _composerDraftClearPromise=_clearComposerDraft(activeSid,_submittedDraftTextForClear,_submittedDraftFilesForClear);
 
-  setComposerStatus(_submittedFiles.length?'Uploading…':'');
+  setComposerStatus(_submittedFiles.length?t('uploading'):'');
   let uploaded=[];
   try{uploaded=await uploadPendingFiles({files:_submittedFiles, sessionId:activeSid, clearPending:false});}
   catch(e){if(!text){setComposerStatus(t('wg_upload_error',e.message));return;}}
@@ -2368,7 +2368,7 @@ function attachLiveStream(activeSid, streamId, uploaded=[], options={}){
     return out.trim();
   }
   function _liveThinkingText(){
-    return String(liveReasoningText||'').trim() || 'Thinking…';
+    return String(liveReasoningText||'').trim() || t('wg_thinking');
   }
   function _liveThinkingPlacement(){
     const activeSeq=Number(_assistantSegmentSeq||0);
@@ -2528,7 +2528,7 @@ function attachLiveStream(activeSid, streamId, uploaded=[], options={}){
         if(streamId){
           const st=await api(`/api/chat/stream/status?stream_id=${encodeURIComponent(streamId)}`);
           if(st.active){
-            setComposerStatus('Reconnected');
+            setComposerStatus(t('wg_reconnected'));
             _wireSSE(new EventSource(new URL(`api/chat/stream?stream_id=${encodeURIComponent(streamId)}${_runJournalReplayParams()}`,document.baseURI||location.href).href,{withCredentials:true}));
             return;
           }
@@ -4050,7 +4050,7 @@ function attachLiveStream(activeSid, streamId, uploaded=[], options={}){
     if(window._showThinking===false){removeThinking();return;}
     const text=(parsed&&parsed.thinkingText)||'';
     if(text||(parsed&&parsed.inThinking)){
-      _updateLiveThinkingCard(text||'Thinking…');
+      _updateLiveThinkingCard(text||t('wg_thinking'));
       return;
     }
     // Only remove thinking if we're not in an active reasoning phase.
@@ -6221,7 +6221,7 @@ function attachLiveStream(activeSid, streamId, uploaded=[], options={}){
           return;
         }
         // Show as a small inline notice, not a full error
-        setComposerStatus(`${d.message||'Warning'}`);
+        setComposerStatus(`${d.message||t('wg_warning')}`);
         // If it's a fallback notice, show it briefly then clear
         if(d.type==='fallback') setTimeout(()=>setComposerStatus(''),4000);
       }catch(_){}
@@ -6272,7 +6272,7 @@ function attachLiveStream(activeSid, streamId, uploaded=[], options={}){
           try{
             const st=await api(`/api/chat/stream/status?stream_id=${encodeURIComponent(streamId)}`);
             if(st&&st.active){
-              setComposerStatus('Reconnected');
+              setComposerStatus(t('wg_reconnected'));
               _wireSSE(new EventSource(new URL(`api/chat/stream?stream_id=${encodeURIComponent(streamId)}${_runJournalReplayParams()}`,document.baseURI||location.href).href,{withCredentials:true}));
               return;
             }

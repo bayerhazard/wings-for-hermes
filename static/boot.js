@@ -1039,7 +1039,7 @@ function _micEncodeWav(samples, sampleRate){
     // pressing the button will do (#1488).
     _setButtonTooltipAndKey(btn, on ? (_rawAudioMode ? 'voice_recording_active' : 'voice_dictate_active') : (_rawAudioMode ? 'voice_send_raw' : 'voice_dictate'));
     status.style.display=on?'':'none';
-    if(statusText) statusText.textContent=on?'Listening':'Listening';
+    if(statusText) statusText.textContent=t('voice_listening');
     if(!on){ _finalText=''; _prefix=''; }
   }
 
@@ -1143,7 +1143,7 @@ function _micEncodeWav(samples, sampleRate){
     form.append('file',new File([blob],`voice-input.${ext}`,{type:_bt||`audio/${ext}`}));
     // Snapshot is passed in from the recorder.onstop handler — taken there
     // BEFORE _setRecording(false) clears _prefix (async server STT path).
-    setComposerStatus('Transcribing…');
+    setComposerStatus(t('wg_transcribing'));
     try{
       const res=await fetch('api/transcribe',{method:'POST',body:form});
       const data=await res.json().catch(()=>({}));

@@ -312,7 +312,7 @@ function _renderUserFencedBlocks(text){
   const mathStash=[];
   const stashMath=(type,src)=>{mathStash.push({type,src});return '\x00UM'+(mathStash.length-1)+'\x00';};
   const sentContextHtml=(label,quoteText)=>{
-    const safeLabel=String(label||'').trim()||'Context';
+    const safeLabel=String(label||'').trim()||t('context_block_name_default');
     const safeQuote=String(quoteText||'').replace(/\s+$/,'');
     return `<figure class="sent-selection-context" data-selected-context="1"><figcaption class="sent-selection-context-label">${esc(safeLabel)}</figcaption><blockquote class="sent-selection-context-quote">${esc(safeQuote)}</blockquote></figure>`;
   };
@@ -397,7 +397,7 @@ function _statusCardHtml(card){
   const rows=Array.isArray(card.rows)?card.rows:[];
   const sessionId=String(card.sessionId||'');
   const shortSessionId=sessionId.length>22?`${sessionId.slice(0,10)}…${sessionId.slice(-8)}`:sessionId;
-  const copyIcon=(typeof li==='function')?li('copy',13):'Copy';
+  const copyIcon=(typeof li==='function')?li('copy',13):t('copy');
   const copyBtn=sessionId
     ? `<button class="status-card-session-copy" type="button" data-copy-status-session="${esc(card.sessionId||'')}" title="${t('copy')}" onclick="copyStatusSessionId(this);event.stopPropagation()"><span>${esc(shortSessionId)}</span>${copyIcon}</button>`
     : '';
@@ -2220,7 +2220,7 @@ function _mountMermaidViewer(svgEl, options = {}) {
   toolbar.appendChild(_createMermaidViewerButton(t('wg_reset_view'), 'reset', _resetViewer));
   toolbar.appendChild(_createMermaidViewerButton(t('wg_fit_screen'), 'fit', _fitViewer));
   if(mode === 'inline'){
-    toolbar.appendChild(_createMermaidViewerButton('Fullscreen', 'fullscreen', openLightbox));
+    toolbar.appendChild(_createMermaidViewerButton(t('wg_fullscreen'), 'fullscreen', openLightbox));
   }
 
   if(mode === 'lightbox'){
@@ -2621,7 +2621,7 @@ function _formatQuotaPercentShort(value){
 }
 function _providerQuotaIndicatorText(status){
   if(!status||status.status!=='available') return null;
-  const provider=status.display_name||status.provider||'Provider';
+  const provider=status.display_name||status.provider||t('status_provider');
   const accountLimits=status.account_limits||null;
   if(accountLimits&&Array.isArray(accountLimits.windows)&&accountLimits.windows.length){
     const w=accountLimits.windows.find(x=>x&&Number.isFinite(Number(x.remaining_percent)))||accountLimits.windows[0];
@@ -3284,7 +3284,7 @@ async function populateModelDropdown(opts={}){
       for(const [providerId,models] of grouped.entries()){
         const display=(String(providerId).startsWith('custom:')
           ? String(providerId).slice('custom:'.length)
-          : String(providerId))||'Configured';
+          : String(providerId))||t('model_group_configured');
         groups.push({provider:display,provider_id:providerId,models});
       }
       return groups;
@@ -3996,7 +3996,7 @@ function renderModelDropdown(){
   const _buildModelRow=(m,withProviderChip)=>{
     const row=document.createElement('div');
     row.className='model-opt'+(_isSelectedModelRow(m)?' active':'');
-    const badgeHtml=m.badge?`<span class="model-opt-badge model-opt-badge--${esc(m.badge.role||'configured')}">${esc(m.badge.label||'Configured')}</span>`:'';
+    const badgeHtml=m.badge?`<span class="model-opt-badge model-opt-badge--${esc(m.badge.role||'configured')}">${esc(m.badge.label||t('model_group_configured'))}</span>`:'';
     const _plainGroup=m.group?String(m.group).replace(/\s*\(\d+\s+of\s+\d+\)\s*$/,''):'';
     const providerChip=(_plainGroup&&withProviderChip)?`<span class="model-opt-provider">${esc(_plainGroup)}</span>`:'';
     row.innerHTML=`<div class="model-opt-top"><span class="model-opt-name">${esc(m.name)}</span>${badgeHtml}${_selectedModelBadge(m)}${providerChip}</div><span class="model-opt-id">${esc(m.id)}</span>`;
@@ -4114,7 +4114,7 @@ function renderModelDropdown(){
   const _makeModelRow=(m,shouldRenderHeading)=>{
     const row=document.createElement('div');
     row.className='model-opt'+(_isSelectedModelRow(m)?' active':'');
-    const badgeHtml=m.badge?`<span class="model-opt-badge model-opt-badge--${esc(m.badge.role||'configured')}">${esc(m.badge.label||'Configured')}</span>`:'';
+    const badgeHtml=m.badge?`<span class="model-opt-badge model-opt-badge--${esc(m.badge.role||'configured')}">${esc(m.badge.label||t('model_group_configured'))}</span>`:'';
     const _plainGroup=m.group?String(m.group).replace(/\s*\(\d+\s+of\s+\d+\)\s*$/,''):'';
     const _underOwnHeading=shouldRenderHeading&&!!(m.groupKey&&_groupWrappers[m.groupKey]);
     const providerChip=(_plainGroup&&!_underOwnHeading)?`<span class="model-opt-provider">${esc(_plainGroup)}</span>`:'';
@@ -4208,7 +4208,7 @@ function renderModelDropdown(){
         let modelName = m.name;
         if (m.badge) {
           // 直接用badge的原始key（即config.yaml里的ID）
-          const rawId = badgeKeyMap.get(m.badge) || m.value || m.badge.label || 'Configured';
+          const rawId = badgeKeyMap.get(m.badge) || m.value || m.badge.label || t('model_group_configured');
           badgeLabel = rawId;
           modelName = rawId; // model-opt-name直接用原始ID
           if(m.badge.provider){
@@ -4679,14 +4679,14 @@ function _normalizeReasoningEffort(eff){
 }
 
 function _formatReasoningEffortLabel(effort){
-  if(effort==='none') return 'None';
-  if(!effort) return 'Default';
-  if(effort==='minimal') return 'Minimal';
-  if(effort==='low') return 'Low';
-  if(effort==='medium') return 'Medium';
-  if(effort==='high') return 'High';
-  if(effort==='xhigh') return 'XHigh';
-  if(effort==='max') return 'Max';
+  if(effort==='none') return t('wg_reasoning_none');
+  if(!effort) return t('wg_reasoning_default');
+  if(effort==='minimal') return t('wg_reasoning_minimal');
+  if(effort==='low') return t('wg_reasoning_low');
+  if(effort==='medium') return t('wg_reasoning_medium');
+  if(effort==='high') return t('wg_reasoning_high');
+  if(effort==='xhigh') return t('wg_reasoning_extra_high');
+  if(effort==='max') return t('wg_reasoning_max');
   return effort.charAt(0).toUpperCase()+effort.slice(1);
 }
 
@@ -6570,7 +6570,7 @@ function _fmtOllamaLabel(mid){
 }
 
 function getModelLabel(modelId){
-  if(!modelId) return 'Unknown';
+  if(!modelId) return t('status_unknown');
   const rawId=String(modelId||'');
   // Preserve custom gateway model IDs exactly as configured.
   // Examples:
@@ -6642,7 +6642,7 @@ function getModelLabel(modelId){
   if (allowOllamaFormat && (modelId.startsWith('ollama/') || modelId.startsWith('@ollama') || looksLikeOllamaTag || looksLikeBareOllamaId) && ollamaLabel !== _last) {
     return ollamaLabel;
   }
-  return _last || 'Unknown';
+  return _last || t('status_unknown');
 }
 
 function _gatewayProviderName(provider){
@@ -7682,7 +7682,7 @@ function _renderQueueChips(sid){
     const mergeBtn=document.createElement('button');
     mergeBtn.className='queue-card-btn';
     mergeBtn.title=t('wg_queue_merge')+(hasFiles?t('wg_queue_merge_files'):'');
-    mergeBtn.innerHTML=li('layers',12)+'Combine';
+    mergeBtn.innerHTML=li('layers',12)+t('wg_combine');
     mergeBtn.onclick=()=>{
       const _doMerge=(snapshot)=>{
         const combined=snapshot.map(e=>e&&(e.text||e.message||e.content||'')).filter(Boolean).join('\n\n');
@@ -9155,7 +9155,7 @@ function setSystemHealthUnavailable(message){
   if(!panel) return;
   panel.classList.remove('loading');
   panel.classList.add('unavailable');
-  if(status) status.textContent=message||'Unavailable';
+  if(status) status.textContent=message||t('wg_unavailable');
   ['cpu','memory','disk'].forEach(name=>_updateSystemHealthMetric(name,null));
 }
 function renderSystemHealth(payload){
@@ -9163,11 +9163,11 @@ function renderSystemHealth(payload){
   const status=$('systemHealthStatus');
   if(!panel) return;
   if(!payload||payload.available===false){
-    setSystemHealthUnavailable('Unavailable');
+    setSystemHealthUnavailable(t('wg_unavailable'));
     return;
   }
   panel.classList.remove('loading','unavailable');
-  if(status) status.textContent=payload.status==='partial'?'Partial':'Live';
+  if(status) status.textContent=payload.status==='partial'?t('wg_health_partial'):t('wg_health_live');
   _updateSystemHealthMetric('cpu',payload.cpu);
   _updateSystemHealthMetric('memory',payload.memory);
   _updateSystemHealthMetric('disk',payload.disk);
@@ -9179,7 +9179,7 @@ async function pollSystemHealth(){
     const payload=await api('/api/system/health',{timeoutToast:false});
     renderSystemHealth(payload);
   }catch(_){
-    setSystemHealthUnavailable('Unavailable');
+    setSystemHealthUnavailable(t('wg_unavailable'));
   }
 }
 function _systemHealthPanelIsVisible(){
@@ -9537,7 +9537,7 @@ function _renderUpdateSummaryPanel(payload,data,targetKey){
       const title=document.createElement('div');
       title.style.fontWeight='650';
       title.style.marginBottom='3px';
-      title.textContent=section.title||'Summary';
+      title.textContent=section.title||t('wg_summary');
       block.appendChild(title);
       const ul=document.createElement('ul');
       ul.style.margin='0';
@@ -9826,7 +9826,7 @@ async function applyClearUpdateLock(btn){
       else showToast(msg);
     }
   }catch(e){
-    const msg='Lock-check request failed: '+((e&&e.message)||String(e));
+    const msg=t('wg_lock_check_failed')+((e&&e.message)||String(e));
     const errEl=$('updateError');
     if(errEl){errEl.textContent=msg;errEl.style.display='block';}
     else showToast(msg);
@@ -9938,7 +9938,7 @@ async function forceUpdate(btn){
   const confirmed=await showConfirmDialog({
     title:t('wg_force_title',target),
     message:t('wg_force_message',target),
-    confirmLabel:t('wg_force_update'),
+    confirmLabel:t('update_force'),
     danger:true,
     focusCancel:true,
   });
@@ -9951,7 +9951,7 @@ async function forceUpdate(btn){
     const res=await api('/api/updates/force',{method:'POST',body:JSON.stringify((()=>{const b={target};const _ch=window._updateData?.[target]?.channel;if(_ch==='stable'||_ch==='experimental')b.channel=_ch;return b;})()),timeoutMs:120000});
     if(!res.ok){
       if(errEl){errEl.textContent=t('wg_force_failed')+(res.message||t('wg_unknown_error_lc'));errEl.style.display='block';}
-      btn.disabled=false;btn.textContent=t('wg_force_update');
+      btn.disabled=false;btn.textContent=t('update_force');
       return;
     }
     showToast(t('wg_force_applied'));
@@ -9960,7 +9960,7 @@ async function forceUpdate(btn){
     _waitForServerThenReload({baselineServerIdentity});
   }catch(e){
     if(errEl){errEl.textContent=t('wg_force_failed')+e.message;errEl.style.display='block';}
-    btn.disabled=false;btn.textContent=t('wg_force_update');
+    btn.disabled=false;btn.textContent=t('update_force');
   }
 }
 
@@ -10376,8 +10376,8 @@ function _fmtDateSep(d){
   const todayStart=new Date();todayStart.setHours(0,0,0,0);
   const dStart=new Date(d);dStart.setHours(0,0,0,0);
   const diffDays=Math.round((todayStart-dStart)/86400000);
-  if(diffDays===0) return 'Today';
-  if(diffDays===1) return 'Yesterday';
+  if(diffDays===0) return t('session_time_bucket_today');
+  if(diffDays===1) return t('session_time_bucket_yesterday');
   if(diffDays>0 && diffDays<7) return dStart.toLocaleDateString([], {weekday:'long'});
   const opts={month:'short', day:'numeric'};
   if(todayStart.getFullYear()!==dStart.getFullYear()) opts.year='numeric';
@@ -10959,7 +10959,7 @@ function _attachCopyButton(header){
   return btn;
 }
 function _transparentEventCountLabel(toolCount){
-  return toolCount?`Trace: ${toolCount} ${toolCount===1?'tool':'tools'}`:'Trace';
+  return toolCount?t('wg_trace_count',toolCount):t('wg_trace');
 }
 function _setTransparentDetailMode(tab, mode){
   const row=tab&&tab.closest?tab.closest('.transparent-event-row'):null;
@@ -11298,7 +11298,9 @@ function _decorateTransparentEventRow(row, opts){
         statusEl.textContent='';
         statusEl.removeAttribute('data-status');
       }else{
-        statusEl.textContent=status;
+        // Wings: the status stays an English value (compared above and below), shown translated (CI ABGLEICH WG-R3)
+        const statusKey='wg_tool_status_'+status.toLowerCase(), statusText=t(statusKey);
+        statusEl.textContent=statusText===statusKey?status:statusText;
         statusEl.setAttribute('data-status',status.toLowerCase());
       }
       row.setAttribute('data-event-status',status);
@@ -12165,7 +12167,7 @@ function _anchorSceneNodeForRow(row, opts){
     }else{
       node=_activityStatusNode({
         kind:settled?'done':'waiting',
-        label:row.text||row.status||'Working',
+        label:row.text||row.status||t('wings_activity_working'),
         status:!settled&&row.status==='running'?'running':'done',
         id:row.row_id||row.local_id||'',
       });
@@ -12173,7 +12175,7 @@ function _anchorSceneNodeForRow(row, opts){
   }else if(row.role==='control'){
     node=_activityStatusNode({
       kind:settled?'done':'waiting',
-      label:row.text||row.source_event_type||'Waiting',
+      label:row.text||row.source_event_type||t('wg_waiting'),
       status:settled?'done':'running',
       id:row.row_id||row.local_id||'',
     });
@@ -16654,10 +16656,10 @@ function renderMessages(options){
 
 function _toolDisplayName(tc){
   const name=(tc&&tc.name)||'tool';
-  if(name==='subagent_progress') return 'Subagent';
+  if(name==='subagent_progress') return t('wg_subagent');
   if(name==='delegate_task') return t('wg_delegate_task');
-  if(name==='skill_view') return 'Skill';
-  if(name==='skill_manage') return 'Skill';
+  if(name==='skill_view') return t('slash_skill_badge');
+  if(name==='skill_manage') return t('slash_skill_badge');
   return name;
 }
 
@@ -16894,7 +16896,7 @@ function _toolWorklogActionParts(tc){
 }
 function _toolWorklogSummary(toolCalls, opts){
   const cards=Array.from(toolCalls||[]).filter(tc=>tc);
-  if(!cards.length) return (opts&&opts.live)?'Running':'Worklog';
+  if(!cards.length) return (opts&&opts.live)?t('wg_running'):t('wg_worklog');
   if(cards.length===1){
     const part=_toolWorklogActionParts(cards[0]);
     const line=_toolWorklogSummaryLine(part.kind,part.isDone?'done':'running',1);
@@ -17126,8 +17128,8 @@ function _toolCardAllowsDetail(kind, tc){
 }
 function _toolDetailLeadLabel(kind){
   if(kind==='shell') return 'Shell';
-  if(kind==='write') return 'Target';
-  return 'Input';
+  if(kind==='write') return t('wg_detail_target');
+  return t('wg_detail_input');
 }
 function _toolDetailLeadText(kind, tc){
   const target=_toolTargetLabel(tc);
@@ -17248,7 +17250,7 @@ function buildToolCard(tc){
   if(toolKind==='shell'||previewText===argPreview||previewText==='Completed'||previewText==='Running'||previewText==='Failed') previewText='';
   if(isSubagent) previewText=previewText.replace(/^(?:\u{1F500}|↳)\s*/u,'');
   const detailLeadText=hasDetail&&typeof _toolDetailLeadText==='function'?_toolDetailLeadText(toolKind,tc):'';
-  const detailLeadLabel=typeof _toolDetailLeadLabel==='function'?_toolDetailLeadLabel(toolKind):(toolKind==='shell'?'Shell':'Input');
+  const detailLeadLabel=typeof _toolDetailLeadLabel==='function'?_toolDetailLeadLabel(toolKind):(toolKind==='shell'?'Shell':t('wg_detail_input'));
   const detailLead=detailLeadText?`<div class="tool-card-detail-lead"><div class="tool-card-detail-lead-label">${esc(detailLeadLabel)}</div><pre>${esc(detailLeadText)}</pre></div>`:'';
   // Generated documents stay downloadable right from the chat — crucial in
   // Basic mode, where the workspace panel is not available.
@@ -17351,7 +17353,7 @@ function _syncToolCallGroupSummary(group){
   const durationEl=group.querySelector('.tool-call-group-duration');
   if(label){
     if(group.getAttribute('data-run-activity-group')==='1'){
-      label.textContent=toolCount?_toolWorklogSummary(cards,{live:isLiveWorklog, toolCount}):'Running';
+      label.textContent=toolCount?_toolWorklogSummary(cards,{live:isLiveWorklog, toolCount}):t('wg_running');
     }else if(isWorklogGroup){
       const processedLabel=isLiveWorklog
         ? _activityProcessedElapsedLabel(group)

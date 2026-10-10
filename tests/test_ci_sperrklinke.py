@@ -10,7 +10,8 @@ scripts/ci/i18n_fest.py, two rules:
 - JS is a ratchet: STAND holds the number of fixed texts per file. It may only
   go down; a file missing from STAND must stay at zero. 2c-2 brought the chat
   (sessions.js, messages.js, commands.js) to zero, 2c-3a ui.js and boot.js,
-  2c-3b the rest: STAND is empty, every JS file is at zero. What
+  2c-3b the rest: STAND is empty, every JS file is at zero; 2c-4 counts single
+  words ("Enabled", "Running") as well. What
   stays in JS is listed with a reason in i18n_fest.JS_ERLAUBT.
 - share.html (the public share page) loads i18n.js and has no text past it.
 - Notices that go into the transcript stay English there (server, session
@@ -145,6 +146,29 @@ def test_transcript_render_goes_through_wghinweis():
     ui = (STATIC / "ui.js").read_text(encoding="utf-8")
     assert "if(!isUser&&typeof wgHinweis==='function') text=wgHinweis(text);" in ui
     assert "wgHinweis(m.provider_details_label||'Provider details')" in ui
+
+
+# The meter must keep seeing each kind of fixed text; a rule that goes blind shows up here.
+_PROBE = r"""
+el.textContent='Saved draft';
+const label=on?'Listening':'Muted';
+function badge(){ return 'Never'; }
+const hint=`
+  <div class="foot">Live snapshot only; history comes later.</div>`;
+const r={replacement:'Low-latency replacement for lighter turns'};
+if(e.key==='Escape') close();
+const label2=t('k')||'Fallback text';
+"""
+
+
+def test_meter_sees_every_kind_of_fixed_text(tmp_path):
+    datei = tmp_path / "probe.js"
+    datei.write_text(_PROBE, encoding="utf-8")
+    texte = {t for _, t in i18n_fest.js_funde(datei)}
+    for erwartet in ("Saved draft", "Listening", "Muted", "Never",
+                     "Live snapshot only; history comes later.", "Low-latency replacement for lighter turns"):
+        assert erwartet in texte, (erwartet, texte)
+    assert "Escape" not in texte and "Fallback text" not in texte
 
 
 def test_js_ratchet():
