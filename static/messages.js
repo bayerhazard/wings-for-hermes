@@ -879,7 +879,7 @@ async function toggleSavedPromptsPopup(){
       return;
     }
     try{await api('/api/prompts',{method:'POST',body:JSON.stringify({text})});}catch(_e){
-      if(typeof showToast==='function') showToast(_e&&_e.message||'Failed to save prompt',2000,'error');
+      if(typeof showToast==='function') showToast(_e&&_e.message||t('wg_save_prompt_failed'),2000,'error');
       return;
     }
     _savedPromptsCache=null;
@@ -1455,9 +1455,9 @@ async function send(){
         try{
           _petOutput=typeof handlePetSlashCommand==='function'
             ? await handlePetSlashCommand(text,{name:'pet'})
-            : {handled:false,message:t('wg_companion_unavailable')};
+            : {handled:false,message:'Desktop Companion is unavailable in WebUI.'};
         }catch(e){
-          _petOutput={handled:false,message:t('wg_companion_error',e&&e.message||e)};
+          _petOutput={handled:false,message:`Desktop Companion command error: ${e&&e.message||e}`};
         }
         if(_petOutput&&_petOutput.message){
           S.messages.push({role:'assistant',content:String(_petOutput.message),_ts:Date.now()/1000});
@@ -1589,7 +1589,7 @@ async function send(){
   setComposerStatus(_submittedFiles.length?'Uploading…':'');
   let uploaded=[];
   try{uploaded=await uploadPendingFiles({files:_submittedFiles, sessionId:activeSid, clearPending:false});}
-  catch(e){if(!text){setComposerStatus(`Upload error: ${e.message}`);return;}}
+  catch(e){if(!text){setComposerStatus(t('wg_upload_error',e.message));return;}}
   // Clear the uploading status now that upload is done — if we don't clear here
   // it stays visible for the entire duration of the agent stream, since
   // setComposerStatus('') is only called in setBusy(false), not setBusy(true).
@@ -1622,7 +1622,7 @@ async function send(){
       }
     }
   }
-  if(!msgText){setComposerStatus('Nothing to send');return;}
+  if(!msgText){setComposerStatus(t('wg_nothing_to_send'));return;}
   // Composer textarea + persisted draft were already captured and cleared
   // immediately after capture (above, salvage of #4750 + #5912 gate fix) to close
   // the re-entrant double-send race AND avoid clobbering a draft typed during the
@@ -2546,7 +2546,7 @@ function attachLiveStream(activeSid, streamId, uploaded=[], options={}){
 
   function _deferStreamErrorIfPageHidden(source){
     if(!_pageHiddenForStreamError()) return false;
-    setComposerStatus('Connection paused. Reconnecting when this tab returns…');
+    setComposerStatus(t('wg_connection_paused'));
     if(S.session&&S.session.session_id===activeSid&&streamId) S.activeStreamId=streamId;
     if(!_deferredStreamRecoveryBound){
       _deferredStreamRecoveryBound=true;
@@ -5528,7 +5528,7 @@ function attachLiveStream(activeSid, streamId, uploaded=[], options={}){
       _applyToAnchor('approval',d,e);
       showApprovalForSession(activeSid, d, d.pending_count || 1);
       playAttentionSound(_attentionSoundKey(activeSid,'approval',1));
-      sendBrowserNotification('Approval required',d.description||'Tool approval needed',{sid:activeSid});
+      sendBrowserNotification(t('wg_notify_approval'),d.description||t('wg_notify_tool_approval'),{sid:activeSid});
     });
 
     source.addEventListener('clarify',e=>{
@@ -5536,7 +5536,7 @@ function attachLiveStream(activeSid, streamId, uploaded=[], options={}){
       _applyToAnchor('clarify',d,e);
       showClarifyForSession(activeSid, d);
       playAttentionSound(_attentionSoundKey(activeSid,'clarify',1));
-      sendBrowserNotification('Clarification needed',d.question||'Tool clarification needed',{sid:activeSid});
+      sendBrowserNotification(t('clarify_heading'),d.question||t('wg_notify_tool_clarify'),{sid:activeSid});
     });
 
     source.addEventListener('state_saved',e=>{
@@ -5577,9 +5577,9 @@ function attachLiveStream(activeSid, streamId, uploaded=[], options={}){
       const status=String(prefill.status||'not_configured');
       const label=String(prefill.label||'session recall');
       if(status==='loaded'){
-        setComposerStatus(`Context loaded: ${label}`);
+        setComposerStatus(t('wg_context_loaded',label));
       }else if(status==='error'){
-        setComposerStatus(`Context unavailable: ${label}`);
+        setComposerStatus(t('wg_context_unavailable',label));
         if(typeof showToast==='function') showToast(t('wg_context_unavailable',String(prefill.error||label)),3600,'warning');
       }
     });
@@ -5953,7 +5953,7 @@ function attachLiveStream(activeSid, streamId, uploaded=[], options={}){
           sessionId:completedSid,
           liveDisplayText:typeof _streamDisplay==='function'?_streamDisplay():assistantText,
         });
-        sendBrowserNotification('Response complete',_completionPreview||'Task finished',{forceHidden:_wasEverBackgrounded,sid:activeSid});
+        sendBrowserNotification(t('wg_notify_response_complete'),_completionPreview||t('wg_notify_task_finished'),{forceHidden:_wasEverBackgrounded,sid:activeSid});
       };
       if(_shouldUseLiveProseFade()&&assistantBody){
         _cancelAnimationFramePendingStreamRender();
@@ -6217,7 +6217,7 @@ function attachLiveStream(activeSid, streamId, uploaded=[], options={}){
           return;
         }
         if(d.type==='approval_gateway_offline'){
-          if(typeof showToast==='function') showToast(d.message||'Gateway offline',4000,'warning');
+          if(typeof showToast==='function') showToast(d.message||t('wg_gateway_offline'),4000,'warning');
           return;
         }
         // Show as a small inline notice, not a full error
@@ -6277,7 +6277,7 @@ function attachLiveStream(activeSid, streamId, uploaded=[], options={}){
               return;
             }
             if(st&&st.replay_available){
-              setComposerStatus('Restoring stream…');
+              setComposerStatus(t('wg_restoring_stream'));
               _wireSSE(new EventSource(new URL(`api/chat/stream?stream_id=${encodeURIComponent(streamId)}${_runJournalReplayParams()}`,document.baseURI||location.href).href,{withCredentials:true}));
               return;
             }
@@ -6298,7 +6298,7 @@ function attachLiveStream(activeSid, streamId, uploaded=[], options={}){
           // status) and can recover a completed response without an error banner.
           // This is especially important on iOS where Tailscale reconnects can
           // take longer than the retry window.
-          setComposerStatus('Restoring session…');
+          setComposerStatus(t('wg_restoring_session'));
           let _restoreTimedOut=false;
           const _restoreTimer=setTimeout(()=>{
             // If _restoreSettledSession hangs (flaky Tailscale), don't leave
@@ -6652,7 +6652,7 @@ function attachLiveStream(activeSid, streamId, uploaded=[], options={}){
     }else{
       if(typeof trackBackgroundError==='function'){
         const _errTitle=(typeof _allSessions!=='undefined'&&_allSessions.find(s=>s.session_id===activeSid)||{}).title||null;
-        trackBackgroundError(activeSid,_errTitle,'Connection interrupted');
+        trackBackgroundError(activeSid,_errTitle,t('wg_note_label_connection_interrupted'));
       }
     }
     _setActivePaneIdleIfOwner();
@@ -7067,7 +7067,7 @@ function _syncApprovalCollapseButton(card) {
   // Icon swap: chevron-down when expanded (click to collapse), chevron-up when collapsed (click to expand)
   const polyline = collapse.querySelector("svg polyline");
   if (polyline) polyline.setAttribute("points", collapsed ? "18 15 12 9 6 15" : "6 9 12 15 18 9");
-  const label = collapsed ? "Expand approval" : "Collapse approval";
+  const label = collapsed ? t('wg_expand_approval') : t('wg_collapse_approval');
   collapse.setAttribute("aria-label", label);
   collapse.title = label;
 }
@@ -7174,7 +7174,7 @@ async function respondApproval(choice) {
       }
       return;
     }
-    const errMsg = (result && result.error) || "Approval response not accepted.";
+    const errMsg = (result && result.error) || t('wg_approval_not_accepted');
     _restoreFailedApprovalResponse(sid, errMsg);
   } catch(e) {
     const errMsg = (e && e.message) || (t("approval_responding") + " failed");
@@ -7853,7 +7853,7 @@ function _syncClarifyCollapseButton(card) {
   // Icon swap: chevron-down when expanded (click to collapse), chevron-up when collapsed (click to expand)
   const polyline = collapse.querySelector("svg polyline");
   if (polyline) polyline.setAttribute("points", collapsed ? "18 15 12 9 6 15" : "6 9 12 15 18 9");
-  const label = collapsed ? "Expand clarification" : "Collapse clarification";
+  const label = collapsed ? t('wg_expand_clarify') : t('wg_collapse_clarify');
   collapse.setAttribute("aria-label", label);
   collapse.title = label;
 }
@@ -7990,8 +7990,8 @@ function _stashClarifyDraft(reason) {
     if (typeof updateSendBtn === "function") updateSendBtn();
   }
   const notice = reason === "expired"
-    ? "Clarification timed out. Your draft was kept in the composer."
-    : "Clarification closed. Your draft was kept in the composer.";
+    ? t('wg_clarify_timed_out')
+    : t('wg_clarify_closed');
   if (typeof setComposerStatus === "function") setComposerStatus(notice);
   else if (typeof setStatus === "function") setStatus(notice);
   if (typeof showToast === "function") showToast(notice, 5000);
@@ -8150,7 +8150,7 @@ function showClarifyCard(pending) {
     };
   }
   if (typeof lockComposerForClarify === "function") {
-    lockComposerForClarify(question ? `Clarification needed: ${question}` : "Clarification needed");
+    lockComposerForClarify(question ? t('wg_clarify_needed_q', question) : t('clarify_heading'));
   }
   _clarifySetControlsDisabled(false, false);
   _ensureClarifyResizeListener();
@@ -8214,7 +8214,7 @@ async function respondClarify(response) {
         input.value = draft;
         input.focus();
       }
-      const errMsg = (result && result.error) || "Clarification response not accepted — the agent may have already proceeded.";
+      const errMsg = (result && result.error) || t('wg_clarify_not_accepted');
       if (typeof showToast === "function") showToast(errMsg, 5000);
       if (typeof setStatus === "function") setStatus(errMsg);
     }
@@ -8243,7 +8243,7 @@ async function respondClarify(response) {
         _clarifyId = null;
         _clearClarifyPendingForSession(sid);
         hideClarifyCard(true, "expired");
-        const errMsg = (e.message || "Clarification prompt expired or not found.");
+        const errMsg = (e.message || t('wg_clarify_expired'));
         if (typeof setStatus === "function") setStatus("Clarify: " + errMsg);
         // ``_stashClarifyDraft('expired')`` already surfaces the actionable
         // "Clarification timed out. Your draft was kept in the composer."
@@ -8267,7 +8267,7 @@ async function respondClarify(response) {
       input.value = draft;
       input.focus();
     }
-    const errMsg = (e && e.message) || "Failed to deliver clarification response.";
+    const errMsg = (e && e.message) || t('wg_clarify_deliver_failed');
     if (typeof setStatus === "function") setStatus("Clarify: " + errMsg);
     if (typeof showToast === "function") showToast(errMsg, 5000);
   }
@@ -8358,7 +8358,7 @@ function _startClarifyFallbackPoll(sid) {
       if (isMissingEndpoint) {
         if (!_clarifyMissingEndpointWarned) {
           _clarifyMissingEndpointWarned = true;
-          setComposerStatus("Clarify unavailable on current server build. Restart server.");
+          setComposerStatus(t('wg_clarify_unavailable_build'));
           if (typeof showToast === "function") {
             showToast(t('wg_clarify_unavailable'), 5000);
           }

@@ -1503,6 +1503,7 @@ function _renderCacheKey(text, isUser){
   return p + ':' + text.length + ':' + text.slice(0,20) + ':' + text.slice(-20);
 }
 function _getCachedRender(text, isUser){
+  if(!isUser&&typeof wgHinweis==='function') text=wgHinweis(text);  // Wings: notices in the transcript (WG-R3)
   const key = _renderCacheKey(text, isUser);
   const hit = _renderCache.get(key);
   if(hit !== undefined) return hit;
@@ -15568,8 +15569,8 @@ function renderMessages(options){
     }
     let bodyHtml = _getCachedRender(displayContent, isUser);
     if(!isUser&&m.provider_details){
-      const summary=m.provider_details_label||'Provider details';
-      bodyHtml += `<details class="provider-error-details"><summary>${esc(String(summary))}</summary><pre><code>${esc(String(m.provider_details))}</code></pre></details>`;
+      const summary=typeof wgHinweis==='function'?wgHinweis(m.provider_details_label||'Provider details'):(m.provider_details_label||'Provider details');
+      bodyHtml += `<details class="provider-error-details"><summary>${esc(String(summary))}</summary><pre><code>${esc(String(typeof wgHinweis==='function'?wgHinweis(String(m.provider_details)):m.provider_details))}</code></pre></details>`;
     }
     const recoveryPayload=(!isUser&&m._compressionRecovery)
       ? m._compressionRecovery

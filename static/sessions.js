@@ -2193,7 +2193,7 @@ async function loadSession(sid){
             if(_msg&&_first.text&&!_msg.value){
               _msg.value=_first.text||'';
               if(typeof autoResize==='function') autoResize();
-              if(typeof showToast==='function') showToast((_fresh.length>1?`${_fresh.length} queued messages restored (showing first)`:'Queued message restored')+' — review and send when ready');
+              if(typeof showToast==='function') showToast(t('wg_queued_restored',_fresh.length));
             }
           }
           if(typeof _clearPersistedSessionQueue==='function') _clearPersistedSessionQueue(sid);
@@ -2455,7 +2455,7 @@ function _isCliSession(session) {
 
 function _sessionSourceLabel(filter, count) {
   const n = Number(count) || 0;
-  return filter === 'cli' ? `CLI sessions (${n})` : `WebUI sessions (${n})`;
+  return filter === 'cli' ? t('wg_sessions_tab_cli', n) : t('wg_sessions_tab_webui', n);
 }
 
 function _clearSessionSourceTabCounts() {
@@ -2691,8 +2691,8 @@ function _showHandoffHint(sid, rounds) {
 
   const channel = _getChannelLabel(S.session);
   const hintText = channel
-    ? `${channel} handoff`
-    : `Conversation handoff`;
+    ? t('wg_handoff_channel', channel)
+    : t('wg_conversation_handoff');
   const hintMeta = `${rounds} new conversation rounds`;
 
   const bar = document.createElement('div');
@@ -2815,7 +2815,7 @@ async function _generateHandoffSummary(sid, rounds) {
         phase: 'error',
         channel,
         rounds,
-        errorText: 'Could not generate summary. Please try again.',
+        errorText: t('wg_summary_failed'),
       });
     } else {
       // Stale session response path: only record success baseline.
@@ -2828,7 +2828,7 @@ async function _generateHandoffSummary(sid, rounds) {
         phase: 'error',
         channel,
         rounds,
-        errorText: 'Summary generation failed: ' + e.message,
+        errorText: t('wg_summary_generation_failed') + e.message,
       });
     }
   }
@@ -3983,7 +3983,7 @@ function _getPinnedSessionsLimit(){
 }
 function _pinnedSessionsLimitMessage(){
   const limit=_getPinnedSessionsLimit();
-  return `Only ${limit} conversations can be pinned. Unpin one before pinning another.`;
+  return t('wg_pin_limit', limit);
 }
 function _worktreeSessionCount(ids){
   return (ids||[]).reduce((count,sid)=>{
@@ -4517,7 +4517,7 @@ function _buildSessionRenameStarter(session, displayEl, renderDisplay){
         applyTitle(newTitle);
       }catch(err){
         applyTitle(oldTitle,false);
-        const msg='Rename failed: '+(err&&err.message?err.message:String(err));
+        const msg=t('rename_failed')+(err&&err.message?err.message:String(err));
         setStatus(msg);
         if(typeof showToast==='function') showToast(msg,3000,'error');
       }finally{
@@ -5387,10 +5387,10 @@ function _showSessionListLoadError(error){
   const wasRetrying=Boolean(_sessionListLoadError&&_sessionListLoadError.retrying);
   _sessionListLoadError={
     message:isTimeout
-      ? 'Session list is taking longer than expected.'
-      : 'Could not load conversations.',
+      ? t('wg_session_list_slow')
+      : t('wg_sessions_load_failed'),
     detail:isTimeout
-      ? 'The backend may still be scanning a very large session history.'
+      ? t('wg_session_list_slow_hint')
       : String(error&&error.message?error.message:''),
     _retryFailedFocus:wasRetrying,
   };
@@ -5405,7 +5405,7 @@ function _renderSessionListLoadErrorNote(){
   note.setAttribute('role','status');
   note.setAttribute('aria-live','polite');
   const title=document.createElement('div');
-  title.textContent=_sessionListLoadError.message||'Could not load conversations.';
+  title.textContent=_sessionListLoadError.message||t('wg_sessions_load_failed');
   note.appendChild(title);
   if(_sessionListLoadError.detail){
     const detail=document.createElement('div');
@@ -6788,7 +6788,7 @@ function _sessionForkTooltip(parentLabel){
 }
 
 function _sessionLineageBadgeTooltip(label, canExpand){
-  const base=String(label||'Prior turns').trim()||'Prior turns';
+  const base=String(label||t('wg_prior_turns')).trim()||t('wg_prior_turns');
   if(typeof t==='function'){
     return canExpand
       ? t('session_lineage_toggle_hint', base)
@@ -6798,14 +6798,14 @@ function _sessionLineageBadgeTooltip(label, canExpand){
 }
 
 function _sessionChildBadgeTooltip(label){
-  const base=String(label||'Child sessions').trim()||'Child sessions';
+  const base=String(label||t('wg_child_sessions')).trim()||t('wg_child_sessions');
   if(typeof t==='function') return t('session_child_toggle_hint', base);
   return base;
 }
 
 function _sessionStateTooltip({isStreaming=false,hasUnread=false}={}){
-  if(isStreaming) return 'Conversation is running';
-  if(hasUnread) return 'Unread completion';
+  if(isStreaming) return t('wg_conversation_running');
+  if(hasUnread) return t('wg_unread_completion');
   return '';
 }
 
@@ -7079,7 +7079,7 @@ function upsertActiveSessionForLocalTurn({title='', messageCount=0, timestampMs=
   const row={
     ...S.session,
     session_id:sid,
-    title:S.session.title||title||'New chat',
+    title:S.session.title||title||t('wg_new_chat'),
     message_count:count,
     last_message_at:nowSec,
     updated_at:nowSec,
@@ -7431,7 +7431,7 @@ function _sessionAttentionState(s){
   const labelKey=kind==='approval'?'session_attention_approval':(kind==='clarify'?'session_attention_clarify':'session_attention_generic');
   const titleKey=kind==='approval'?'session_attention_approval_title':(kind==='clarify'?'session_attention_clarify_title':'session_attention_generic_title');
   const fallback=kind==='approval'?(count===1?'Approval':`${count} approvals`):(kind==='clarify'?(count===1?'Question':`${count} questions`):(count===1?'Attention':`${count} items`));
-  const titleFallback=kind==='approval'?'Waiting for permission decision':(kind==='clarify'?'Waiting for your answer':'Waiting for user action');
+  const titleFallback=kind==='approval'?t('wg_waiting_permission'):(kind==='clarify'?t('wg_waiting_answer'):t('wg_waiting_action'));
   const label=(typeof t==='function')?t(labelKey,count):fallback;
   const title=(typeof t==='function')?t(titleKey,count):titleFallback;
   return {kind,count,severity:String(attention.severity||''),label,title};
@@ -7817,7 +7817,7 @@ function renderSessionListFromCache(){
   if(archivedCount>0||_showArchived){
     const toggle=document.createElement('div');
     toggle.style.cssText='font-size:10px;padding:4px 10px;color:var(--muted);cursor:pointer;text-align:center;opacity:.7;';
-    toggle.textContent=_showArchived?'Hide archived':'Show '+archivedCount+' archived';
+    toggle.textContent=_showArchived?t('wg_hide_archived'):t('wg_show_archived',archivedCount);
     toggle.onclick=()=>{
       _showArchived=!_showArchived;
       if(_showArchived) _archivedRowsLoadedLimit=SESSION_ARCHIVED_PAGE_SIZE;
@@ -7829,12 +7829,12 @@ function renderSessionListFromCache(){
   if(_sessionSourceFilter==='cli'&&sessions.length===0){
     const empty=document.createElement('div');
     empty.className='session-empty-note';
-    empty.textContent=window._showCliSessions?'No CLI sessions found.':'Enable Show agent sessions in Settings to list CLI sessions here.';
+    empty.textContent=window._showCliSessions?t('wg_no_cli_sessions'):t('wg_enable_cli_sessions');
     list.appendChild(empty);
   } else if(_activeProject&&sessions.length===0){
     const empty=document.createElement('div');
     empty.className='session-empty-note';
-    empty.textContent=_activeProject===NO_PROJECT_FILTER?'No unassigned sessions.':'No sessions in this project yet.';
+    empty.textContent=_activeProject===NO_PROJECT_FILTER?t('wg_no_unassigned_sessions'):t('wg_no_project_sessions');
     list.appendChild(empty);
   }
   const orderedSessions=[...sessions].sort(_sessionSidebarSortCompare);
@@ -8000,7 +8000,7 @@ function renderSessionListFromCache(){
     });
     if(key!==NO_PROJECT_FILTER&&!_sessionSelectMode){
       header.draggable=true;
-      header.title=(header.title?header.title+' · ':'')+'Drag to reorder folders';
+      header.title=(header.title?header.title+' · ':'')+t('wg_drag_reorder_folders');
       header.addEventListener('dragstart', _onFolderDragStart, {passive:false});
       header.addEventListener('dragover', _onFolderDragOver, {passive:false});
       header.addEventListener('drop', _onFolderDrop, {passive:false});
@@ -8077,7 +8077,7 @@ function renderSessionListFromCache(){
     const attentionClass=attention?(attention.kind==='approval'?' attention-approval':(attention.kind==='clarify'?' attention-clarify':' attention-attention')):'';
     const readOnly=_isReadOnlySession(s);
     el.className='session-item'+(isActive?' active':'')+(isActive&&S.session&&S.session._flash?' new-flash':'')+(s.archived?' archived':'')+(isStreaming?' streaming':'')+(hasUnread?' unread':'')+(attention?' needs-attention':'')+attentionClass;
-    if(!_sessionSelectMode&&!readOnly&&!s.archived){ el.draggable=true; el.title=(el.title?el.title+' · ':'')+'Drag to reorder'; }
+    if(!_sessionSelectMode&&!readOnly&&!s.archived){ el.draggable=true; el.title=(el.title?el.title+' · ':'')+t('wg_drag_reorder'); }
     const swipeReturnOffset=_sessionSwipeReturnOffsets.get(s.session_id);
     if(swipeReturnOffset!==undefined){
       _sessionSwipeReturnOffsets.delete(s.session_id);
@@ -8302,7 +8302,7 @@ function renderSessionListFromCache(){
         await _openSidebarSession(childSession, {skipLineageResolve:true});
       };
       const childLabelFor=(child)=>{
-        const childTitle=_sessionDisplayTitle(child)||'Untitled child session';
+        const childTitle=_sessionDisplayTitle(child)||t('wg_untitled_child');
         const childTime=_formatRelativeSessionTime(_sessionTimestampMs(child));
         const parentNote=child._parent_segment_title?` via ${child._parent_segment_title}`:'';
         return `-> ${childTitle}${parentNote} - ${childTime}`;
@@ -9140,7 +9140,7 @@ async function deleteSession(sid, beforeDelete=null){
       renderSessionListFromCache();
     }
     const err=deleteResult.error;
-    setStatus(`Delete failed: ${err&&err.message?err.message:String(err)}`);
+    setStatus(t('delete_failed')+(err&&err.message?err.message:String(err)));
     return false;
   }
   const response=deleteResult&&deleteResult.response;
