@@ -60,7 +60,7 @@ def test_icons_js_equals_the_generator_output():
 import zeichen_einsetzen  # noqa: E402
 
 # CI names that are not in the stand yet; their <svg> carries data-li-ausstehend.
-AUSSTEHEND = {"pause", "erweiterung", "vergroessern", "verkleinern", "vollbild", "einpassen", "warteschlange"}
+AUSSTEHEND = set()
 
 
 def _inline_icons():
