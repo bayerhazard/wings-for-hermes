@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from tests.wings_i18n import en  # Wings: UI text via t() (CI ABGLEICH WG-R3)
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -303,8 +304,8 @@ def test_read_only_source_badge_ui_guards_are_present():
     assert "function _isReadOnlySession" in sessions_js
     assert "read-only-session" in sessions_js
     assert "if(!readOnly)" in sessions_js
-    assert "Read-only imported sessions cannot be renamed" in sessions_js
-    assert "Read-only imported sessions cannot be modified" in sessions_js
+    assert "t('wg_readonly_rename')" in sessions_js and "cannot be renamed" in en("wg_readonly_rename")
+    assert "t('wg_readonly_modify')" in sessions_js and "cannot be modified" in en("wg_readonly_modify")
     assert "S.session.read_only||S.session.is_read_only" in messages_js
     assert "topbar-source-badge" in ui_js
     assert " · read-only" in ui_js

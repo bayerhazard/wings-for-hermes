@@ -1,4 +1,5 @@
 from pathlib import Path
+from tests.wings_i18n import en  # Wings: UI text via t() (CI ABGLEICH WG-R3)
 
 ROOT = Path(__file__).resolve().parent.parent
 MESSAGES_JS = (ROOT / "static" / "messages.js").read_text(encoding="utf-8")
@@ -19,7 +20,8 @@ def test_done_and_restore_filters_recovery_messages_from_frontend_state():
 
 def test_apererror_recovers_on_recovery_control_event():
     assert "isRecoveryControlMessage=isInterrupted && (d.recovery_control===true || _streamRecoveryControlMessageText(d.message));" in MESSAGES_JS
-    assert "Stream recovery signal received. Restoring transcript..." in MESSAGES_JS
+    assert "t('wg_stream_recovery')" in MESSAGES_JS
+    assert en("wg_stream_recovery") == "Stream recovery signal received. Restoring transcript..."
     assert "if(await _restoreSettledSession(source, {preserveVisibleOnShorterTerminalSnapshot:true})) return;" in MESSAGES_JS
 
 

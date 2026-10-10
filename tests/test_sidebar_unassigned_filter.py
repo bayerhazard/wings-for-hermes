@@ -24,6 +24,7 @@ break the chip.
 from __future__ import annotations
 
 import pathlib
+from tests.wings_i18n import en  # Wings: UI text via t() (CI ABGLEICH WG-R3)
 
 JS = pathlib.Path(__file__).parent.parent / "static" / "sessions.js"
 CSS = pathlib.Path(__file__).parent.parent / "static" / "style.css"
@@ -91,7 +92,7 @@ def test_unassigned_chip_only_shown_when_relevant():
 def test_unassigned_chip_label_and_handler():
     """The chip label should be 'Unassigned' and clicking it should set the sentinel."""
     js = _js()
-    assert "noneChip.textContent='Unassigned';" in js, (
+    assert "noneChip.textContent=t('session_folder_unassigned');" in js and en("session_folder_unassigned") == "Unassigned", (
         "The Unassigned chip must display the label 'Unassigned'"
     )
     assert "_setActiveProjectFilter(NO_PROJECT_FILTER)" in js, (

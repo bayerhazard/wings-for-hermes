@@ -35,7 +35,7 @@ PICKER_BODY = _show_project_picker_body()
 def test_no_project_branch_writes_to_allSessions_cache():
     """The 'No project' callback must update `_allSessions[idx].project_id`
     after the /api/session/move call so the re-render reflects the move."""
-    none_idx = PICKER_BODY.find("'Removed from project'")
+    none_idx = PICKER_BODY.find("t('wg_removed_from_project')")
     assert none_idx != -1, "'Removed from project' branch not located"
     # Look back over the callback body
     window = PICKER_BODY[max(0, none_idx - 600): none_idx]
@@ -52,7 +52,7 @@ def test_no_project_branch_writes_to_allSessions_cache():
 def test_existing_project_branch_writes_to_allSessions_cache():
     """The existing-project callback must update `_allSessions[idx].project_id`
     after the /api/session/move call so the re-render reflects the move."""
-    moved_idx = PICKER_BODY.find("'Moved to '+p.name")
+    moved_idx = PICKER_BODY.find("t('moved_to')+p.name")
     assert moved_idx != -1, "'Moved to '+p.name branch not located"
     window = PICKER_BODY[max(0, moved_idx - 600): moved_idx]
     assert "_allSessions.findIndex" in window, (
@@ -140,7 +140,7 @@ def test_new_project_branch_still_uses_authoritative_refetch():
     create-branch block (up to the next picker item) rather than a fixed byte
     window so the assertion tracks intent, not exact offsets.
     """
-    create_idx = PICKER_BODY.find("'+ New project'")
+    create_idx = PICKER_BODY.find("'+ '+t('wg_new_project')")
     assert create_idx != -1, "'+ New project' branch not located"
     # Bound the window at the end of the create handler (the picker.appendChild
     # that follows the createItem.onclick), falling back to a generous slice.

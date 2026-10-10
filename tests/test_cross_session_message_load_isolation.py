@@ -17,6 +17,7 @@ import subprocess
 from pathlib import Path
 
 import pytest
+from tests.wings_i18n import T_EN_MJS  # Wings: UI text via t() (CI ABGLEICH WG-R3)
 
 
 REPO = Path(__file__).resolve().parents[1]
@@ -122,8 +123,8 @@ def test_loadsession_has_generation_token_and_forwards_to_ensure_messages_loaded
         "loadSession() must pass generation into _ensureMessagesLoaded() for stale-owner checks"
     )
     assert (
-        "showToast('Failed to load session" in LOAD_SESSION_SRC
-        or "showToast('Failed to load conversation messages" in LOAD_SESSION_SRC
+        "showToast(t('wg_session_load_failed')" in LOAD_SESSION_SRC
+        or "showToast(t('wg_messages_load_failed')" in LOAD_SESSION_SRC
     ), "loadSession() should preserve toast-based failure paths"
 
 
@@ -579,7 +580,7 @@ runAll()
 def _run_node(script: str, tmp_path: Path) -> dict:
     assert NODE is not None, "node is required"
     script_path = tmp_path / "cross-session-message-load-isolation.mjs"
-    script_path.write_text(script, encoding="utf-8")
+    script_path.write_text(T_EN_MJS + script, encoding="utf-8")
     completed = subprocess.run(
         [NODE, str(script_path)],
         cwd=str(REPO),

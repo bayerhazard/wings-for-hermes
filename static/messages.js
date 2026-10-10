@@ -824,7 +824,7 @@ async function toggleSavedPromptsPopup(){
     if(btn)btn.setAttribute('aria-expanded','false');
     return;
   }
-  popup.innerHTML='<div class="saved-prompts-loading">'+esc(t('wg_loading'))+'</div>';
+  popup.innerHTML='<div class="saved-prompts-loading">'+t('wg_loading')+'</div>';
   popup.style.display='flex';
   if(btn)btn.setAttribute('aria-expanded','true');
   const prompts=await _loadSavedPrompts();

@@ -43,7 +43,7 @@ def test_session_action_menu_exposes_popup_state_and_focus_contract():
     """
     assert SESSIONS_JS.count("menuBtn.setAttribute('aria-expanded','false');") == 2
     assert "menu.setAttribute('role','menu');" in SESSIONS_JS
-    assert "menu.setAttribute('aria-label', 'Conversation actions');" in SESSIONS_JS
+    assert "menu.setAttribute('aria-label', t('wg_conversation_actions'));" in SESSIONS_JS
     assert "opt.setAttribute('role','menuitem');" in SESSIONS_JS
 
     mount = _sessions_block("function _mountSessionActionMenu(menu, session, anchorEl){", "function _findSessionRenameRow")
@@ -154,7 +154,7 @@ def test_session_swipes_route_archive_restore_and_delete():
     assert "_archiveSession(s,true,()=>_waitForSessionMotion(committedSwipeDuration))" in archived_visible_branch
     assert archive_branch.find("_completeSessionSwipePaint(signedDx);") < archive_branch.find("_archiveSession(s,true,()=>_waitForSessionMotion(committedSwipeReflowDelay))")
     assert delete_branch.find("deleteSession(s.session_id,async()=>{") < delete_branch.find("_completeSessionSwipePaint(signedDx);")
-    assert "showToast('Imported sessions cannot be deleted here.',3000);" in SESSIONS_JS
+    assert "showToast(t('wg_imported_cannot_delete'),3000);" in SESSIONS_JS
     assert "let _gestureState='idle';" in SESSIONS_JS
     assert SESSIONS_JS.count("if(e.pointerType==='touch') return;") >= 3
     assert "if(_gesturePointerType==='mouse'&&_gestureState!=='idle') _clearPointerDragState();" in SESSIONS_JS

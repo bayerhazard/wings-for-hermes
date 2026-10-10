@@ -1765,7 +1765,7 @@ async function loadSession(sid){
     }
     _loadingOlder = false;
     const _msgInner = $('msgInner');
-    if (_msgInner && currentSid !== sid) _msgInner.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text-muted);font-size:14px;padding:40px;text-align:center;">'+esc(t('wg_loading_conversation'))+'</div>';
+    if (_msgInner && currentSid !== sid) _msgInner.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text-muted);font-size:14px;padding:40px;text-align:center;">'+t('wg_loading_conversation')+'</div>';
   }
   // Phase 1: Load metadata only (~1KB) for fast session switching. Keep model
   // resolution out of the first-paint path; old provider-shaped model IDs are
@@ -1841,7 +1841,7 @@ async function loadSession(sid){
         // When currentSid is set, a 500/network error may be transient — the
         // session might still exist on the server (#4028 follow-up).
         _clearStuckSessionOnBoot(sid, currentSid);
-        _msgInner.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text-muted);font-size:14px;padding:40px;text-align:center;">'+esc(t('wg_session_load_failed_hint'))+'</div>';
+        _msgInner.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text-muted);font-size:14px;padding:40px;text-align:center;">'+t('wg_session_load_failed_hint')+'</div>';
         if(typeof showToast==='function') showToast(t('wg_session_load_failed'),3000,'error');
       }
     }
@@ -2167,7 +2167,7 @@ async function loadSession(sid){
       // persist forever with no recovery path.
       const _msgInner = $('msgInner');
       if (_msgInner) {
-        _msgInner.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text-muted);font-size:14px;padding:40px;text-align:center;">' + esc(t('wg_messages_load_failed_hint')) + '</div>';
+        _msgInner.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text-muted);font-size:14px;padding:40px;text-align:center;">' + t('wg_messages_load_failed_hint') + '</div>';
       }
       if (typeof showToast === 'function') showToast(t('wg_messages_load_failed'), 3000, 'error');
       if (_isCurrentLoad()) _loadingSessionId = null;

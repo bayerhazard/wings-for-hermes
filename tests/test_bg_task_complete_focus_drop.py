@@ -23,6 +23,7 @@ from __future__ import annotations
 
 import re
 from pathlib import Path
+from tests.wings_i18n import en  # Wings: UI text via t() (CI ABGLEICH WG-R3)
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 
@@ -211,5 +212,6 @@ def test_toast_template_pins_copy():
     block = _toast_block()
     assert "slice(0, 8)" in block
     assert "slice(0, 80)" in block
-    assert "Task ${tid} done${tail}" in block
+    assert "t('wg_task_done', tid, tail)" in block
+    assert en("wg_task_done", "${tid}", "${tail}") == "Task ${tid} done${tail}"
     assert "2600" in block, "toast duration must be 2600ms per Q-c-1"
