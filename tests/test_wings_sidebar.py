@@ -112,7 +112,7 @@ def test_renderer_emits_icon_count_and_active_state():
     assert start != -1
     end = SESSIONS_JS.find("if(folderGrouping){", start)
     body = SESSIONS_JS[start:end]
-    assert "li(isUnassigned?'archive':'folder',18,1.75)" in body
+    assert "li(isUnassigned?'archive':'folder',18)" in body  # Wings: stroke is the CI's fixed 1.5 (CI ABGLEICH WG-Z1)
     assert "session-folder-count" in body
     assert "group.sessions.length" in body, "the count must come from the folder's sessions"
     assert "count>0" in body, "an empty folder must not claim a count"
