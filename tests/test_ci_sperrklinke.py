@@ -14,6 +14,9 @@ scripts/ci/i18n_fest.py, two rules:
   words ("Enabled", "Running") as well. What
   stays in JS is listed with a reason in i18n_fest.JS_ERLAUBT.
 - share.html (the public share page) loads i18n.js and has no text past it.
+- Texts the server sends stay English in api/ and are translated when shown:
+  every one has a wg_srv_ key or a reason (scripts/ci/server_texte.py, 2c-5,
+  decision B); wgServer() in i18n.js does it, api() and showToast() call it.
 - Notices that go into the transcript stay English there (server, session
   files and tests share one wording) and are translated when shown:
   wgHinweis() in i18n.js (CI ABGLEICH WG-R3, decision A).
@@ -37,6 +40,7 @@ import pytest
 REPO = pathlib.Path(__file__).parent.parent
 sys.path.insert(0, str(REPO / "scripts" / "ci"))
 import i18n_fest  # noqa: E402
+import server_texte  # noqa: E402
 
 STATIC = REPO / "static"
 HTML = (STATIC / "index.html").read_text(encoding="utf-8")
@@ -195,3 +199,55 @@ def test_keys_named_in_index_html_exist():
     wg = {k for k in keys["en"] if k.startswith("wg_")}
     assert wg, "Wings' own keys carry the wg_ prefix"
     assert wg <= set(keys["de"])
+
+
+@pytest.mark.skipif(not NODE, reason="node not installed")
+def test_every_server_text_is_translated_or_has_a_reason():
+    offen = server_texte.offen()
+    assert offen == [], "\n".join(f"{w[0]}  {t}" for t, w in offen) + (
+        "\nadd a wg_srv_ key with the server's English template, or a reason in server_texte.ERLAUBT")
+
+
+def test_server_texts_allowed_still_exist():
+    assert set(server_texte.ERLAUBT) - set(server_texte.texte()) == set()
+
+
+_SERVER = r"""
+const fs = require('fs'), vm = require('vm');
+const ctx = {window: {}, document: {documentElement: {}, addEventListener() {}, querySelectorAll: () => []},
+  localStorage: {getItem: () => null, setItem() {}}, navigator: {language: 'en'}, console};
+ctx.globalThis = ctx; vm.createContext(ctx);
+vm.runInContext(fs.readFileSync(process.argv[1], 'utf8') +
+  ';globalThis.__s = wgServer; globalThis.__set = (l) => { _locale = LOCALES[l]; };', ctx);
+const texte = JSON.parse(process.argv[2]);
+const en = texte.map(x => ctx.__s(x));
+ctx.__set('de');
+console.log(JSON.stringify({en, de: texte.map(x => ctx.__s(x))}));
+"""
+
+SERVERTEXTE = [
+    "Session not found",
+    "File too large (max 25MB)",
+    'A file named "a.txt" already exists in that folder',
+    "Models endpoint returned 401 — check the API key for openai.",
+    "Hermes Agent exposes WIKI_PATH/wiki.path for location, but no stable on/off config flag is currently available.",
+]
+
+
+@pytest.mark.skipif(not NODE, reason="node not installed")
+def test_server_texts_are_translated_when_shown():
+    out = subprocess.run([NODE, "-e", _SERVER, str(STATIC / "i18n.js"), json.dumps(SERVERTEXTE + ["Hello"])],
+                         capture_output=True, text=True, timeout=30)
+    assert out.returncode == 0, out.stderr
+    r = json.loads(out.stdout)
+    assert r["en"] == SERVERTEXTE + ["Hello"], "English stays as the server wrote it"
+    assert [d for d, e in zip(r["de"], SERVERTEXTE) if d == e] == []
+    assert r["de"][-1] == "Hello", "unknown text is never touched"
+
+
+def test_server_texts_go_through_wgserver():
+    ws = (STATIC / "workspace.js").read_text(encoding="utf-8")
+    assert "const err=new Error(typeof wgServer==='function'?wgServer(message):message);" in ws
+    assert "err.serverText=message;" in ws
+    ui = (STATIC / "ui.js").read_text(encoding="utf-8")
+    assert "const anzeige=typeof wgServer==='function'?wgServer(s):s;" in ui

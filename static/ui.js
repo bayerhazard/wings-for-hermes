@@ -7892,12 +7892,14 @@ function copyToastText(btn){
 function showToast(msg,ms,type){
   const el=$('toast');if(!el)return;
   const s=String(msg==null?'':msg);let t=type;
-  if(!t){const low=s.toLowerCase();if(/fail|error|denied|invalid|unavailable|no active|no workspace match|no model match|no personalities/.test(low))t='error';else if(/warn|queued|takes effect|skipped|fallback/.test(low))t='warning';else if(/saved|created|imported|restored|switched|set to|updated|duplicated|moved to|renamed|deleted|complete|pinned|archived|cleared|stopped/.test(low))t='success';else t='info';}
+  if(!t){const low=s.toLowerCase();if(/fail|error|denied|invalid|unavailable|no active|no workspace match|no model match|no personalities|fehlgeschlagen|fehler|verweigert|ungültig|nicht verfügbar|nicht erreichbar|nicht gefunden|kein aktiv/.test(low))t='error';else if(/warn|queued|takes effect|skipped|fallback|warnung|eingereiht|übersprungen|rückfall/.test(low))t='warning';else if(/saved|created|imported|restored|switched|set to|updated|duplicated|moved to|renamed|deleted|complete|pinned|archived|cleared|stopped|gespeichert|angelegt|erstellt|importiert|wiederhergestellt|gewechselt|aktualisiert|dupliziert|verschoben|umbenannt|gelöscht|abgeschlossen|angeheftet|archiviert|geleert|gestoppt/.test(low))t='success';else t='info';}
+  /* Wings (CI ABGLEICH WG-R3): the type above reads the words in English and German; a known server text is shown translated */
+  const anzeige=typeof wgServer==='function'?wgServer(s):s;
   const duration=(ms==null)?(t==='error'?TOAST_ERROR_DEFAULT_MS:TOAST_DEFAULT_MS):ms;
   el.className='toast show '+t;
   el.dataset.toastMessage=s;
-  /* Wings: t is the toast type here, the translation is globalThis.t (WG-R3) */ if(t==='error') el.innerHTML=`<span class="toast-message">${esc(s)}</span><button class="toast-copy" type="button" data-toast-copy="1" onclick="copyToastText(this);event.stopPropagation()">${globalThis.t('copy')}</button><button class="toast-dismiss" type="button" aria-label="${globalThis.t('wg_dismiss_error_toast')}" data-toast-dismiss="1" onclick="dismissToast(this);event.stopPropagation()">${globalThis.t('wg_close_notice')}</button>`;
-  else el.textContent=s;
+  /* Wings: t is the toast type here, the translation is globalThis.t (WG-R3) */ if(t==='error') el.innerHTML=`<span class="toast-message">${esc(anzeige)}</span><button class="toast-copy" type="button" data-toast-copy="1" onclick="copyToastText(this);event.stopPropagation()">${globalThis.t('copy')}</button><button class="toast-dismiss" type="button" aria-label="${globalThis.t('wg_dismiss_error_toast')}" data-toast-dismiss="1" onclick="dismissToast(this);event.stopPropagation()">${globalThis.t('wg_close_notice')}</button>`;
+  else el.textContent=anzeige;
   el.onmouseenter=()=>clearToastDismissTimer(el);
   el.onmouseleave=()=>setToastDismissTimer(el,duration);
   el.onfocusin=()=>clearToastDismissTimer(el);
@@ -9950,7 +9952,7 @@ async function forceUpdate(btn){
     const baselineServerIdentity = await _readHealthServerIdentity();
     const res=await api('/api/updates/force',{method:'POST',body:JSON.stringify((()=>{const b={target};const _ch=window._updateData?.[target]?.channel;if(_ch==='stable'||_ch==='experimental')b.channel=_ch;return b;})()),timeoutMs:120000});
     if(!res.ok){
-      if(errEl){errEl.textContent=t('wg_force_failed')+(res.message||t('wg_unknown_error_lc'));errEl.style.display='block';}
+      if(errEl){errEl.textContent=t('wg_force_failed')+((typeof wgServer==='function'?wgServer(res.message):res.message)||t('wg_unknown_error_lc'));errEl.style.display='block';}
       btn.disabled=false;btn.textContent=t('update_force');
       return;
     }
