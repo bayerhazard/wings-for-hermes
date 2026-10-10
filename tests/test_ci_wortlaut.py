@@ -139,3 +139,12 @@ def test_activity_line_speaks_german(locales):
         "summary_many": "Durchsucht den Arbeitsbereich 3-mal",
         "join": "a, b und c",
     }
+
+
+# English terms with a German word the UI uses everywhere else (WG-R3; WG-R4: "Arbeitsbereich").
+ENGLISCH_MIT_DEUTSCHEM_WORT = re.compile(r"\b(?:Workspaces?|Basic|Advanced|Provider|Routing|Upload|Settings|Memory)\b")
+
+
+def test_no_english_term_where_german_has_a_word(locales):
+    funde = {k: v for k, v in _texte(locales["de"]).items() if ENGLISCH_MIT_DEUTSCHEM_WORT.search(v)}
+    assert funde == {}, funde
