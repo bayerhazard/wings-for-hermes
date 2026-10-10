@@ -203,6 +203,31 @@ JS_ERLAUBT = {
     ("messages.js", "Cancellation details"): HINWEIS,
     ("messages.js", "Interruption details"): HINWEIS,
     ("messages.js", "Terminal state details"): HINWEIS,
+    # Architecture notes in STATE_LAYERS: exported for tests, never shown.
+    ("assistant_turn_anchors.js", "RuntimeAdapter / run-journal Event Envelope"): "interne Architekturbeschreibung, nie angezeigt",
+    ("assistant_turn_anchors.js", "Anchor identity and replay dedupe"): "interne Architekturbeschreibung, nie angezeigt",
+    ("assistant_turn_anchors.js", "Run journal replay events"): "interne Architekturbeschreibung, nie angezeigt",
+    ("assistant_turn_anchors.js", "Replay hydration should rebuild"): "interne Architekturbeschreibung, nie angezeigt",
+    ("assistant_turn_anchors.js", "Server settled transcript messages"): "interne Architekturbeschreibung, nie angezeigt",
+    ("assistant_turn_anchors.js", "Settlement updates the existing anchor"): "interne Architekturbeschreibung, nie angezeigt",
+    ("assistant_turn_anchors.js", "Browser transcript projection"): "interne Architekturbeschreibung, nie angezeigt",
+    ("assistant_turn_anchors.js", "Projection input/output"): "interne Architekturbeschreibung, nie angezeigt",
+    ("assistant_turn_anchors.js", "Browser in-flight recovery cache"): "interne Architekturbeschreibung, nie angezeigt",
+    ("assistant_turn_anchors.js", "Recovery fallback only"): "interne Architekturbeschreibung, nie angezeigt",
+    ("assistant_turn_anchors.js", "attachLiveStream closure-local state"): "interne Architekturbeschreibung, nie angezeigt",
+    ("assistant_turn_anchors.js", "Live DOM / Worklog nodes"): "interne Architekturbeschreibung, nie angezeigt",
+    ("assistant_turn_anchors.js", "#liveAssistantTurn, tool-card rows"): "interne Architekturbeschreibung, nie angezeigt",
+    ("assistant_turn_anchors.js", "DOM continuity is useful"): "interne Architekturbeschreibung, nie angezeigt",
+    # Login: en fallbacks; the page gets the text from the server (_LOGIN_LOCALE).
+    ("login.js", "Invalid password"): "Rückfall; Text kommt vom Server (_LOGIN_LOCALE)",
+    ("login.js", "Connection failed"): "Rückfall; Text kommt vom Server (_LOGIN_LOCALE)",
+    ("login.js", "Cannot reach server"): "Rückfall; Text kommt vom Server (_LOGIN_LOCALE)",
+    ("onboarding.js", "claude setup-token"): "Befehl, wird so eingetippt",
+    ("panels.js", "0 9 * * *  —  every 1h  —  @daily"): "Beispiele für Cron-Ausdrücke, Syntax",
+    ("panels.js", "my-skill"): "Beispielname eines Skills",
+    ("panels.js", "Workspace already in list"): "Vergleich mit der Fehlermeldung des Servers, kein Text",
+    ("panels.js", "auto ("): "Wert auto, Erklärung dahinter per t()",
+    ("panels.js", "Available on larger screens"): "Rückfall von t('settings_mode_advanced_desktop_only'), Upstream-Zeile",
 }
 
 
@@ -243,7 +268,8 @@ def js_funde(datei):
              and not _KEY_DANACH.match(src[m.end():m.end() + 40])]
     for m in _SCHNIPSEL_TEXT.finditer(src):
         t = m.group(1).strip()
-        if not _sichtbar(t) or re.search(r"[=;(){}\\]|&&|\|\|", t) or kommentar(m.start()):
+        # a semicolon is code, unless prose goes on after it ("…only; paths are…")
+        if not _sichtbar(t) or re.search(r"[=(){}\\]|&&|\|\||;(?! [a-z])", t) or kommentar(m.start()):
             continue
         if "data-i18n=" in src[src.rfind("<", 0, m.start() + 1):m.start() + 1]:
             continue  # the element carries its key; applyLocaleToDOM sets the text

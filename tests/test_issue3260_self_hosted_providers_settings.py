@@ -14,6 +14,7 @@ import pytest
 
 from tests.js_source_extract import extract_function
 from tests.test_provider_management import _install_fake_hermes_cli, _post
+from tests.wings_i18n import T_EN_JS  # Wings: UI text via t() (CI ABGLEICH WG-R3)
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -345,7 +346,7 @@ def test_save_self_hosted_provider_posts_expected_payload(tmp_path):
         encoding="utf-8",
     )
     driver_path = tmp_path / "driver.js"
-    driver_path.write_text(_DRIVER, encoding="utf-8")
+    driver_path.write_text(T_EN_JS + _DRIVER, encoding="utf-8")
     scenario = {
         "providerId": "ollama",
         "baseUrl": "http://127.0.0.1:11434/v1",
@@ -390,7 +391,7 @@ def test_probe_self_hosted_provider_populates_model_and_enables_save(tmp_path):
         encoding="utf-8",
     )
     driver_path = tmp_path / "probe-driver.js"
-    driver_path.write_text(_PROBE_DRIVER, encoding="utf-8")
+    driver_path.write_text(T_EN_JS + _PROBE_DRIVER, encoding="utf-8")
     scenario = {
         "providerId": "ollama",
         "baseUrl": "http://127.0.0.1:11434/v1",
@@ -429,7 +430,7 @@ def test_probe_self_hosted_provider_accepts_string_models(tmp_path):
         encoding="utf-8",
     )
     driver_path = tmp_path / "probe-driver-string.js"
-    driver_path.write_text(_PROBE_DRIVER, encoding="utf-8")
+    driver_path.write_text(T_EN_JS + _PROBE_DRIVER, encoding="utf-8")
     scenario = {
         "providerId": "ollama",
         "baseUrl": "http://127.0.0.1:11434/v1",

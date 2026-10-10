@@ -272,7 +272,8 @@ def test_login_locale_entry_well_formed(loc_key: str):
     """Each _LOGIN_LOCALE entry must have all required sub-keys and non-empty string values."""
     login = _load_login_locale()
     entry = login[loc_key]
-    assert set(entry.keys()) == set(REQUIRED_LOGIN_KEYS), (
+    # Wings: wg_unreachable (offline hint) exists in en and de; the others fall back to en (CI ABGLEICH WG-R3)
+    assert set(entry.keys()) - {"wg_unreachable"} == set(REQUIRED_LOGIN_KEYS), (
         f"_LOGIN_LOCALE[{loc_key!r}] keys mismatch. "
         f"Expected {set(REQUIRED_LOGIN_KEYS)}, got {set(entry.keys())}."
     )

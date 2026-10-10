@@ -255,7 +255,7 @@
     var cancel = document.createElement('button');
     cancel.type = 'button';
     cancel.className = 'wings-sheet-cancel';
-    cancel.textContent = 'Abbrechen';
+    cancel.textContent = (typeof t === 'function' ? t('cancel') : 'Cancel');
     cancel.addEventListener('click', function (e) { e.preventDefault(); closeSheet(); });
     sheet.appendChild(cancel);
 

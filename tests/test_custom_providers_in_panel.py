@@ -12,6 +12,7 @@ import types
 import api.config as config
 import api.profiles as profiles
 from tests._pytest_port import BASE
+from tests.wings_i18n import en  # Wings: UI text via t() (CI ABGLEICH WG-R3)
 
 
 def _install_fake_hermes_cli(monkeypatch):
@@ -108,7 +109,8 @@ class TestCustomProvidersInGetProviders:
         """Settings → Providers must not filter out read-only custom providers."""
         src = open("static/panels.js", encoding="utf-8").read()
         assert "filter(p=>p.configurable||p.is_oauth||p.is_custom||p.is_plugin_provider||p.is_self_hosted)" in src
-        assert "Custom provider loaded from config.yaml / hermes model" in src
+        assert "t('wg_custom_provider_loaded_from_config_yaml')" in src
+        assert en("wg_custom_provider_loaded_from_config_yaml").startswith("Custom provider loaded from config.yaml / hermes model")
         assert "if(p.configurable){" in src
 
     def test_custom_provider_with_multi_models(self, monkeypatch, tmp_path):

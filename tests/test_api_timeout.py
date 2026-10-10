@@ -7,6 +7,7 @@ import re
 import subprocess
 import textwrap
 from pathlib import Path
+from tests.wings_i18n import T_EN_JS  # Wings: UI text via t() (CI ABGLEICH WG-R3)
 
 ROOT = Path(__file__).resolve().parents[1]
 WORKSPACE_JS = ROOT / "static" / "workspace.js"
@@ -83,7 +84,7 @@ def _extract_js_function(src: str, name: str) -> str:
 
 def _node_eval(script: str, timeout: float = 2.0) -> subprocess.CompletedProcess[str]:
     return subprocess.run(
-        ["node", "-e", script],
+        ["node", "-e", T_EN_JS + script],
         cwd=ROOT,
         text=True,
         capture_output=True,

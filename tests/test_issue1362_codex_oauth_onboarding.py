@@ -13,6 +13,7 @@ import time
 from pathlib import Path
 
 import pytest
+from tests.wings_i18n import en  # Wings: UI text via t() (CI ABGLEICH WG-R3)
 
 REPO = Path(__file__).resolve().parents[1]
 UI_JS = REPO / "static" / "ui.js"
@@ -590,10 +591,10 @@ def test_frontend_has_anthropic_oauth_support():
     assert "startAnthropicOAuth" in js
     assert "cancelAnthropicOAuth" in js
     assert "anthropicOAuthBtn" in js
-    assert "Login with Claude Code" in js
-    assert "Anthropic API key" in js
-    assert "Claude Code subscription" in js
-    assert "not the same as an Anthropic API key" in js
+    assert "t('wg_ob_cc_login')" in js and en("wg_ob_cc_login") == "Login with Claude Code"
+    assert "t('wg_ob_cc_not_api_key'" in js and "Anthropic API key" in en("wg_ob_cc_not_api_key")
+    assert "t('wg_ob_cc_not_api_key'" in js and "Claude Code subscription" in en("wg_ob_cc_not_api_key")
+    assert "t('wg_ob_cc_not_api_key'" in js and "not the same as an Anthropic API key" in en("wg_ob_cc_not_api_key")
     assert "/api/onboarding/oauth/start" in js
     assert "/api/onboarding/oauth/poll" in js
     assert "/api/onboarding/oauth/cancel" in js

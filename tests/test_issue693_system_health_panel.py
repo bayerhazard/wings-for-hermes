@@ -7,6 +7,7 @@ import pathlib
 import sys
 from types import SimpleNamespace
 from urllib.parse import urlparse
+from tests.wings_i18n import en  # Wings: UI text via t() (CI ABGLEICH WG-R3)
 
 
 REPO_ROOT = pathlib.Path(__file__).parent.parent
@@ -266,9 +267,9 @@ def test_system_health_panel_markup_and_styles_live_under_insights_not_top_chrom
     assert 'aria-label="Host resource health"' not in top_shell
     assert 'function _renderSystemHealthPanel()' in PANELS_JS
     assert 'id="systemHealthPanel"' in PANELS_JS
-    assert 'aria-label="Host resource health"' in PANELS_JS
-    assert 'System health' in PANELS_JS
-    assert 'Current VPS resource usage' in PANELS_JS
+    assert 'aria-label="${t(\'wg_host_resource_health\')}"' in PANELS_JS and en("wg_host_resource_health") == "Host resource health"
+    assert "t('wg_system_health'" in PANELS_JS and 'System health' in en("wg_system_health")
+    assert "t('wg_current_vps_resource_usage'" in PANELS_JS and 'Current VPS resource usage' in en("wg_current_vps_resource_usage")
     assert PANELS_JS.index('_renderSystemHealthPanel()') < PANELS_JS.index('_renderLlmWikiStatus(wikiStatus)')
     assert 'data-system-health-metric="cpu"' in PANELS_JS
     assert 'data-system-health-metric="memory"' in PANELS_JS
@@ -289,7 +290,8 @@ def test_system_health_frontend_polls_visible_and_renders_progress_labels():
     assert "function renderSystemHealth(payload)" in UI_JS
     assert "setSystemHealthUnavailable" in UI_JS
     assert "data-system-health-metric" in PANELS_JS
-    assert "CPU" in PANELS_JS and "RAM" in PANELS_JS and "Disk" in PANELS_JS
+    assert all(f"t('{k}')" in PANELS_JS for k in ("wg_cpu_usage", "wg_ram_usage", "wg_disk"))
+    assert "CPU" in en("wg_cpu_usage") and "RAM" in en("wg_ram_usage") and en("wg_disk") == "Disk"
     assert "aria-valuenow" in UI_JS
     assert "style.width=`${percent}%`" in UI_JS
 

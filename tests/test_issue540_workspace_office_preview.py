@@ -20,6 +20,7 @@ from openpyxl import Workbook
 
 import api.office_documents as office_documents
 import api.routes as routes
+from tests.wings_i18n import en  # Wings: UI text via t() (CI ABGLEICH WG-R3)
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -199,7 +200,7 @@ def test_workspace_js_docx_routes_through_file_read_not_download():
 def test_workspace_js_edit_button_uses_server_editable_flag():
     assert "_previewServerEditable" in WORKSPACE_JS
     assert "_previewServerEditable===false" in WORKSPACE_JS
-    assert "This Office document is preview-only." in WORKSPACE_JS
+    assert "t('wg_this_office_document_is_preview_only')" in WORKSPACE_JS and en("wg_this_office_document_is_preview_only") == "This Office document is preview-only."
     assert "_previewSaveRoute" in WORKSPACE_JS
     assert "_previewSaveRoute = data.preview_kind==='office' ? '/api/file/office-save' : '/api/file/save';" in WORKSPACE_JS
 

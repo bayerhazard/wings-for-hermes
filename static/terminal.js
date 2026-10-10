@@ -127,7 +127,7 @@ function _ensureXterm(){
   if(!surface)return null;
   if(TERMINAL_UI.term)return TERMINAL_UI.term;
   if(!_xtermReady()){
-    surface.textContent='Terminal library failed to load. Check network access to cdn.jsdelivr.net.';
+    surface.textContent=t('wg_terminal_library_failed_to_load_check');
     return null;
   }
   const term=new window.Terminal({
@@ -355,7 +355,7 @@ function _terminalRemoteBackendUnsupportedMessage(){
   const key=t('terminal_remote_backend_unsupported');
   return key&&key!=='terminal_remote_backend_unsupported'
     ? key
-    : 'Embedded terminal is only supported for local terminal backends.';
+    : t('terminal_remote_backend_unsupported');
 }
 
 function _terminalStartErrorMessage(err){

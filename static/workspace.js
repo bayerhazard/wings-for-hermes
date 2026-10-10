@@ -120,7 +120,7 @@ async function api(path,opts={}){
           timeoutId=setTimeout(()=>{
             didTimeout=true;
             if(controller) controller.abort();
-            const err=new Error('Request timed out. Please try again.');
+            const err=new Error(t('wg_request_timed_out_please_try_again'));
             err.name='TimeoutError';
             err.timeout=true;
             reject(err);
@@ -155,10 +155,10 @@ async function api(path,opts={}){
           if(typeof _showStreamTimeoutHint==='function') _showStreamTimeoutHint(timeoutMs);
           throw lastErr;
         }
-        const err=(e&&e.name==='TimeoutError')?e:new Error('Request timed out. Please try again.');
+        const err=(e&&e.name==='TimeoutError')?e:new Error(t('wg_request_timed_out_please_try_again'));
         err.name='TimeoutError';
         err.timeout=true;
-        if(timeoutToast&&typeof showToast==='function') showToast('Request timed out. Please try again.',5000,'error');
+        if(timeoutToast&&typeof showToast==='function') showToast(t('wg_request_timed_out_please_try_again'),5000,'error');
         throw err;
       }
       // Only retry on network errors (TypeError from fetch), not on HTTP errors
@@ -626,11 +626,11 @@ function renderSessionArtifacts(){
   const items = collectSessionArtifacts();
   if(count) count.textContent = String(items.length);
   if(!S.session){
-    root.innerHTML = '<div class="workspace-artifact-empty">Open a conversation to see files changed in this session.</div>';
+    root.innerHTML = '<div class="workspace-artifact-empty">'+t('wg_open_a_conversation_to_see_files')+'</div>';
     return;
   }
   if(!items.length){
-    root.innerHTML = '<div class="workspace-artifact-empty">No artifacts detected yet. Files created or edited during this session will appear here.</div>';
+    root.innerHTML = '<div class="workspace-artifact-empty">'+t('wg_no_artifacts_detected_yet_files_created')+'</div>';
     return;
   }
   // Strip workspace prefix for display so long absolute paths don't clutter the list.
@@ -801,7 +801,7 @@ async function loadDir(path, opts={}){
     }
     if(!preservePreview&&typeof clearPreview==='function'){
       if(typeof _previewDirty!=='undefined'&&_previewDirty){
-        showConfirmDialog({title:t('unsaved_confirm'),message:'',confirmLabel:'Discard',danger:true,focusCancel:true}).then(ok=>{if(ok)clearPreview({keepPanelOpen:true});});
+        showConfirmDialog({title:t('unsaved_confirm'),message:'',confirmLabel:t('discard'),danger:true,focusCancel:true}).then(ok=>{if(ok)clearPreview({keepPanelOpen:true});});
       }else{
         clearPreview({keepPanelOpen:true});
       }
@@ -902,7 +902,7 @@ function largeMarkdownPlainTextStatus(content){
   const bytes=markdownPreviewByteLength(content);
   const lines=markdownPreviewLineCount(content);
   const sizeLabel=bytes>=1024?`${Math.round(bytes/1024)} KB`:`${bytes} B`;
-  return `Large markdown file (${sizeLabel}, ${lines} lines) shown as plain text. Click "Render as markdown anyway" to force rich rendering, or Edit to view raw.`;
+  return t('wg_large_markdown_file_0_1_lines', sizeLabel, lines);
 }
 
 function setLargeMarkdownForceRenderVisible(visible){
@@ -969,7 +969,7 @@ function forceRenderMarkdownPreview(){
   if(_previewDirty || $('previewEditArea').style.display!=='none') return;
   if(!_previewRawContent || _previewRawContentPath!==_previewCurrentPath) return;
   openFile(_previewCurrentPath,{forceRichMarkdown:true});
-  setStatus('Markdown rendered for this file.');
+  setStatus(t('wg_markdown_rendered_for_this_file'));
 }
 
 let _previewCurrentPath = '';  // relative path of currently previewed file
@@ -1023,7 +1023,7 @@ async function toggleEditMode(){
     return;
   }
   if(!editing && _previewServerEditable===false){
-    showToast('This Office document is preview-only.', 3000, 'error');
+    showToast(t('wg_this_office_document_is_preview_only'), 3000, 'error');
     return;
   }
   if(editing){
@@ -1168,7 +1168,7 @@ async function openFile(path, opts={}){
     if(frame){
       frame.src=''; // clear first to avoid stale content
       frame.src=url;
-      frame.title=`PDF preview: ${path.split('/').pop()||path}`;
+      frame.title=t('wg_pdf_preview_0', path.split('/').pop()||path);
     }
   } else if(MD_EXTS.has(ext)){
     // Markdown: fetch text, render with renderMd, display as formatted HTML
@@ -1388,13 +1388,13 @@ async function uploadToWorkspace(file, dir) {
       // of a misleading "Uploaded" success toast.
       var msg = data.extract_error
         || (data.files.find(function(f){return f && f.extract_error;}) || {}).extract_error
-        || 'Archive extraction failed';
+        || t('wg_archive_extraction_failed');
       showToast(msg, 5000, 'error');
     } else {
       showToast(t('uploaded') || ('Uploaded ' + (data.filename || file.name)), 2000);
     }
   } catch (e) {
-    showToast(t('upload_failed') || ('Upload failed: ' + e.message), 5000, 'error');
+    showToast(t('upload_failed') || (t('upload_failed') + e.message), 5000, 'error');
   }
 }
 

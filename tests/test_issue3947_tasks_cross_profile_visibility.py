@@ -13,6 +13,7 @@ from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
+from tests.wings_i18n import T_EN_JS, en  # Wings: UI text via t() (CI ABGLEICH WG-R3)
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -62,7 +63,7 @@ def _run_node(script: str) -> dict:
     if NODE is None:
         pytest.skip("node not on PATH")
     with tempfile.NamedTemporaryFile("w", suffix=".js", delete=False, encoding="utf-8") as handle:
-        handle.write(script)
+        handle.write(T_EN_JS + script)
         path = Path(handle.name)
     try:
         result = subprocess.run(
@@ -590,7 +591,7 @@ process.stdout.write(JSON.stringify(results));
     assert result["dotRemoved"] is False
     assert result["renderedReadOnly"] is True
     assert "if (!isReadOnly) _loadCronDetailRuns(job.id, _currentCronDetailKey);" in PANELS_JS
-    assert "Read-only from another profile" in PANELS_JS
+    assert "t('wg_read_only_from_another_profile')" in PANELS_JS and en("wg_read_only_from_another_profile") == "Read-only from another profile"
 
 
 def test_history_race_ignores_stale_active_response_after_foreign_row_switch():

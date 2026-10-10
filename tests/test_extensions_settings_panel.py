@@ -1,6 +1,7 @@
 """Regression tests for the Settings → Extensions diagnostics and toggles."""
 from pathlib import Path
 import re
+from tests.wings_i18n import en  # Wings: UI text via t() (CI ABGLEICH WG-R3)
 
 
 ROOT = Path(__file__).parent.parent
@@ -147,7 +148,8 @@ def test_extensions_panel_renders_sanitized_status_payload():
     assert "const code=esc(rawCode)" in warning_block
     assert "esc((item&&item.source)||'unknown')" in warning_block
     assert "extension_state_unknown_ids" in warning_block
-    assert "Some saved disabled-extension overrides no longer match the current manifest" in warning_block
+    assert "t('wg_ext_override_mismatch')" in warning_block
+    assert en("wg_ext_override_mismatch").startswith("Some saved disabled-extension overrides no longer match the current manifest")
     assert "Rejected" not in render_block  # rejected values must never be rendered directly
 
 
@@ -160,8 +162,8 @@ def test_extensions_panel_renders_loopback_sidecar_monitor_safely():
     load_block = _between("async function loadExtensionsPanel", "async function copyExtensionsDiagnostics")
     load_catch_block = load_block[load_block.index("}catch(e){"):]
 
-    assert "Loopback sidecars" in sidecar_block
-    assert "No loopback sidecars declared." in sidecar_block
+    assert "t('wg_loopback_sidecars')" in sidecar_block and en("wg_loopback_sidecars") == "Loopback sidecars"
+    assert "t('wg_no_loopback_sidecars_declared'" in sidecar_block and "No loopback sidecars declared." in en("wg_no_loopback_sidecars_declared")
     assert "esc(title)" in sidecar_block
     assert "esc(meta)" in sidecar_block
     assert "esc(origin)" in sidecar_block
@@ -172,7 +174,7 @@ def test_extensions_panel_renders_loopback_sidecar_monitor_safely():
     assert "proxy.consented===true" in sidecar_block
     assert "proxy.consent_required===true" in sidecar_block
     assert "proxy.origin_changed===true" in sidecar_block
-    assert "Proxy path" in sidecar_block
+    assert "t('wg_proxy_path'" in sidecar_block and "Proxy path" in en("wg_proxy_path")
     assert "data-extension-sidecar-proxy-id" in sidecar_block
     assert "data-extension-sidecar-proxy-approved" in sidecar_block
     assert 'data-sidecar-runtime-index="${index}"' in sidecar_block
@@ -220,9 +222,9 @@ def test_extensions_panel_sidecar_proxy_consent_uses_dedicated_endpoint():
     assert "handleExtensionSidecarProxyConsent" in bind_block
     assert "data-extension-sidecar-proxy-id" in bind_block
     assert "api('/api/extensions/sidecar-proxy-consent',{method:'POST',body:JSON.stringify({id,approved})})" in consent_block
-    assert "Extension sidecar proxy approved." in consent_block
-    assert "Extension sidecar proxy consent revoked." in consent_block
-    assert "Failed to update extension sidecar proxy consent" in consent_block
+    assert "t('wg_extension_sidecar_proxy_approved')" in consent_block and en("wg_extension_sidecar_proxy_approved") == "Extension sidecar proxy approved."
+    assert "t('wg_extension_sidecar_proxy_consent_revoked'" in consent_block and "Extension sidecar proxy consent revoked." in en("wg_extension_sidecar_proxy_consent_revoked")
+    assert "t('wg_failed_to_update_extension_sidecar_proxy'" in consent_block and "Failed to update extension sidecar proxy consent" in en("wg_failed_to_update_extension_sidecar_proxy")
     assert "api('/api/extensions/toggle'" not in consent_block
 
 
@@ -232,12 +234,12 @@ def test_extensions_panel_toggle_uses_dedicated_endpoint_without_settings_or_ins
 
     assert "data-extension-toggle-id" in installed_block
     assert "data-extension-next-enabled" in installed_block
-    assert "No extension directory is configured." in installed_block
-    assert "No manifest extensions are installed in the configured bundle." in installed_block
+    assert "t('wg_no_extension_directory_is_configured')" in installed_block and en("wg_no_extension_directory_is_configured") == "No extension directory is configured."
+    assert "t('wg_no_manifest_extensions_are_installed_in'" in installed_block and "No manifest extensions are installed in the configured bundle." in en("wg_no_manifest_extensions_are_installed_in")
     assert "extensionDirConfigured" in installed_block
     assert "Manifest-disabled entries cannot be enabled from WebUI." in installed_block
     assert "api('/api/extensions/toggle',{method:'POST',body:JSON.stringify({id,enabled})})" in toggle_block
-    assert "Reload WebUI to apply changes" in toggle_block
+    assert "t('wg_extension_enabled_reload_webui_to_apply'" in toggle_block and "Reload WebUI to apply changes" in en("wg_extension_enabled_reload_webui_to_apply")
     combined = installed_block + toggle_block
     assert "api('/api/settings'" not in combined
     assert ">Install<" not in combined
@@ -259,9 +261,9 @@ def test_extensions_installed_settings_route_through_shared_accessor():
     assert "data-extension-settings-save" in settings_block
     assert "data-extension-settings-reset" in settings_block
     assert "data-extension-storage-clear" in settings_block
-    assert "Browser-local extension settings" in settings_block
-    assert "Do not store secrets here" in settings_block
-    assert "Reload WebUI after enabling or installing this extension to edit browser-local settings." in settings_block
+    assert "t('wg_browser_local_extension_settings')" in settings_block and en("wg_browser_local_extension_settings") == "Browser-local extension settings"
+    assert "t('wg_settings_and_extension_owned_storage_stay'" in settings_block and "Do not store secrets here" in en("wg_settings_and_extension_owned_storage_stay")
+    assert "t('wg_reload_webui_after_enabling_or_installing'" in settings_block and "Reload WebUI after enabling or installing this extension to edit browser-local settings." in en("wg_reload_webui_after_enabling_or_installing")
     assert "_extensionSettingsControls(entry)" in installed_block
     assert "window.HermesExtensionSettings.settingsForExtension(id).reset()" in bind_block
     assert "window.HermesExtensionSettings.storageForExtension(id).clear()" in bind_block
